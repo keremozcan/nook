@@ -6,25 +6,29 @@
   const R = (typeof module === 'object' && module.exports) ? require('./rng.js') : globalThis.NOOK_RNG;
   const { makeRng, shuffle } = R;
 
+  // Categories overlap on purpose. A deal is kept only when the category
+  // stays ambiguous until the difficulty's reveal word, then becomes unique.
   const BANK = [
-    { name: 'Fruit', accept: ['fruit', 'fruits'], words: ['lychee', 'quince', 'fig', 'mango', 'pear', 'apple', 'banana', 'grape', 'orange', 'lemon', 'plum', 'cherry'] },
-    { name: 'Colours', accept: ['colour', 'color', 'colours', 'colors'], words: ['scarlet', 'crimson', 'amber', 'violet', 'indigo', 'orange', 'purple', 'green', 'lemon', 'gold', 'plum', 'cherry'] },
+    { name: 'Fruit', accept: ['fruit', 'fruits'], words: ['lychee', 'quince', 'fig', 'mango', 'pear', 'apple', 'banana', 'grape', 'orange', 'lemon', 'plum', 'cherry', 'pineapple'] },
+    { name: 'Colours', accept: ['colour', 'color', 'colours', 'colors'], words: ['scarlet', 'crimson', 'amber', 'violet', 'indigo', 'orange', 'purple', 'green', 'lemon', 'gold', 'navy', 'ivory'] },
     { name: 'Planets', accept: ['planet', 'planets'], words: ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'neptune', 'uranus', 'earth', 'pluto'] },
     { name: 'Metals', accept: ['metal', 'metals'], words: ['mercury', 'gold', 'silver', 'iron', 'copper', 'tin', 'zinc', 'nickel', 'bronze', 'lead'] },
-    { name: 'Birds', accept: ['bird', 'birds'], words: ['robin', 'sparrow', 'eagle', 'heron', 'crane', 'swan', 'goose', 'duck', 'raven', 'crow', 'finch', 'wren'] },
+    { name: 'Birds', accept: ['bird', 'birds'], words: ['robin', 'sparrow', 'eagle', 'heron', 'crane', 'swan', 'goose', 'duck', 'raven', 'crow', 'finch', 'wren', 'jay'] },
     { name: 'Countries', accept: ['country', 'countries'], words: ['turkey', 'chad', 'jordan', 'georgia', 'peru', 'mali', 'togo', 'cuba', 'iran', 'laos', 'niger', 'benin'] },
     { name: 'Foods', accept: ['food', 'foods'], words: ['turkey', 'ham', 'stew', 'soup', 'bread', 'rice', 'pasta', 'salad', 'curry', 'toast', 'gravy', 'cider'] },
     { name: 'Instruments', accept: ['instrument', 'instruments', 'musical instrument', 'musical instruments'], words: ['organ', 'flute', 'piano', 'violin', 'cello', 'harp', 'drum', 'trumpet', 'oboe', 'banjo', 'lute', 'tuba'] },
     { name: 'The body', accept: ['body', 'the body', 'body parts', 'body part'], words: ['organ', 'heart', 'liver', 'ankle', 'elbow', 'thumb', 'spine', 'skull', 'wrist', 'palm', 'chest', 'femur'] },
     { name: 'Trees', accept: ['tree', 'trees'], words: ['cedar', 'birch', 'maple', 'olive', 'willow', 'aspen', 'alder', 'spruce', 'poplar', 'pine', 'fir', 'palm'] },
-    { name: 'Flowers', accept: ['flower', 'flowers'], words: ['rose', 'tulip', 'daisy', 'lilac', 'iris', 'peony', 'poppy', 'pansy', 'violet', 'aster', 'lotus', 'phlox'] },
+    { name: 'Flowers', accept: ['flower', 'flowers'], words: ['rose', 'tulip', 'daisy', 'lilac', 'iris', 'peony', 'poppy', 'pansy', 'violet', 'aster', 'lotus', 'phlox', 'lily'] },
     { name: 'Weather', accept: ['weather'], words: ['rain', 'snow', 'hail', 'mist', 'fog', 'storm', 'sleet', 'drizzle', 'frost', 'thunder', 'breeze', 'gale'] },
     { name: 'Clothes', accept: ['clothes', 'clothing'], words: ['scarf', 'glove', 'boot', 'cloak', 'vest', 'shirt', 'skirt', 'coat', 'sock', 'belt', 'hat', 'cape'] },
     { name: 'Kitchen', accept: ['kitchen', 'kitchen tools', 'kitchenware'], words: ['spoon', 'knife', 'plate', 'bowl', 'oven', 'whisk', 'ladle', 'grater', 'kettle', 'mug', 'fork', 'pan'] },
     { name: 'Sports', accept: ['sport', 'sports'], words: ['tennis', 'rugby', 'golf', 'boxing', 'rowing', 'skiing', 'diving', 'fencing', 'archery', 'polo', 'judo', 'surfing'] },
     { name: 'Sea life', accept: ['sea life', 'sea creatures', 'ocean life', 'marine life'], words: ['whale', 'shark', 'otter', 'crab', 'squid', 'coral', 'kelp', 'seal', 'eel', 'clam', 'tuna', 'cod'] },
-    { name: 'Yellow things', accept: ['yellow', 'yellow things', 'things that are yellow'], words: ['lemon', 'gold', 'butter', 'banana', 'corn', 'honey', 'amber', 'mustard', 'canary', 'daffodil', 'sulfur', 'sunflower'] },
-    { name: 'Found in a kitchen', accept: ['kitchen', 'found in a kitchen', 'kitchen things'], words: ['spoon', 'knife', 'bread', 'butter', 'honey', 'lemon', 'apple', 'orange', 'plum', 'cherry', 'grape', 'kettle'] },
+    { name: 'Yellow things', accept: ['yellow', 'yellow things', 'things that are yellow'], words: ['lemon', 'gold', 'butter', 'banana', 'corn', 'honey', 'amber', 'mustard', 'canary', 'daffodil', 'sulfur', 'sunflower', 'pineapple', 'mango'] },
+    { name: 'Found in a kitchen', accept: ['found in a kitchen', 'kitchen things'], words: ['spoon', 'knife', 'bread', 'butter', 'honey', 'lemon', 'kettle', 'jug', 'tray', 'sink', 'oven', 'whisk'] },
+    { name: 'Coins', accept: ['coin', 'coins', 'money'], words: ['gold', 'silver', 'copper', 'nickel', 'penny', 'pound', 'crown', 'cent', 'dime', 'euro'] },
+    { name: 'Names', accept: ['name', 'names', 'first names'], words: ['robin', 'jay', 'crane', 'wren', 'iris', 'rose', 'daisy', 'lily', 'grace', 'ruby', 'pearl', 'hazel'] },
   ];
 
   function holders(word) {
@@ -77,7 +81,7 @@
       for (let d = 0; d < deals.length && looked < 48; d++) {
         looked++;
         const words = deals[d].slice().sort((a, b) => holders(b).length - holders(a).length || (a < b ? -1 : 1));
-        if (holders(words[0]) < 2 || holders(words[1]) < 2) continue;
+        if (holders(words[0]).length < 2 || holders(words[1]).length < 2) continue;
         if (revealAt(words) !== target) continue;
         if (sole(words).length !== 1 || sole(words)[0] !== order[i]) continue;
         found.push({

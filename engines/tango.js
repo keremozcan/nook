@@ -29,7 +29,7 @@
     return out;
   }
 
-  const ROWS = { 6: patterns(6) };
+  const ROWS = { 4: patterns(4), 6: patterns(6), 8: patterns(8) };
 
   function fill(n, rng) {
     const pats = ROWS[n];
@@ -130,9 +130,12 @@
   }
 
   function generate(difficulty, seed) {
-    const n = 6;
-    const target = difficulty === 'easy' ? 8 : difficulty === 'tricky' ? 5 : 4;
-    for (let attempt = 0; attempt < 20; attempt++) {
+    // Difficulty changes the actual board size; larger boards add both more
+    // deductions and more places for the balancing/run rules to interact.
+    const n = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 6 : 8;
+    const target = difficulty === 'easy' ? 5 : difficulty === 'tricky' ? 8 : 12;
+    const markTarget = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 7 : 10;
+    for (let attempt = 0; attempt < 24; attempt++) {
       const rng = makeRng(String(seed) + ':tango:' + difficulty + ':' + attempt);
       const bits = fill(n, rng);
       if (!bits) continue;
@@ -149,7 +152,7 @@
         for (let c = 0; c < n - 1; c++) edges.push(['h', r, c]);
         if (r < n - 1) for (let c = 0; c < n; c++) edges.push(['v', r, c]);
       }
-      const chosen = shuffle(rng, edges).slice(0, difficulty === 'easy' ? 6 : 5);
+      const chosen = shuffle(rng, edges).slice(0, markTarget);
       let sameMarks = 0;
       let differMarks = 0;
       for (const [axis, r, c] of chosen) {
@@ -174,7 +177,10 @@
       }
       if (filled > n * n - 4) continue;
       if (count(n, givens, h, v) !== 1) continue;
-      return { game: 'tango', difficulty, seed, n, givens, h, v, solution };
+      return {
+        game: 'tango', difficulty, seed, n, givens, h, v, solution,
+        rating: { size: n, givens: filled, relationMarks: chosen.length },
+      };
     }
     throw new Error('tango: no unique puzzle');
   }

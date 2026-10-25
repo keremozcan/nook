@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1c1612">
+<meta name="theme-color" content="#f5f8f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="Nook. Nine puzzles, no ads, no accounts.">
 <title>Nook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,778 +13,200 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,560;0,9..144,620;1,9..144,560&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink: #1c1612;
-  --paper: #efe6d6;
-  --paper-2: #f4efe6;
-  --brass: #b08d57;
-  --copper: #8c4a32;
-  --moss: #3e5c50;
-  --wine: #6d3038;
-  --rose: #9a3b32;
-  --night: #16181e;
-  --moon: #d9d6ea;
-  --sun: #f0b45a;
-  --lead: #1a1614;
-  --cream: #f3eadc;
-  --line: rgba(243, 234, 220, 0.28);
-  --serif: Fraunces, "Iowan Old Style", Palatino, Georgia, serif;
+  --ink: #17242b;
+  --muted: #62727a;
+  --paper: #fff;
+  --canvas: #f5f8f8;
+  --line: #d9e2e3;
+  --teal: #087f82;
+  --teal-dark: #075e64;
+  --teal-pale: #e1f3f1;
+  --blue-pale: #e8effa;
+  --rose: #b64953;
+  --serif: Fraunces, "Iowan Old Style", Georgia, serif;
   --sans: "Avenir Next", "Segoe UI", sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
 }
-
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
-body {
-  background: var(--ink);
-  color: var(--cream);
-  font-family: var(--sans);
-  font-weight: 400;
-  letter-spacing: 0.01em;
+body { background: var(--canvas); color: var(--ink); font: 400 15px/1.45 var(--sans); }
+button, input, summary { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; background: transparent; border: 0; }
+button:disabled { cursor: default; opacity: .45; }
+.cell { cursor: pointer; }
+.cell:focus-visible { z-index: 4; outline: 3px solid #075e64; outline-offset: -3px; }
+button:focus-visible, summary:focus-visible, input:focus-visible, .tile:focus-visible, .tonight:focus-visible {
+  outline: 3px solid #168ca0; outline-offset: 3px;
 }
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.18;
-  background-image: radial-gradient(rgba(243, 234, 220, 0.14) 0.6px, transparent 0.6px);
-  background-size: 3px 3px;
-}
-button, summary { font: inherit; color: inherit; }
-button {
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  min-height: 44px;
-  touch-action: manipulation;
-}
-button:focus-visible, summary:focus-visible, .tile:focus-visible, .tonight:focus-visible {
-  outline: 2px solid var(--brass);
-  outline-offset: 3px;
-}
-#app { position: relative; z-index: 1; min-height: 100dvh; }
-
-.home, .play, .summary {
-  width: min(1080px, 100%);
-  margin: 0 auto;
-  padding: calc(28px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
-}
-.eyebrow {
-  margin: 0 0 8px;
-  font-size: 13px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(243, 234, 220, 0.62);
-}
-h1 {
-  margin: 0;
-  font-family: var(--serif);
-  font-weight: 560;
-  font-size: clamp(44px, 8vw, 72px);
-  letter-spacing: -0.035em;
-  line-height: 0.92;
-}
-.home { position: relative; }
-.home::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: -40px;
-  left: 8%;
-  width: 78%;
-  height: 280px;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 50% 30%, rgba(232, 190, 130, 0.34), rgba(176, 141, 87, 0.08) 42%, transparent 70%);
-}
-.home h1::after {
-  content: "";
-  display: block;
-  width: 64px;
-  height: 2px;
-  margin-top: 18px;
-  background: var(--brass);
-}
-.lede {
-  max-width: 36rem;
-  margin: 14px 0 0;
-  font-size: 17px;
-  line-height: 1.45;
-  color: rgba(243, 234, 220, 0.78);
-}
-.solid, .ghost {
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 2px;
-}
-.solid { background: var(--paper); color: var(--ink); }
-.ghost { border: 1px solid var(--line); }
-
-.tonight {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  margin-top: 22px;
-  padding: 14px 16px;
-  text-align: left;
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 2px;
-  box-shadow: 3px 3px 0 #0c0a08;
-}
-.tonight .eyebrow { color: var(--copper); margin: 0; }
-.tonight-copy { display: grid; gap: 2px; }
-.tonight-title {
-  font-family: var(--serif);
-  font-size: clamp(26px, 4vw, 34px);
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-.tonight-go {
-  flex: none;
-  min-height: 44px;
-  padding: 0 16px;
-  display: grid;
-  place-items: center;
-  background: var(--ink);
-  color: var(--cream);
-  border-radius: 2px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 13px;
-}
-.shelf-block { margin-top: 26px; }
-.shelf-block h2 {
-  margin: 0 0 10px;
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(243, 234, 220, 0.55);
-}
-.shelf {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
-}
+#app { min-height: 100dvh; }
+.home, .play, .summary { width: min(1120px, 100%); margin: 0 auto; padding: max(24px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom)); }
+.eyebrow { margin: 0 0 6px; color: var(--teal-dark); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+h1 { margin: 0; font: 620 clamp(40px, 7vw, 66px)/.98 var(--serif); letter-spacing: -.045em; }
+.lede { max-width: 36rem; margin: 12px 0 0; color: var(--muted); font-size: 16px; }
+.home .mast { padding: 6px 0 10px; }
+.solid, .ghost { min-height: 44px; padding: 0 16px; border: 1px solid var(--teal); border-radius: 9px; font-weight: 650; }
+.solid { background: var(--teal); color: white; }
+.ghost { background: white; color: var(--ink); border-color: var(--line); }
+.tonight { display: flex; width: 100%; min-height: 86px; margin-top: 18px; padding: 15px 18px; align-items: center; justify-content: space-between; gap: 12px; text-align: left; border: 1px solid #c9e3e1; border-radius: 14px; background: var(--teal-pale); color: var(--ink); }
+.tonight .eyebrow { margin: 0; }
+.tonight-copy { display: grid; gap: 3px; }
+.tonight-title { font: 620 clamp(23px, 4vw, 30px)/1.05 var(--serif); letter-spacing: -.025em; }
+.tonight-go { display: grid; min-height: 42px; padding: 0 17px; place-items: center; border-radius: 8px; background: var(--teal); color: white; font-size: 13px; font-weight: 700; }
+.shelf-block { margin-top: 24px; }
+.shelf-block h2 { margin: 0 0 10px; color: #52666e; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.shelf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .tile-wrap { position: relative; min-width: 0; }
-.tile {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  grid-template-rows: auto auto;
-  column-gap: 10px;
-  row-gap: 2px;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  min-height: 76px;
-  padding: 12px;
-  text-align: left;
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 2px;
-  box-shadow: 3px 3px 0 #0c0a08;
-}
-.tile-wrap.paused .tile { box-shadow: 3px 3px 0 var(--copper); padding-right: 54px; }
-.mark { grid-row: 1 / span 2; width: 56px; height: 40px; }
-.tile-name {
-  min-width: 0;
-  font-family: var(--serif);
-  font-size: 22px;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-}
-.tile-how {
-  color: rgba(28, 22, 18, 0.68);
-  font-size: 13px;
-  line-height: 1.3;
-}
-.tile-best {
-  position: absolute;
-  right: 10px;
-  bottom: 8px;
-  font-variant-numeric: tabular-nums;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: rgba(28, 22, 18, 0.5);
-}
-.fresh {
-  position: absolute;
-  z-index: 1;
-  top: 6px;
-  right: 6px;
-  min-height: 32px;
-  padding: 0 8px;
-  color: var(--copper);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.tile:active, .tonight:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0c0a08; }
-@media (hover: hover) {
-  .tile:hover, .tonight:hover { transform: translateY(-2px); }
-  .tile:hover { box-shadow: 3px 5px 0 #0c0a08; }
-  .tonight:hover { box-shadow: 3px 5px 0 #0c0a08; }
-  .tile-wrap.paused .tile:hover { box-shadow: 3px 5px 0 var(--copper); }
-}
-@media (min-width: 900px) {
-  .shelf { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
-  .tile { grid-template-columns: 72px 1fr; min-height: 92px; }
-  .mark, .tile .mini-svg { width: 72px; height: 52px; }
-  .tile-name { font-size: 26px; }
-}
-.mini-svg { width: 56px; height: 40px; display: block; }
+.tile { display: grid; grid-template-columns: 64px minmax(0,1fr); grid-template-rows: auto auto; align-items: center; column-gap: 12px; row-gap: 3px; width: 100%; min-height: 88px; padding: 12px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); box-shadow: 0 2px 5px #17242b0a; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.tile-wrap.paused .tile { padding-right: 52px; border-color: #91cbc7; }
+.mark { grid-row: 1 / span 2; width: 64px; height: 48px; display: grid; place-items: center; }
+.mini-svg { display: block; width: 64px; height: 48px; }
+.tile-name { min-width: 0; font: 620 22px/1.05 var(--serif); letter-spacing: -.025em; }
+.tile-how { color: var(--muted); font-size: 12px; line-height: 1.3; }
+.tile-best { display: inline-block; margin-left: 5px; color: var(--teal-dark); font-size: 11px; font-variant-numeric: tabular-nums; }
+.fresh { position: absolute; z-index: 1; top: 4px; right: 5px; min-height: 34px; padding: 0 8px; color: var(--teal-dark); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.tile:active, .tonight:active { transform: translateY(1px); }
+@media (hover:hover) { .tile:hover, .tonight:hover { transform: translateY(-2px); border-color: #9bc9c7; box-shadow: 0 5px 14px #17242b12; } }
 
-.bar {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 8px 12px;
-  align-items: center;
-}
-.back {
-  grid-column: 1;
-  grid-row: 1;
-  padding: 0 2px;
-  letter-spacing: 0.04em;
-}
+.bar { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 8px 14px; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.back { min-height: 40px; padding: 0 9px 0 0; color: var(--teal-dark); font-weight: 650; }
 .titles { grid-column: 2; grid-row: 1; min-width: 0; }
-.titles h1 { font-size: clamp(32px, 6vw, 44px); }
-.status {
-  margin: 4px 0 0;
-  min-height: 1.3em;
-  color: rgba(243, 234, 220, 0.78);
-  font-size: 15px;
-}
-.clock {
-  grid-column: 3;
-  grid-row: 1;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-size: 18px;
-}
-.clock small {
-  display: block;
-  color: rgba(243, 234, 220, 0.55);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.switch {
-  grid-column: 1 / 3;
-  grid-row: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  justify-content: flex-start;
-  background: #2a241e;
-  padding: 3px;
-  border-radius: 999px;
-  width: fit-content;
-  max-width: 100%;
-}
-.diff-label {
-  align-self: center;
-  padding: 0 10px 0 8px;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(243, 234, 220, 0.62);
-}
-.switch button {
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: 999px;
-  color: var(--cream);
-}
-.switch button.on { background: var(--brass); color: var(--ink); }
-.seed {
-  grid-column: 3;
-  grid-row: 2;
-  justify-self: end;
-  max-width: 42vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-height: 36px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-
-.stage {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  margin-top: 18px;
-}
-.stage::before {
-  content: "";
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  width: min(92vw, 760px);
-  height: min(78vw, 640px);
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, rgba(232, 190, 130, 0.22), transparent 68%);
-  z-index: 0;
-  pointer-events: none;
-}
-.board-wrap, .side { position: relative; z-index: 1; width: min(92vw, calc(100dvh - 250px), 680px); }
-.board {
-  --n: 6;
-  width: 100%;
-  aspect-ratio: 1;
-  display: grid;
-  grid-template-columns: repeat(var(--n), 1fr);
-  grid-template-rows: repeat(var(--n), 1fr);
-  position: relative;
-  touch-action: none;
-  user-select: none;
-  container-type: inline-size;
-  border-radius: 2px;
-}
-.cell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  min-height: 0;
-  font-family: var(--serif);
-  font-size: 16px;
-  font-size: calc(92cqi / var(--n) * 0.42);
-  line-height: 1;
-}
-.board.pending {
-  background: rgba(243, 234, 220, 0.05);
-  box-shadow: inset 0 0 0 1px rgba(243, 234, 220, 0.16);
-}
-.board.zip {
-  background: var(--paper-2);
-  color: var(--ink);
-  border: 3px solid var(--lead);
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.38);
-}
-.board.zip .cell { background: var(--paper-2); box-shadow: inset 0 0 0 1px rgba(28, 22, 18, 0.16); }
-.board.zip .cell.on-path { background: #f6e3d6; }
-.board.zip .cell.start { box-shadow: inset 0 0 0 2px var(--copper); }
-.num {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 62%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #fffaf2, var(--paper-2) 62%);
-  box-shadow: 0 1px 0 rgba(28, 22, 18, 0.28), inset 0 0 0 1px rgba(140, 74, 50, 0.45);
-  font-weight: 560;
-  color: var(--ink);
-}
-.wall-e, .wall-s { position: absolute; background: var(--lead); z-index: 3; pointer-events: none; }
-.wall-e { right: -2px; top: 0; width: 4px; height: 100%; }
-.wall-s { left: 0; bottom: -2px; height: 4px; width: 100%; }
-.trace { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
-
-.board.queens { gap: 3px; padding: 3px; background: var(--lead); color: var(--ink); box-shadow: 0 22px 48px rgba(0, 0, 0, 0.38); }
-.board.murdoku { gap: 0; padding: 4px; background: var(--lead); color: var(--ink); box-shadow: 0 22px 48px rgba(0, 0, 0, 0.38); }
-.board.murdoku .cell.room-e { box-shadow: inset -3px 0 0 var(--lead); }
-.board.murdoku .cell.room-s { box-shadow: inset 0 -3px 0 var(--lead); }
-.board.murdoku .cell.room-e.room-s { box-shadow: inset -3px -3px 0 var(--lead); }
-.crown { width: 70%; height: auto; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lead); opacity: 0.55; }
+.titles h1 { font-size: clamp(28px, 5vw, 38px); }
+.status { min-height: 1.3em; margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.clock { grid-column: 3; grid-row: 1; text-align: right; font-size: 18px; font-variant-numeric: tabular-nums; font-weight: 650; }
+.clock small { display: block; color: var(--muted); font-size: 10px; font-weight: 500; letter-spacing: .04em; }
+.switch { grid-column: 1 / 3; grid-row: 2; display: flex; width: fit-content; max-width: 100%; flex-wrap: wrap; gap: 3px; align-items: center; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+.diff-label { padding: 0 8px 0 6px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.switch button { min-height: 36px; padding: 0 12px; border-radius: 7px; color: #52666e; font-size: 13px; }
+.switch button.on { background: var(--teal); color: white; }
+.seed { grid-column: 3; grid-row: 2; justify-self: end; min-height: 36px; max-width: 42vw; overflow: hidden; padding: 0 11px; text-overflow: ellipsis; white-space: nowrap; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--teal-dark); font-size: 12px; font-weight: 650; }
+.game-intro { max-width: 52rem; margin: 13px auto 0; color: #52666e; font-size: 14px; }
+.difficulty-note { max-width: 52rem; margin: 8px auto 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.progress-line { width: min(100%, 520px); margin: 12px auto 0; color: var(--teal-dark); font-size: 12px; font-weight: 650; }
+.stage { display: flex; flex-direction: column; align-items: center; gap: 18px; margin: 14px auto 0; }
+.board-wrap, .side { position: relative; width: min(100%, 480px); }
+.board { --n: 6; position: relative; display: grid; width: 100%; aspect-ratio: 1; grid-template-columns: repeat(var(--n), minmax(0,1fr)); grid-template-rows: repeat(var(--n), minmax(0,1fr)); overflow: visible; container-type: inline-size; touch-action: none; user-select: none; }
+.cell { position: relative; display: flex; min-width: 0; min-height: 0; align-items: center; justify-content: center; font: 560 16px/1 var(--serif); font-size: calc(90cqi / var(--n) * .42); }
+.board.pending { background: #edf2f2; border: 1px solid var(--line); border-radius: 12px; }
+.board.zip, .board.sudoku, .board.queens, .board.tango, .board.patches, .board.murdoku, .board.wend { overflow: hidden; border: 1px solid #52666e; border-radius: 9px; background: white; box-shadow: 0 5px 18px #17242b12; }
+.board.zip { color: var(--ink); }
+.board.zip .trace .line path:first-child { stroke: #075e64; }
+.board.zip .trace .line path:nth-child(2) { stroke: #34a8a2; }
+.board.zip .trace .line circle { fill: #fff; }
+.board.zip .trace .marks circle { fill: #fff; stroke: #087f82; }
+.board.zip .trace .marks text { fill: #17242b; }
+.board.zip .cell { background: #fff; box-shadow: inset -1px -1px 0 #ced8da; }
+.board.zip .cell.on-path { background: #bde9e4; }
+.board.zip .cell.start { box-shadow: inset 0 0 0 3px var(--teal); }
+.num { position: relative; z-index: 2; display: grid; width: 58%; aspect-ratio: 1; place-items: center; border: 2px solid var(--teal); border-radius: 50%; background: white; color: var(--teal-dark); font: 700 .75em/1 var(--sans); }
+.wall-e, .wall-s { position: absolute; z-index: 3; background: #253940; pointer-events: none; }
+.wall-e { top: 0; right: -2px; width: 4px; height: 100%; }.wall-s { bottom: -2px; left: 0; width: 100%; height: 4px; }
+.trace { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.board.queens { gap: 2px; padding: 2px; background: #43545b; }
+.board.queens .cell-fill { position: absolute; z-index: 0; inset: 0; opacity: .7; }
+.board.queens .cell { background: #f6f9f9; }
+.crown { position: relative; z-index: 1; width: 70%; height: auto; }
+.dot { position: relative; z-index: 1; width: 8px; height: 8px; border-radius: 50%; background: #344c55; }
 .cell.bad { outline: 3px solid var(--rose); outline-offset: -4px; }
-.cell.sel { box-shadow: inset 0 0 0 2px var(--ink); }
-
-.board.tango {
-  background: var(--night);
-  gap: 0;
-  color: var(--cream);
-  box-shadow: 0 0 0 1px rgba(176, 141, 87, 0.55), 0 22px 48px rgba(0, 0, 0, 0.38);
-}
-.board.tango .cell {
-  background: radial-gradient(circle at 50% 40%, #2a3142, #141820 70%);
-  box-shadow: inset 0 0 0 1px rgba(243, 234, 220, 0.14);
-}
-.board.tango .cell.given { background: radial-gradient(circle at 50% 40%, #1c2433, #0e1118 72%); }
-.sun, .moon { width: 72%; height: 72%; display: block; overflow: visible; }
-.given .sun, .given .moon { opacity: 1; }
-.edge {
-  position: absolute;
-  z-index: 2;
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  color: #1c1612;
-  font-family: var(--serif);
-  font-size: 16px;
-  font-weight: 560;
-  line-height: 1;
-  pointer-events: none;
-  background: #f3e6c4;
-  color: #1c1612;
-  border: 0;
-  box-shadow: 0 1px 0 #0c0a08;
-  border-radius: 50%;
-}
-.edge.e { right: 0; top: 50%; transform: translate(50%, -50%); }
-.edge.s { left: 50%; bottom: 0; transform: translate(-50%, 50%); }
-
-.board.sudoku { background: var(--paper-2); border: 2px solid var(--ink); color: var(--ink); box-shadow: 0 22px 48px rgba(0, 0, 0, 0.38); }
-.board.sudoku .cell {
-  background: var(--paper-2);
-  color: var(--moss);
-  box-shadow: inset -1px -1px 0 rgba(28, 22, 18, 0.16);
-}
-.board.sudoku .cell.given { color: var(--ink); font-weight: 560; }
-.board.sudoku .cell.same { background: #e7efe9; }
-.board.sudoku .cell.box-r { box-shadow: inset -2px -1px 0 var(--ink); }
-.board.sudoku .cell.box-b { box-shadow: inset -1px -2px 0 var(--ink); }
-.board.sudoku .cell.box-r.box-b { box-shadow: inset -2px -2px 0 var(--ink); }
-.notes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  width: 86%;
-  height: 86%;
-  font-family: var(--sans);
-  font-size: calc(70cqi / var(--n) * 0.16);
-  color: #8a8175;
-}
-.notes.six { grid-template-rows: 1fr 1fr; }
-.notes i { font-style: normal; text-align: center; }
-.pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-.pad button {
-  background: #322b24;
-  color: var(--cream);
-  border: 1px solid rgba(243, 234, 220, 0.28);
-  border-radius: 2px;
-  font-family: var(--serif);
-  font-size: 22px;
-  min-height: 48px;
-}
-.pad button.on, .pad button.armed { background: var(--paper); color: var(--ink); }
-.pad button.done { opacity: 0.38; }
-.pad button.tool { font-family: var(--sans); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
-
-.board.patches {
-  background-color: #e6d7c2;
-  background-image: repeating-linear-gradient(90deg, transparent 0 8px, rgba(90, 62, 40, 0.06) 8px 9px), repeating-linear-gradient(0deg, transparent 0 8px, rgba(90, 62, 40, 0.05) 8px 9px);
-  gap: 0;
-  padding: 0;
-  color: var(--ink);
-  border: 3px solid var(--lead);
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.38);
-}
-.board.patches .cell { background: transparent; box-shadow: inset 0 0 0 1px rgba(28, 22, 18, 0.1); }
-.board.patches .cell.seam-e { box-shadow: inset -2px 0 0 var(--wine); }
-.board.patches .cell.seam-s { box-shadow: inset 0 -2px 0 var(--wine); }
-.board.patches .cell.seam-e.seam-s { box-shadow: inset -2px -2px 0 var(--wine); }
-.stitch { color: var(--wine); font-weight: 560; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; z-index: 1; }
-.glyph { width: 18px; height: 14px; border: 1.6px solid var(--wine); }
-.glyph.tall { width: 11px; height: 20px; }
-.glyph.wide { width: 22px; height: 11px; }
-.glyph.diamond { width: 12px; height: 12px; border: 0; background: var(--wine); transform: rotate(45deg); }
-.cell.preview { background: rgba(109, 48, 56, 0.16); }
-.board.shake { animation: shake 180ms ease; }
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
-}
-
-.room-name {
-  position: absolute;
-  left: 6px;
-  top: 6px;
-  font-family: var(--sans);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink);
-  background: rgba(244, 239, 230, 0.72);
-  padding: 2px 5px;
-  pointer-events: none;
-  z-index: 1;
-}
-.furn {
-  position: absolute;
-  right: 5px;
-  bottom: 5px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  z-index: 1;
-  pointer-events: none;
-}
-.furn em {
-  font-style: normal;
-  font-family: var(--sans);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  color: rgba(28, 22, 18, 0.78);
-}
-.furn i { display: block; }
-.furn.plant i { width: 16px; height: 16px; border-radius: 50% 50% 45% 45%; background: var(--moss); }
-.furn.table i, .furn.bookshelf i { width: 22px; height: 12px; background: #6d513c; }
-.furn.bookshelf i { height: 18px; background: repeating-linear-gradient(#6d513c 0 3px, #efe6d6 3px 4px); }
-.furn.statue i { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #8d8478; }
-.furn.chair i, .furn.stool i { width: 14px; height: 14px; border: 1.5px solid #6d513c; }
-.furn.armchair i, .furn.sofa i { width: 26px; height: 14px; border-radius: 7px 7px 2px 2px; background: #7d5a49; }
-.furn.rug i { width: 28px; height: 14px; background: repeating-linear-gradient(90deg, #8c4a32 0 3px, #e6c27a 3px 6px); }
-.token {
-  width: 58%;
-  height: 58%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--paper);
-  color: var(--ink);
-  border: 1.5px solid var(--ink);
-  font-size: calc(70cqi / var(--n) * 0.28);
-  position: relative;
-  z-index: 1;
-}
-.token.victim { background: var(--wine); color: var(--cream); border-color: var(--wine); }
-.token.on { box-shadow: 0 0 0 2px var(--brass); }
-.token.culprit { box-shadow: 0 0 0 2px #e6c27a; }
-.token.bad { box-shadow: 0 0 0 2px var(--rose); }
-.cell.lit { outline: 1px solid var(--brass); outline-offset: -3px; }
-.side { display: flex; flex-direction: column; gap: 8px; }
-.roster { display: flex; flex-wrap: wrap; gap: 6px; }
-.roster button {
-  min-height: 40px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-}
-.roster button.on { background: var(--paper); color: var(--ink); }
-.slips { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow: auto; }
-.slip {
-  margin: 0;
-  padding: 8px 10px;
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 2px;
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 16px;
-  line-height: 1.35;
-}
-.slip.on { box-shadow: inset 3px 0 0 var(--copper); }
-@media (min-width: 900px) {
-  .stage.with-side { display: grid; grid-template-columns: min(calc(100dvh - 250px), 680px) minmax(240px, 300px); justify-content: center; align-items: center; }
-  .stage.with-side .board-wrap, .stage.with-side .side { width: auto; }
-  .slips { max-height: min(calc(100dvh - 250px), 680px); }
-}
-
-.dock {
-  position: sticky;
-  bottom: 0;
-  z-index: 3;
-  width: min(92vw, calc(100dvh - 250px), 680px);
-  margin: 16px auto 0;
-  display: flex;
-  gap: 8px;
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
-  background: var(--ink);
-}
-.dock button {
-  flex: 1;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  letter-spacing: 0.04em;
-}
-.dock button[aria-pressed="true"] { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-.rules { width: min(92vw, 560px); margin: 14px auto 0; color: rgba(243, 234, 220, 0.72); }
-.rules summary { cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; font-size: 12px; }
-.rules p { font-size: 15px; line-height: 1.45; }
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  background: var(--paper);
-  color: var(--ink);
-  padding: 10px 14px;
-  border-radius: 2px;
-  z-index: 5;
-}
-.summary ol { list-style: none; padding: 0; margin: 24px 0; max-width: 420px; }
-.summary li {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-  font-family: var(--serif);
-  font-size: 28px;
-}
-.summary li span { font-family: var(--sans); font-variant-numeric: tabular-nums; font-size: 18px; align-self: center; }
-.stage.solved .board { filter: saturate(1.04) brightness(1.05); }
-
-.board.wend {
-  background: #2a211c;
-  color: var(--ink);
-  gap: 4px;
-  padding: 8px;
-  border: 3px solid #3a2c24;
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.38), inset 0 0 0 1px rgba(176, 141, 87, 0.35);
-}
-.board.wend .cell {
-  background:
-    radial-gradient(circle at 30% 25%, rgba(255, 250, 242, 0.7), transparent 42%),
-    var(--paper-2);
-  border-radius: 2px;
-  box-shadow: 1px 2px 0 rgba(12, 10, 8, 0.35);
-}
-.board.wend .cell.wall {
-  background:
-    repeating-linear-gradient(90deg, #241c17 0 7px, #1a1410 7px 8px);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
-}
-.board.wend .cell.on-path { background: #f6e3d6; }
-.board.wend .cell.locked { background: #e7efe9; }
-.board.wend .letter { font-weight: 560; text-transform: uppercase; }
-.board.wend .cell.locked .letter { color: var(--moss); }
-.blanks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.blanks li {
-  min-height: 36px;
-  padding: 8px 10px;
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 2px;
-  letter-spacing: 0.18em;
-  font-family: var(--serif);
-}
-.blanks li.in { letter-spacing: 0.08em; color: var(--moss); }
-
-.sheet {
-  width: min(92vw, 560px);
-  margin: 0 auto;
-}
-.clues, .rungs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.clues li, .rung {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  padding: 8px 14px;
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 2px;
-  box-shadow: 4px 4px 0 #0c0a08;
-}
-.clues li span, .rung em {
-  color: rgba(28, 22, 18, 0.62);
-  font-style: italic;
-  font-family: var(--serif);
-}
-.clues li { font-family: var(--serif); font-size: 28px; letter-spacing: -0.03em; }
-.clues li.hid { color: rgba(28, 22, 18, 0.28); }
-.guess, .ends { display: grid; gap: 8px; margin-top: 12px; }
-.guess { grid-template-columns: 1fr auto; }
-.sheet input {
-  width: 100%;
-  min-height: 48px;
-  border: 0;
-  border-radius: 2px;
-  background: #fffaf2;
-  color: var(--ink);
-  font: 500 17px/1 var(--serif);
-  padding: 0 12px;
-}
-.rung { padding: 8px; }
-.rung label { flex: 1; display: grid; gap: 2px; min-width: 0; }
-.rung input { text-transform: lowercase; letter-spacing: 0.22em; }
-.rung em { font-size: 14px; letter-spacing: 0; }
-.rung button {
-  width: 48px;
-  min-height: 48px;
-  background: #2a241e;
-  color: var(--cream);
-  border-radius: 2px;
-}
-.rung.hit { box-shadow: inset 4px 0 0 var(--moss), 4px 4px 0 #0c0a08; }
-.end-clue {
-  margin: 0 0 10px;
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 22px;
-}
-.sheet.shake { animation: shake 180ms ease; }
+.cell.sel { box-shadow: inset 0 0 0 3px var(--teal); }
+.board.sudoku .cell.sel { outline: 2px solid var(--teal); outline-offset: -3px; }
+.board.sudoku .cell.sel.bad { outline-color: var(--rose); }
+.board.tango { gap: 2px; padding: 3px; background: #64757b; }
+.board.tango .cell { background: #fff; box-shadow: inset 0 0 0 1px #dbe3e4; }
+.board.tango .cell.given { background: #e5eff0; box-shadow: inset 0 0 0 2px #91a9ad; }
+.board.tango .moon path { fill: #635982; stroke: #44395e; }
+.board.tango .sun g { stroke: #a86a22; }
+.board.tango .sun circle { fill: #f0b84a; stroke: #8b5b14; }
+.sun, .moon { display: block; width: 66%; height: 66%; overflow: visible; }
+.edge { position: absolute; z-index: 3; display: grid; width: clamp(20px, 5.4cqi, 28px); height: clamp(20px, 5.4cqi, 28px); place-items: center; border: 1px solid #9bb7ba; border-radius: 50%; background: #fff; color: #145f67; box-shadow: 0 1px 4px #17242b22; font: 700 14px/1 var(--sans); pointer-events: none; }
+.edge.e { top: 50%; right: -1px; transform: translate(50%,-50%); }.edge.s { bottom: -1px; left: 50%; transform: translate(-50%,50%); }
+.board.sudoku { color: var(--ink); }
+.board.sudoku .cell { background: white; color: #087f82; box-shadow: inset -1px -1px 0 #d8e1e2; }
+.board.sudoku .cell.given { color: #26373e; font-weight: 700; }
+.board.sudoku .cell.same { background: #e5f4f2; }
+.board.sudoku .cell.box-r { box-shadow: inset -2px -1px 0 #52666e; }.board.sudoku .cell.box-b { box-shadow: inset -1px -2px 0 #52666e; }.board.sudoku .cell.box-r.box-b { box-shadow: inset -2px -2px 0 #52666e; }
+.notes { display: grid; width: 88%; height: 88%; grid-template-columns: repeat(3,1fr); color: #77868c; font: 500 calc(70cqi / var(--n) * .16)/1 var(--sans); }.notes.six { grid-template-rows: 1fr 1fr; }.notes i { text-align: center; font-style: normal; }
+.pad { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; }
+.pad button { min-height: 46px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); font: 620 20px/1 var(--serif); }
+.pad button.on, .pad button.armed { border-color: var(--teal); background: var(--teal); color: white; }.pad button.done { opacity: .45; }.pad button.tool { font: 650 11px/1 var(--sans); letter-spacing: .04em; text-transform: uppercase; }
+.pad button.tool:last-child { grid-column: 3; }
+.board.patches { background: #f5f8f8; color: var(--ink); }
+.board.patches .cell { background: #f7f9f9; box-shadow: inset 0 0 0 1px #dce5e5; }
+.board.patches .cell.seam-e { box-shadow: inset -2px 0 0 #52666e; }.board.patches .cell.seam-s { box-shadow: inset 0 -2px 0 #52666e; }.board.patches .cell.seam-e.seam-s { box-shadow: inset -2px -2px 0 #52666e; }
+.stitch { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; color: #075e64; font-weight: 700; }
+.glyph { width: 17px; height: 13px; border: 1.5px solid #087f82; }.glyph.tall { width: 10px; height: 18px; }.glyph.wide { width: 20px; height: 10px; }.glyph.diamond { width: 11px; height: 11px; border: 0; background: #087f82; transform: rotate(45deg); }
+.cell.preview { background: #bde9e4 !important; }
+.room-name { position: absolute; z-index: 1; top: 4px; left: 3px; max-width: calc(100% - 6px); overflow: hidden; padding: 1px 2px; border-radius: 3px; background: #fffE; color: #23363c; font: 700 10px/1.2 var(--sans); letter-spacing: .015em; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.board.murdoku { gap: 0; padding: 2px; background: #52666e; }
+.board.murdoku .cell { box-shadow: inset -1px -1px 0 #17242b3b; }
+.board.murdoku .cell-fill, .board.murdoku .wash { position: absolute; inset: 0; opacity: .6; }
+.board.murdoku .cell.room-e { box-shadow: inset -3px 0 0 #405158; }.board.murdoku .cell.room-s { box-shadow: inset 0 -3px 0 #405158; }.board.murdoku .cell.room-e.room-s { box-shadow: inset -3px -3px 0 #405158; }
+.furn { position: absolute; z-index: 1; right: 2px; bottom: 2px; display: flex; flex-direction: column; align-items: center; gap: 0; pointer-events: none; }
+.furn em { max-width: 52px; overflow: hidden; color: #263b41; font: 650 clamp(8px,1.8cqi,10px)/1.05 var(--sans); text-overflow: ellipsis; white-space: nowrap; }.furn i { display: block; }
+.furn.plant i { width: 11px; height: 11px; border-radius: 50%; background: #4c8270; }.furn.table i, .furn.bookshelf i { width: 15px; height: 8px; background: #638177; }.furn.bookshelf i { height: 12px; background: repeating-linear-gradient(#638177 0 3px,#e9f2ee 3px 4px); }.furn.statue i { width: 0; height: 0; border-right: 6px solid transparent; border-bottom: 11px solid #657b80; border-left: 6px solid transparent; }.furn.chair i, .furn.stool i { width: 10px; height: 10px; border: 1px solid #638177; }.furn.armchair i, .furn.sofa i { width: 19px; height: 10px; border-radius: 5px 5px 2px 2px; background: #739e98; }.furn.rug i { width: 20px; height: 9px; background: repeating-linear-gradient(90deg,#49a39c 0 3px,#d9f0ed 3px 6px); }
+.token { position: relative; z-index: 2; display: flex; width: 52%; height: 52%; align-items: center; justify-content: center; border: 1.5px solid #34464c; border-radius: 50%; background: white; color: #203239; font: 700 calc(70cqi / var(--n) * .28)/1 var(--sans); box-shadow: 0 1px 3px #17242b24; }
+.token.victim { border-color: #8c414b; background: #a94954; color: white; }.token.on { box-shadow: 0 0 0 2px #087f82; }.token.culprit { box-shadow: 0 0 0 2px #d49b31; }.token.bad { box-shadow: 0 0 0 2px var(--rose); }.cell.lit { outline: 2px solid #087f82; outline-offset: -3px; }
+.side { display: flex; flex-direction: column; gap: 10px; }
+.roster { display: flex; flex-wrap: wrap; gap: 6px; }.roster button { min-height: 40px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px; background: white; }.roster button.on { border-color: var(--teal); background: var(--teal-pale); color: var(--teal-dark); }
+.slips { display: flex; max-height: none; flex-direction: column; gap: 6px; overflow: visible; }
+.slip { margin: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: white; color: #394b51; font: italic 15px/1.35 var(--serif); }.slip.on { border-color: #90c9c5; box-shadow: inset 3px 0 0 var(--teal); }
+.side .status { padding: 10px 12px; border-radius: 8px; background: var(--teal-pale); color: #35585c; }
+.dock { display: flex; width: min(100%, 480px); flex-wrap: wrap; gap: 8px; margin: 18px auto 0; padding: 0; }
+.dock button { flex: 1 1 72px; min-height: 42px; padding: 0 9px; border: 1px solid var(--line); border-radius: 9px; background: white; color: #3c5158; font-size: 13px; font-weight: 600; }
+.dock button[aria-pressed="true"] { border-color: #96cbc8; background: var(--teal-pale); color: var(--teal-dark); }
+.rules { width: min(100%, 560px); margin: 17px auto 0; padding: 12px 0; border-top: 1px solid var(--line); color: #52666e; }
+.rules summary { cursor: pointer; color: var(--teal-dark); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }.rules p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; }
+.toast { position: fixed; z-index: 5; bottom: max(18px,env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 10px 14px; border: 1px solid var(--line); border-radius: 9px; background: white; box-shadow: 0 5px 20px #17242b22; color: var(--ink); }
+.summary ol { max-width: 460px; margin: 24px 0; padding: 0; list-style: none; }.summary li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font: 560 26px/1.2 var(--serif); }.summary li span { align-self: center; font: 600 16px var(--sans); font-variant-numeric: tabular-nums; }
+.stage.solved .board { filter: saturate(1.04); }
+.board.wend { gap: 3px; padding: 5px; background: #52666e; }
+.board.wend .cell { border-radius: 5px; background: #fff; box-shadow: 0 1px 2px #17242b14; }
+.board.wend .cell.wall { background: #435158; box-shadow: inset 0 0 0 1px #35464c; }.board.wend .cell.on-path { background: #bde9e4; }.board.wend .cell.locked { background: #dff0e9; }.board.wend .letter { color: #203239; font-weight: 700; text-transform: uppercase; }.board.wend .cell.locked .letter { color: #087f82; }
+.blanks { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin: 12px 0 0; padding: 0; list-style: none; }.blanks li { min-height: 34px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; color: #63767b; font: 650 14px/1.2 var(--sans); letter-spacing: .12em; }.blanks li.in { border-color: #9bcfcb; background: var(--teal-pale); color: var(--teal-dark); letter-spacing: .04em; }
+.sheet { width: min(100%, 560px); margin: 0 auto; }
+.clues, .rungs { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.clues li, .rung { display: flex; min-height: 50px; align-items: center; gap: 12px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); }
+.clues li { font: 560 24px/1.15 var(--serif); letter-spacing: -.02em; }.clues li span, .rung em { color: #7a898d; font: italic 14px var(--serif); }.clues li span { display: inline-block; min-width: 2.6em; margin-right: 8px; }.clues li.hid { color: #9eabad; }
+.guess, .ends { display: grid; gap: 8px; margin-top: 12px; }.guess { grid-template-columns: minmax(0,1fr) auto; }
+.sheet input { width: 100%; min-width: 0; min-height: 46px; padding: 0 12px; border: 1px solid #cbd8da; border-radius: 8px; background: white; color: var(--ink); font: 550 17px/1 var(--serif); }
+.rung { padding: 6px; }.rung label { display: grid; min-width: 0; flex: 1; gap: 3px; }.rung input { text-transform: lowercase; letter-spacing: .18em; }.rung em { font-size: 12px; letter-spacing: 0; }.rung button { width: 38px; min-height: 38px; border: 1px solid var(--line); border-radius: 7px; background: #f5f8f8; color: var(--teal-dark); font-weight: 700; }.rung.hit { border-color: #a7d2ce; box-shadow: inset 3px 0 0 var(--teal); }
+.end-clue { margin: 0 0 10px; color: #445960; font: italic 20px/1.35 var(--serif); }.ends { gap: 8px; }.ends > input { border-color: #91c8c4; background: var(--teal-pale); }.sheet.shake, .board.shake { animation: shake 180ms ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)} }
 .stage.word { display: block; }
-
+@media (min-width: 900px) {
+  .stage.with-side { display: grid; grid-template-columns: minmax(360px,480px) minmax(250px,320px); justify-content: center; align-items: start; gap: 20px; }
+  .stage.with-side .board-wrap, .stage.with-side .side { width: auto; }
+  .stage.with-side .side { max-height: min(78vh,680px); overflow-y: auto; }
+  .slips { max-height: none; }
+}
 @media (max-width: 720px) {
-  .switch { grid-column: 1 / 3; grid-row: 2; width: auto; }
-  .diff-label { display: none; }
-  .switch button { flex: 1; padding: 0 8px; }
-  .seed { grid-column: 3; grid-row: 2; max-width: none; }
-  .clues li { font-size: 22px; }
-  .home { padding-top: calc(16px + env(safe-area-inset-top)); }
+  .home, .play, .summary { padding-right: 16px; padding-left: 16px; }
+  .home { padding-top: max(16px,env(safe-area-inset-top)); }
   .lede { font-size: 15px; }
-  .tonight { margin-top: 14px; padding: 12px 12px 12px 14px; }
-  .tonight-title { font-size: 24px; }
-  .shelf-block { margin-top: 16px; }
-  .tile { grid-template-columns: 48px 1fr; column-gap: 8px; padding: 11px; min-height: 74px; }
-  .mark, .tile .mini-svg { width: 48px; height: 36px; }
-  .tile-name { font-size: 16px; letter-spacing: -0.045em; }
-  .play {
-    min-height: 100dvh;
-    padding-bottom: calc(84px + env(safe-area-inset-bottom));
-  }
-  .dock {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    margin: 0;
-    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
-  }
+  .tonight { min-height: 76px; margin-top: 13px; padding: 11px 12px; }
+  .shelf-block { margin-top: 17px; }.shelf-block h2 { margin-bottom: 8px; }
+  .shelf { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .tile { grid-template-columns: 42px minmax(0,1fr); column-gap: 7px; min-height: 74px; padding: 9px; border-radius: 10px; }
+  .mark, .mini-svg { width: 42px; height: 34px; }.tile-name { font-size: 17px; }.tile-how { font-size: 11px; }
+  .play { padding-top: max(12px,env(safe-area-inset-top)); }
+  .bar { grid-template-columns: auto minmax(0,1fr) auto; gap: 6px 8px; padding-bottom: 10px; }
+  .back { min-height: 38px; font-size: 12px; }.titles h1 { font-size: clamp(25px,7vw,34px); }.status { font-size: 11px; }
+  .clock { font-size: 16px; }.clock small { font-size: 9px; }
+  .switch { grid-column: 1 / 3; grid-row: 2; width: 100%; }.diff-label { display: none; }.switch button { flex: 1; min-height: 36px; padding: 0 5px; font-size: 12px; }
+  .seed { grid-column: 3; grid-row: 2; max-width: 74px; min-height: 36px; padding: 0 8px; }
+  .stage { gap: 12px; margin-top: 12px; }.board-wrap, .side { width: min(100%, 480px); }
+  .stage.with-side .side { margin-top: 2px; }.slips { max-height: none; }
+  .dock { width: 100%; gap: 6px; margin-top: 14px; }.dock button { flex-basis: 62px; min-height: 40px; padding: 0 5px; font-size: 12px; }
+  .rules { margin-top: 13px; }.rules p { font-size: 13px; }
+  .clues li { min-height: 46px; font-size: 21px; }
 }
-
-@media (pointer: coarse) {
-  button { min-height: 48px; }
+@media (max-width: 360px) {
+  .home, .play, .summary { padding-right: 12px; padding-left: 12px; }
+  .shelf { gap: 7px; }.tile { grid-template-columns: 36px minmax(0,1fr); column-gap: 5px; padding: 8px; }.mark, .mini-svg { width: 36px; height: 30px; }.tile-name { font-size: 15px; }.tile-how { font-size: 10px; }
+  .back { font-size: 11px; }.titles h1 { font-size: 25px; }.seed { max-width: 64px; font-size: 11px; }
+  .pad { gap: 5px; }.pad button { min-height: 42px; font-size: 18px; }.roster { gap: 4px; }.roster button { min-height: 38px; padding: 0 8px; font-size: 12px; }
 }
-
-@media (min-width: 768px) and (max-width: 1180px) {
-  .home, .play, .summary { padding-left: 28px; padding-right: 28px; }
-  .home::before { height: 520px; left: 18%; width: 64%; }
-  .board-wrap, .side, .dock { width: min(78vw, calc(100dvh - 280px), 640px); }
-}
-
-@media (min-width: 768px) and (orientation: landscape) and (max-height: 900px) {
-  .home, .play, .summary { padding-top: 16px; padding-bottom: 16px; }
-  h1 { font-size: 64px; }
-  .titles h1 { font-size: 32px; }
-  .board-wrap, .side, .dock { width: min(62vh, 520px); }
-  .stage.with-side { grid-template-columns: min(58vh, 480px) minmax(220px, 280px); }
-  .sheet { width: min(680px, 72vw); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-}
+@media (pointer:coarse) { button { min-height: 44px; } }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
 
 </style>
 </head>
@@ -1228,7 +650,7 @@ h1 {
       for (const c of order[r]) {
         let ok = true;
         for (let i = 0; i < r; i++) {
-          if (cols[i] === c || Math.abs(cols[i] - c) === r - i) {
+          if (cols[i] === c || (r - i === 1 && Math.abs(cols[i] - c) === 1)) {
             ok = false;
             break;
           }
@@ -1249,39 +671,28 @@ h1 {
     queens.forEach(([r, c], i) => {
       region[r][c] = i;
     });
+    // Let regions grow to different sizes. Equal-sized regions leave too many
+    // interchangeable crown placements under the no-touch rule.
     let empty = n * n - n;
-    let spins = 0;
-    const limit = n * n * n * 4;
-    while (empty > 0 && spins < limit) {
-      spins++;
-      const sizes = Array(n).fill(0);
-      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (region[r][c] >= 0) sizes[region[r][c]]++;
-      let bestId = -1;
-      let bestSize = 1e9;
-      let bestOptions = null;
-      for (let id = 0; id < n; id++) {
-        const options = [];
-        for (let r = 0; r < n; r++) {
-          for (let c = 0; c < n; c++) {
-            if (region[r][c] !== id) continue;
-            for (const [dr, dc] of DIRS) {
-              const rr = r + dr;
-              const cc = c + dc;
-              if (rr >= 0 && cc >= 0 && rr < n && cc < n && region[rr][cc] < 0) options.push([rr, cc]);
-            }
+    while (empty > 0) {
+      const frontier = [];
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          const id = region[r][c];
+          if (id < 0) continue;
+          for (const [dr, dc] of DIRS) {
+            const rr = r + dr;
+            const cc = c + dc;
+            if (rr >= 0 && cc >= 0 && rr < n && cc < n && region[rr][cc] < 0) frontier.push([rr, cc, id]);
           }
         }
-        if (!options.length || sizes[id] > bestSize) continue;
-        bestSize = sizes[id];
-        bestId = id;
-        bestOptions = options;
       }
-      if (!bestOptions) return null;
-      const pick = bestOptions[int(rng, 0, bestOptions.length - 1)];
-      region[pick[0]][pick[1]] = bestId;
+      if (!frontier.length) return null;
+      const [r, c, id] = frontier[int(rng, 0, frontier.length - 1)];
+      region[r][c] = id;
       empty--;
     }
-    return empty === 0 ? region : null;
+    return region;
   }
 
   function count(regions, limit) {
@@ -1289,8 +700,7 @@ h1 {
     const cap = limit || 2;
     const usedC = Array(n).fill(false);
     const usedR = Array(n).fill(false);
-    const d1 = Array(2 * n).fill(false);
-    const d2 = Array(2 * n).fill(false);
+    const columns = Array(n).fill(-1);
     let found = 0;
     function bt(r) {
       if (found >= cap) return;
@@ -1302,12 +712,12 @@ h1 {
         if (usedC[c]) continue;
         const reg = regions[r][c];
         if (usedR[reg]) continue;
-        const a = r + c;
-        const b = r - c + n - 1;
-        if (d1[a] || d2[b]) continue;
-        usedC[c] = d1[a] = d2[b] = usedR[reg] = true;
+        if (r > 0 && Math.abs(columns[r - 1] - c) === 1) continue;
+        columns[r] = c;
+        usedC[c] = usedR[reg] = true;
         bt(r + 1);
-        usedC[c] = d1[a] = d2[b] = usedR[reg] = false;
+        usedC[c] = usedR[reg] = false;
+        columns[r] = -1;
         if (found >= cap) return;
       }
     }
@@ -1357,7 +767,9 @@ h1 {
 
   function repair(region, queens, rng) {
     const n = region.length;
-    let score = count(region, 8);
+    // Keep enough of the solution count to distinguish improvements. Capping
+    // at eight made boards with hundreds of solutions look equally good.
+    let score = count(region, 1000);
     for (let round = 0; round < 30; round++) {
       if (score === 1) return true;
       const moves = [];
@@ -1380,7 +792,7 @@ h1 {
         if (!canLeave(region, move[0], move[1])) continue;
         const old = region[move[0]][move[1]];
         region[move[0]][move[1]] = move[2];
-        const next = count(region, 8);
+        const next = count(region, 1000);
         region[move[0]][move[1]] = old;
         if (next > 0 && next < bestScore) {
           best = move;
@@ -1398,7 +810,7 @@ h1 {
       const shake = legal[int(rng, 0, legal.length - 1)];
       const old = region[shake[0]][shake[1]];
       region[shake[0]][shake[1]] = shake[2];
-      const next = count(region, 8);
+      const next = count(region, 1000);
       if (next <= 0) region[shake[0]][shake[1]] = old;
       else score = next;
     }
@@ -1506,7 +918,7 @@ h1 {
     return out;
   }
 
-  const ROWS = { 6: patterns(6) };
+  const ROWS = { 4: patterns(4), 6: patterns(6), 8: patterns(8) };
 
   function fill(n, rng) {
     const pats = ROWS[n];
@@ -1607,9 +1019,12 @@ h1 {
   }
 
   function generate(difficulty, seed) {
-    const n = 6;
-    const target = difficulty === 'easy' ? 8 : difficulty === 'tricky' ? 5 : 4;
-    for (let attempt = 0; attempt < 20; attempt++) {
+    // Difficulty changes the actual board size; larger boards add both more
+    // deductions and more places for the balancing/run rules to interact.
+    const n = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 6 : 8;
+    const target = difficulty === 'easy' ? 5 : difficulty === 'tricky' ? 8 : 12;
+    const markTarget = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 7 : 10;
+    for (let attempt = 0; attempt < 24; attempt++) {
       const rng = makeRng(String(seed) + ':tango:' + difficulty + ':' + attempt);
       const bits = fill(n, rng);
       if (!bits) continue;
@@ -1626,7 +1041,7 @@ h1 {
         for (let c = 0; c < n - 1; c++) edges.push(['h', r, c]);
         if (r < n - 1) for (let c = 0; c < n; c++) edges.push(['v', r, c]);
       }
-      const chosen = shuffle(rng, edges).slice(0, difficulty === 'easy' ? 6 : 5);
+      const chosen = shuffle(rng, edges).slice(0, markTarget);
       let sameMarks = 0;
       let differMarks = 0;
       for (const [axis, r, c] of chosen) {
@@ -1651,7 +1066,10 @@ h1 {
       }
       if (filled > n * n - 4) continue;
       if (count(n, givens, h, v) !== 1) continue;
-      return { game: 'tango', difficulty, seed, n, givens, h, v, solution };
+      return {
+        game: 'tango', difficulty, seed, n, givens, h, v, solution,
+        rating: { size: n, givens: filled, relationMarks: chosen.length },
+      };
     }
     throw new Error('tango: no unique puzzle');
   }
@@ -1809,10 +1227,10 @@ h1 {
   }
 
   const SPEC = {
-    mini: { size: 6, boxR: 2, boxC: 3, aim: 15, max: 26, min: 12, logic: 2 },
-    easy: { size: 9, boxR: 3, boxC: 3, aim: 36, max: 50, min: 32, logic: 2 },
-    tricky: { size: 9, boxR: 3, boxC: 3, aim: 28, max: 40, min: 26, logic: 2 },
-    fiendish: { size: 9, boxR: 3, boxC: 3, aim: 24, max: 34, min: 22, logic: 2 },
+    mini: { size: 6, boxR: 2, boxC: 3, aim: 15, max: 26, min: 12 },
+    easy: { size: 9, boxR: 3, boxC: 3, aim: 38, max: 50, min: 32 },
+    tricky: { size: 9, boxR: 3, boxC: 3, aim: 33, max: 40, min: 29 },
+    fiendish: { size: 9, boxR: 3, boxC: 3, aim: 28, max: 32, min: 24 },
   };
 
   function masksOf(grid, boxR, boxC) {
@@ -1840,13 +1258,45 @@ h1 {
     return masks;
   }
 
-  function logicSolve(grid, boxR, boxC, level) {
+  // Human-style deterministic solve rating: naked singles (1), hidden
+  // singles/locked candidates (2), then naked pairs (3).
+  function logicSolve(grid, boxR, boxC, maxTier) {
     const g = grid.map((row) => row.slice());
     const size = g.length;
+    let hardest = 0;
+    let moves = 0;
+    let candidateMasks = null;
+    const bitCount = (mask) => { let n = 0; while (mask) { mask &= mask - 1; n++; } return n; };
+    const units = () => {
+      const out = [];
+      for (let i = 0; i < size; i++) {
+        const row = [], col = [];
+        for (let j = 0; j < size; j++) { row.push([i, j]); col.push([j, i]); }
+        out.push(row, col);
+      }
+      for (let br = 0; br < size; br += boxR) for (let bc = 0; bc < size; bc += boxC) {
+        const box = [];
+        for (let r = br; r < br + boxR; r++) for (let c = bc; c < bc + boxC; c++) box.push([r, c]);
+        out.push(box);
+      }
+      return out;
+    };
+    const groups = units();
+    const place = (r, c, bit) => {
+      g[r][c] = bitIndex(bit) + 1;
+      candidateMasks[r][c] = 0;
+      for (let i = 0; i < size; i++) {
+        candidateMasks[r][i] &= ~bit;
+        candidateMasks[i][c] &= ~bit;
+      }
+      const br = Math.floor(r / boxR) * boxR, bc = Math.floor(c / boxC) * boxC;
+      for (let rr = br; rr < br + boxR; rr++) for (let cc = bc; cc < bc + boxC; cc++) candidateMasks[rr][cc] &= ~bit;
+    };
     for (let guard = 0; guard < size * size * 3; guard++) {
-      const masks = masksOf(g, boxR, boxC);
+      if (!candidateMasks) candidateMasks = masksOf(g, boxR, boxC);
+      const masks = candidateMasks;
       let empty = 0;
-      let moved = false;
+      let placed = false;
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
           if (g[r][c]) continue;
@@ -1854,58 +1304,82 @@ h1 {
           const mask = masks[r][c];
           if (!mask) return false;
           if ((mask & (mask - 1)) === 0) {
-            g[r][c] = bitIndex(mask) + 1;
-            moved = true;
+            place(r, c, mask);
+            hardest = Math.max(hardest, 1);
+            moves++;
+            placed = true;
+            break;
           }
         }
+        if (placed) break;
       }
-      if (!empty) return true;
-      if (moved) continue;
-      if (level < 2) return false;
-      const groups = [];
-      for (let i = 0; i < size; i++) {
-        const row = [];
-        const col = [];
-        for (let j = 0; j < size; j++) {
-          if (!g[i][j]) row.push([i, j]);
-          if (!g[j][i]) col.push([j, i]);
-        }
-        groups.push(row, col);
-      }
-      for (let br = 0; br < size; br += boxR) {
-        for (let bc = 0; bc < size; bc += boxC) {
-          const box = [];
-          for (let r = br; r < br + boxR; r++) {
-            for (let c = bc; c < bc + boxC; c++) if (!g[r][c]) box.push([r, c]);
+      if (!empty) return { solved: true, hardest, moves };
+      if (placed) continue;
+
+      if (maxTier >= 2) {
+        // Hidden singles are the first step beyond checking each cell alone.
+        for (const group of groups) {
+          const spots = new Map();
+          for (const [r, c] of group) if (!g[r][c]) {
+            let m = masks[r][c];
+            while (m) { const bit = m & -m; m ^= bit; if (!spots.has(bit)) spots.set(bit, []); spots.get(bit).push([r, c]); }
           }
-          groups.push(box);
-        }
-      }
-      for (let gi = 0; gi < groups.length && !moved; gi++) {
-        const where = new Map();
-        groups[gi].forEach(([r, c]) => {
-          let m = masks[r][c];
-          while (m) {
-            const bit = m & -m;
-            m ^= bit;
-            if (!where.has(bit)) where.set(bit, []);
-            where.get(bit).push([r, c]);
+          for (const [bit, cells] of spots) if (cells.length === 1) {
+            place(cells[0][0], cells[0][1], bit);
+            hardest = Math.max(hardest, 2); moves++; placed = true; break;
           }
-        });
-        where.forEach((spots, bit) => {
-          if (spots.length !== 1) return;
-          g[spots[0][0]][spots[0][1]] = bitIndex(bit) + 1;
-          moved = true;
-        });
+          if (placed) break;
+        }
+        if (placed) continue;
       }
-      if (!moved) return false;
+
+      // Locked candidate: all possible locations for a digit in a box lie
+      // on one row/column, so remove it from the rest of that line.
+      let eliminated = false;
+      if (maxTier >= 2) {
+        for (let br = 0; br < size && !eliminated; br += boxR) for (let bc = 0; bc < size && !eliminated; bc += boxC) {
+          const cells = [];
+          for (let r = br; r < br + boxR; r++) for (let c = bc; c < bc + boxC; c++) if (!g[r][c]) cells.push([r, c]);
+          for (let d = 0; d < size && !eliminated; d++) {
+            const bit = 1 << d, spots = cells.filter(([r,c]) => masks[r][c] & bit);
+            if (spots.length < 2) continue;
+            if (spots.every(([r]) => r === spots[0][0])) {
+              const row = spots[0][0];
+              for (let c = 0; c < size; c++) if ((c < bc || c >= bc + boxC) && !g[row][c] && (masks[row][c] & bit)) { masks[row][c] &= ~bit; eliminated = true; break; }
+            } else if (spots.every(([,c]) => c === spots[0][1])) {
+              const col = spots[0][1];
+              for (let r = 0; r < size; r++) if ((r < br || r >= br + boxR) && !g[r][col] && (masks[r][col] & bit)) { masks[r][col] &= ~bit; eliminated = true; break; }
+            }
+          }
+        }
+        if (eliminated) { hardest = Math.max(hardest, 2); continue; }
+      }
+
+      // Naked pairs are a compact but meaningful intermediate technique.
+      if (maxTier >= 3) {
+        for (const group of groups) {
+          const pairs = new Map();
+          for (const [r,c] of group) if (!g[r][c] && bitCount(masks[r][c]) === 2) {
+            const m = masks[r][c]; pairs.set(m, (pairs.get(m) || 0) + 1);
+          }
+          for (const [pair, n] of pairs) if (n === 2) {
+            for (const [r,c] of group) if (!g[r][c] && masks[r][c] !== pair && (masks[r][c] & pair)) {
+              masks[r][c] &= ~pair; eliminated = true; break;
+            }
+            if (eliminated) break;
+          }
+          if (eliminated) break;
+        }
+        if (eliminated) { hardest = Math.max(hardest, 3); continue; }
+      }
+      return false;
     }
-    return false;
+    return { solved: g.every((row) => row.every(Boolean)), hardest, moves };
   }
 
   function generate(difficulty, seed) {
     const spec = SPEC[difficulty];
-    for (let attempt = 0; attempt < 20; attempt++) {
+    for (let attempt = 0; attempt < 120; attempt++) {
       const rng = makeRng(String(seed) + ':sudoku:' + difficulty + ':' + attempt);
       const solution = fill(spec.size, spec.boxR, spec.boxC, rng);
       if (!solution) continue;
@@ -1918,11 +1392,17 @@ h1 {
         const saved = givens[r][c];
         givens[r][c] = 0;
         const found = count(givens, spec.boxR, spec.boxC, 2);
-        if (found !== 1 || !logicSolve(givens, spec.boxR, spec.boxC, spec.logic)) givens[r][c] = saved;
+        const rating = logicSolve(givens, spec.boxR, spec.boxC, 3);
+        const targetOk = difficulty === 'mini' || difficulty !== 'easy' || (rating && rating.hardest <= 1);
+        if (found !== 1 || !rating || !rating.solved || !targetOk) givens[r][c] = saved;
         else filled--;
       }
       if (filled < spec.min || filled > spec.max) continue;
-      if (!logicSolve(givens, spec.boxR, spec.boxC, spec.logic)) continue;
+      const rating = logicSolve(givens, spec.boxR, spec.boxC, 3);
+      if (!rating || !rating.solved) continue;
+      if (difficulty === 'easy' && rating.hardest > 1) continue;
+      if (difficulty === 'tricky' && rating.hardest !== 2) continue;
+      if (difficulty === 'fiendish' && rating.hardest !== 3) continue;
       return {
         game: 'sudoku',
         difficulty,
@@ -1932,6 +1412,7 @@ h1 {
         boxC: spec.boxC,
         givens,
         solution,
+        rating: { tier: rating.hardest, logicalSteps: rating.moves },
       };
     }
     throw new Error('sudoku: no unique puzzle');
@@ -1947,6 +1428,7 @@ h1 {
       { id: 'tricky', label: 'Tricky' },
       { id: 'fiendish', label: 'Fiendish' },
     ],
+    assess(grid, boxR, boxC, maxTier) { return logicSolve(grid, boxR, boxC, maxTier || 3); },
     generate,
   };
 });
@@ -2092,36 +1574,6 @@ h1 {
     return found;
   }
 
-  function forceSingleton(rects) {
-    let best = 0;
-    for (let i = 1; i < rects.length; i++) {
-      if (rects[i].h * rects[i].w > rects[best].h * rects[best].w) best = i;
-    }
-    const rect = rects[best];
-    if (rect.h * rect.w === 1) return rects;
-    if (rect.w >= rect.h && rect.w >= 2) {
-      const sliver = { r: rect.r, c: rect.c, h: rect.h, w: 1 };
-      rect.c += 1;
-      rect.w -= 1;
-      rects.push(sliver);
-      if (sliver.w === 1 && sliver.h > 1 && rect.h >= 2) {
-        /* keep the sliver; it may be tall */
-      }
-      if (sliver.h > 1) {
-        const cell = { r: sliver.r, c: sliver.c, h: 1, w: 1 };
-        sliver.r += 1;
-        sliver.h -= 1;
-        rects.push(cell);
-      }
-      return rects;
-    }
-    const cell = { r: rect.r, c: rect.c, h: 1, w: 1 };
-    rect.r += 1;
-    rect.h -= 1;
-    rects.push(cell);
-    return rects;
-  }
-
   function generate(difficulty, seed) {
     const side = difficulty === 'easy' ? 6 : difficulty === 'tricky' ? 7 : 8;
     const leaf = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 4 : 5;
@@ -2143,17 +1595,10 @@ h1 {
           if (count(built.clues, side, side) === 1) loosened++;
           else built.clues[i] = { r: built.clues[i].r, c: built.clues[i].c, area: built.clues[i].area, shape: prev };
         }
-        if (!loosened) {
-          forceSingleton(rects);
-          const again = build(rects, side, side, rng);
-          if (count(again.clues, side, side) !== 1) continue;
-          const singleton = again.clues.findIndex((cl) => cl.area === 1);
-          if (singleton < 0) continue;
-          again.clues[singleton] = { r: again.clues[singleton].r, c: again.clues[singleton].c, area: 1, shape: 'any' };
-          if (count(again.clues, side, side) !== 1) continue;
-          built.clues = again.clues;
-          built.solution = again.solution;
-        }
+        // A singleton area-1 clue is not a useful substitute for withheld
+        // shape information: it pins a cell outright. Retry instead of
+        // labeling that fallback puzzle fiendish.
+        if (loosened < 2) continue;
       }
       return {
         game: 'patches',
@@ -2409,8 +1854,8 @@ h1 {
     }
     if (clue.kind === 'beside') {
       return clue.negate
-        ? name + ' was not beside ' + article(clue.object) + ' ' + clue.object + '.'
-        : name + ' was beside ' + article(clue.object) + ' ' + clue.object + '.';
+        ? name + ' was not beside ' + article(clue.object) + ' ' + clue.object + ' in the same room.'
+        : name + ' was beside ' + article(clue.object) + ' ' + clue.object + ' in the same room.';
     }
     if (clue.kind === 'corner') {
       return clue.negate ? name + ' was not in a corner of the room.' : name + ' was in a corner of the room.';
@@ -2594,25 +2039,29 @@ h1 {
   const R = (typeof module === 'object' && module.exports) ? require('./rng.js') : globalThis.NOOK_RNG;
   const { makeRng, shuffle } = R;
 
+  // Categories overlap on purpose. A deal is kept only when the category
+  // stays ambiguous until the difficulty's reveal word, then becomes unique.
   const BANK = [
-    { name: 'Fruit', accept: ['fruit', 'fruits'], words: ['lychee', 'quince', 'fig', 'mango', 'pear', 'apple', 'banana', 'grape', 'orange', 'lemon', 'plum', 'cherry'] },
-    { name: 'Colours', accept: ['colour', 'color', 'colours', 'colors'], words: ['scarlet', 'crimson', 'amber', 'violet', 'indigo', 'orange', 'purple', 'green', 'lemon', 'gold', 'plum', 'cherry'] },
+    { name: 'Fruit', accept: ['fruit', 'fruits'], words: ['lychee', 'quince', 'fig', 'mango', 'pear', 'apple', 'banana', 'grape', 'orange', 'lemon', 'plum', 'cherry', 'pineapple'] },
+    { name: 'Colours', accept: ['colour', 'color', 'colours', 'colors'], words: ['scarlet', 'crimson', 'amber', 'violet', 'indigo', 'orange', 'purple', 'green', 'lemon', 'gold', 'navy', 'ivory'] },
     { name: 'Planets', accept: ['planet', 'planets'], words: ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'neptune', 'uranus', 'earth', 'pluto'] },
     { name: 'Metals', accept: ['metal', 'metals'], words: ['mercury', 'gold', 'silver', 'iron', 'copper', 'tin', 'zinc', 'nickel', 'bronze', 'lead'] },
-    { name: 'Birds', accept: ['bird', 'birds'], words: ['robin', 'sparrow', 'eagle', 'heron', 'crane', 'swan', 'goose', 'duck', 'raven', 'crow', 'finch', 'wren'] },
+    { name: 'Birds', accept: ['bird', 'birds'], words: ['robin', 'sparrow', 'eagle', 'heron', 'crane', 'swan', 'goose', 'duck', 'raven', 'crow', 'finch', 'wren', 'jay'] },
     { name: 'Countries', accept: ['country', 'countries'], words: ['turkey', 'chad', 'jordan', 'georgia', 'peru', 'mali', 'togo', 'cuba', 'iran', 'laos', 'niger', 'benin'] },
     { name: 'Foods', accept: ['food', 'foods'], words: ['turkey', 'ham', 'stew', 'soup', 'bread', 'rice', 'pasta', 'salad', 'curry', 'toast', 'gravy', 'cider'] },
     { name: 'Instruments', accept: ['instrument', 'instruments', 'musical instrument', 'musical instruments'], words: ['organ', 'flute', 'piano', 'violin', 'cello', 'harp', 'drum', 'trumpet', 'oboe', 'banjo', 'lute', 'tuba'] },
     { name: 'The body', accept: ['body', 'the body', 'body parts', 'body part'], words: ['organ', 'heart', 'liver', 'ankle', 'elbow', 'thumb', 'spine', 'skull', 'wrist', 'palm', 'chest', 'femur'] },
     { name: 'Trees', accept: ['tree', 'trees'], words: ['cedar', 'birch', 'maple', 'olive', 'willow', 'aspen', 'alder', 'spruce', 'poplar', 'pine', 'fir', 'palm'] },
-    { name: 'Flowers', accept: ['flower', 'flowers'], words: ['rose', 'tulip', 'daisy', 'lilac', 'iris', 'peony', 'poppy', 'pansy', 'violet', 'aster', 'lotus', 'phlox'] },
+    { name: 'Flowers', accept: ['flower', 'flowers'], words: ['rose', 'tulip', 'daisy', 'lilac', 'iris', 'peony', 'poppy', 'pansy', 'violet', 'aster', 'lotus', 'phlox', 'lily'] },
     { name: 'Weather', accept: ['weather'], words: ['rain', 'snow', 'hail', 'mist', 'fog', 'storm', 'sleet', 'drizzle', 'frost', 'thunder', 'breeze', 'gale'] },
     { name: 'Clothes', accept: ['clothes', 'clothing'], words: ['scarf', 'glove', 'boot', 'cloak', 'vest', 'shirt', 'skirt', 'coat', 'sock', 'belt', 'hat', 'cape'] },
     { name: 'Kitchen', accept: ['kitchen', 'kitchen tools', 'kitchenware'], words: ['spoon', 'knife', 'plate', 'bowl', 'oven', 'whisk', 'ladle', 'grater', 'kettle', 'mug', 'fork', 'pan'] },
     { name: 'Sports', accept: ['sport', 'sports'], words: ['tennis', 'rugby', 'golf', 'boxing', 'rowing', 'skiing', 'diving', 'fencing', 'archery', 'polo', 'judo', 'surfing'] },
     { name: 'Sea life', accept: ['sea life', 'sea creatures', 'ocean life', 'marine life'], words: ['whale', 'shark', 'otter', 'crab', 'squid', 'coral', 'kelp', 'seal', 'eel', 'clam', 'tuna', 'cod'] },
-    { name: 'Yellow things', accept: ['yellow', 'yellow things', 'things that are yellow'], words: ['lemon', 'gold', 'butter', 'banana', 'corn', 'honey', 'amber', 'mustard', 'canary', 'daffodil', 'sulfur', 'sunflower'] },
-    { name: 'Found in a kitchen', accept: ['kitchen', 'found in a kitchen', 'kitchen things'], words: ['spoon', 'knife', 'bread', 'butter', 'honey', 'lemon', 'apple', 'orange', 'plum', 'cherry', 'grape', 'kettle'] },
+    { name: 'Yellow things', accept: ['yellow', 'yellow things', 'things that are yellow'], words: ['lemon', 'gold', 'butter', 'banana', 'corn', 'honey', 'amber', 'mustard', 'canary', 'daffodil', 'sulfur', 'sunflower', 'pineapple', 'mango'] },
+    { name: 'Found in a kitchen', accept: ['found in a kitchen', 'kitchen things'], words: ['spoon', 'knife', 'bread', 'butter', 'honey', 'lemon', 'kettle', 'jug', 'tray', 'sink', 'oven', 'whisk'] },
+    { name: 'Coins', accept: ['coin', 'coins', 'money'], words: ['gold', 'silver', 'copper', 'nickel', 'penny', 'pound', 'crown', 'cent', 'dime', 'euro'] },
+    { name: 'Names', accept: ['name', 'names', 'first names'], words: ['robin', 'jay', 'crane', 'wren', 'iris', 'rose', 'daisy', 'lily', 'grace', 'ruby', 'pearl', 'hazel'] },
   ];
 
   function holders(word) {
@@ -2665,7 +2114,7 @@ h1 {
       for (let d = 0; d < deals.length && looked < 48; d++) {
         looked++;
         const words = deals[d].slice().sort((a, b) => holders(b).length - holders(a).length || (a < b ? -1 : 1));
-        if (holders(words[0]) < 2 || holders(words[1]) < 2) continue;
+        if (holders(words[0]).length < 2 || holders(words[1]).length < 2) continue;
         if (revealAt(words) !== target) continue;
         if (sole(words).length !== 1 || sole(words)[0] !== order[i]) continue;
         found.push({
@@ -2707,144 +2156,72 @@ h1 {
   const R = (typeof module === 'object' && module.exports) ? require('./rng.js') : globalThis.NOOK_RNG;
   const { makeRng, int } = R;
 
+  // Every listed middle word has a short definition and belongs to one unique
+  // one-letter route between the two fixed ends. Clues define the word, not
+  // merely a loose association with it.
   const DEALS = [
-    {
-      difficulty: 'retired',
-      endClue: 'Someone devoted to books',
-      top: 'book',
-      bottom: 'worm',
-      middle: [
-        ['cook', 'Prepare food with heat'],
-        ['cork', 'The stopper in a wine bottle'],
-        ['work', 'A job, or the act of doing it'],
-      ],
-    },
-    {
-      difficulty: 'retired',
-      endClue: 'Wood kept for a fire',
-      top: 'fire',
-      bottom: 'wood',
-      middle: [
-        ['wire', 'A thin metal thread'],
-        ['wore', 'Had clothes on, yesterday'],
-        ['word', 'A piece of language'],
-      ],
-    },
-    {
-      difficulty: 'retired',
-      endClue: 'Schoolwork done at home',
-      top: 'home',
-      bottom: 'work',
-      middle: [
-        ['some', 'A few, more than none'],
-        ['sore', 'Tender, or a small hurt'],
-        ['wore', 'Had clothes on, yesterday'],
-      ],
-    },
-    {
-      difficulty: 'easy',
-      endClue: 'The game played with a round ball and two goals',
-      top: 'foot',
-      bottom: 'ball',
-      middle: [
-        ['boot', 'Sturdy footwear for mud'],
-        ['bolt', 'A sliding lock on a gate'],
-        ['belt', 'It holds a pair of trousers up'],
-        ['bell', 'It sounds when pulled or struck'],
-      ],
-    },
-    {
-      difficulty: 'tricky',
-      endClue: 'A coat for wet weather',
-      top: 'rain',
-      bottom: 'coat',
-      middle: [
-        ['rail', 'A bar you can hold, or a train track'],
-        ['fail', 'To not succeed'],
-        ['foil', 'Thin metal sheet, or to stop a plan'],
-        ['coil', 'A loop of rope or wire'],
-        ['coal', 'Black rock that burns'],
-      ],
-    },
-    {
-      difficulty: 'tricky',
-      endClue: 'What you press beside a front door',
-      top: 'door',
-      bottom: 'bell',
-      middle: [
-        ['poor', 'Having little money'],
-        ['pool', 'Water you can swim in'],
-        ['tool', 'Something you work with'],
-        ['toll', 'A fee to cross a bridge'],
-        ['tell', 'To say something'],
-      ],
-    },
-    {
-      difficulty: 'tricky',
-      endClue: 'Shelves for books',
-      top: 'book',
-      bottom: 'case',
-      middle: [
-        ['cook', 'Prepare food with heat'],
-        ['cork', 'The stopper in a wine bottle'],
-        ['cord', 'A thin rope'],
-        ['card', 'Stiff paper, often with a greeting'],
-        ['care', 'Looking after someone'],
-      ],
-    },
-    {
-      difficulty: 'tricky',
-      endClue: 'The two faces of a coin',
-      top: 'head',
-      bottom: 'tail',
-      middle: [
-        ['held', 'Kept in the hands'],
-        ['hold', 'To keep in the hands'],
-        ['told', 'Said to someone'],
-        ['toll', 'A fee to cross a bridge'],
-        ['tall', 'High off the ground'],
-      ],
-    },
-    {
-      difficulty: 'fiendish',
-      endClue: 'A small orange pet that swims',
-      top: 'gold',
-      bottom: 'fish',
-      middle: [
-        ['mold', 'The fuzzy growth on old bread'],
-        ['mild', 'Gentle, not harsh'],
-        ['mind', 'Where thoughts live'],
-        ['mint', 'A fresh green herb'],
-        ['mist', 'A thin cloud near the ground'],
-        ['fist', 'A closed hand'],
-      ],
-    },
-    {
-      difficulty: 'fiendish',
-      endClue: 'Where a ship is built',
-      top: 'ship',
-      bottom: 'yard',
-      middle: [
-        ['chip', 'A small piece broken off'],
-        ['chin', 'The front of the jaw'],
-        ['coin', 'A piece of money'],
-        ['corn', 'A yellow grain'],
-        ['cord', 'A thin rope'],
-        ['card', 'Stiff paper'],
-      ],
-    },
-    {
-      difficulty: 'easy',
-      endClue: 'Rows of vines on a hillside',
-      top: 'vine',
-      bottom: 'yard',
-      middle: [
-        ['wine', 'A drink made from grapes'],
-        ['wind', 'Moving air'],
-        ['wand', 'A thin stick in a story'],
-        ['ward', 'A room in a hospital'],
-      ],
-    },
+    // Easy: short, familiar chains.
+    { difficulty: 'easy', endClue: 'Someone devoted to books', top: 'book', bottom: 'worm', middle: [
+      ['cook', 'To heat food in a pan with oil or fat'], ['cork', 'The stopper in a wine bottle'], ['work', 'A job, or the act of doing it'],
+    ] },
+    { difficulty: 'easy', endClue: 'Wood kept for a fire', top: 'fire', bottom: 'wood', middle: [
+      ['wire', 'A thin metal thread'], ['wore', 'Had clothes on, yesterday'], ['word', 'A piece of language'],
+    ] },
+    { difficulty: 'easy', endClue: 'Schoolwork done at home', top: 'home', bottom: 'work', middle: [
+      ['come', 'Move toward the speaker'], ['core', 'The central part of something'], ['wore', 'Had clothes on, yesterday'],
+    ] },
+    { difficulty: 'easy', endClue: 'Rows of grapevines grown together', top: 'vine', bottom: 'yard', middle: [
+      ['wine', 'A drink made from grapes'], ['wind', 'Moving air'], ['wand', 'A thin stick used by a magician'], ['ward', 'A room or unit in a hospital'],
+    ] },
+    { difficulty: 'easy', endClue: 'A small enclosure for a bird', top: 'bird', bottom: 'cage', middle: [
+      ['bard', 'A poet, especially one who tells stories'], ['card', 'A stiff folded greeting for a birthday'], ['care', 'Keeping a person safe and well'],
+    ] },
+    { difficulty: 'easy', endClue: 'A machine that grinds grain into flour', top: 'wind', bottom: 'mill', middle: [
+      ['mind', 'Where thoughts and memories sit'], ['mild', 'Gentle, not strong or harsh'], ['milk', 'A drink produced by cows'],
+    ] },
+
+    // Tricky: more rungs or less direct transitions, still all common words.
+    { difficulty: 'tricky', endClue: 'The game played with a round ball and two goals', top: 'foot', bottom: 'ball', middle: [
+      ['boot', 'A kick, or heavy footwear'], ['bolt', 'A sliding metal lock'], ['belt', 'A strap worn around the waist'], ['bell', 'The metal cup a tower rings'],
+    ] },
+    { difficulty: 'tricky', endClue: 'A coat worn to keep off rain', top: 'rain', bottom: 'coat', middle: [
+      ['rail', 'A bar to hold, or a train track'], ['fail', 'To not succeed'], ['foil', 'Thin metal sheet, or to stop a plan'], ['coil', 'A loop of rope or wire'], ['coal', 'Black rock that can be burned'],
+    ] },
+    { difficulty: 'tricky', endClue: 'A button you press beside a front door', top: 'door', bottom: 'bell', middle: [
+      ['poor', 'Having little money'], ['pool', 'A tank of water made for swimming'], ['tool', 'Something used to do a job'], ['toll', 'A fee paid to use a road or bridge'], ['tell', 'To say something'],
+    ] },
+    { difficulty: 'tricky', endClue: 'A piece of furniture for storing books', top: 'book', bottom: 'case', middle: [
+      ['cook', 'To heat food in a pan with oil or fat'], ['cork', 'The stopper in a wine bottle'], ['cord', 'What you tug to draw a curtain shut'], ['card', 'A stiff folded greeting for a birthday'], ['care', 'Keeping a person safe and well'],
+    ] },
+    { difficulty: 'tricky', endClue: 'A small boat carried by a larger ship', top: 'life', bottom: 'boat', middle: [
+      ['lift', 'Raise something up'], ['list', 'A set of names or items written one under another'], ['lost', 'Unable to find the way'], ['cost', 'The amount of money something needs'], ['coat', 'A warm garment worn outdoors'],
+    ] },
+    { difficulty: 'tricky', endClue: 'A single drop of rainwater', top: 'rain', bottom: 'drop', middle: [
+      ['gain', 'To get or win something'], ['grin', 'A wide smile'], ['grip', 'To hold tightly'], ['drip', 'To fall one drop at a time'],
+    ] },
+    { difficulty: 'tricky', endClue: 'A beam of light from the moon', top: 'moon', bottom: 'beam', middle: [
+      ['moan', 'To make a low sound of pain or sadness'], ['loan', 'Money lent that must be paid back'], ['lean', 'To tilt to one side'], ['bean', 'A seed eaten as a vegetable'],
+    ] },
+
+    // Fiendish: longer routes and less visually obvious changes.
+    { difficulty: 'fiendish', endClue: 'A small orange pet that swims in a bowl', top: 'gold', bottom: 'fish', middle: [
+      ['gild', 'Cover with a thin layer of gold'], ['mild', 'Gentle, not strong or harsh'], ['mind', 'Where thoughts and memories sit'], ['mint', 'A fresh-smelling herb'], ['mist', 'A thin cloud close to the ground'], ['fist', 'A hand with its fingers curled in'],
+    ] },
+    { difficulty: 'fiendish', endClue: 'A place where ships are built or repaired', top: 'ship', bottom: 'yard', middle: [
+      ['chip', 'A small piece broken off something'], ['chin', 'The part of the face below the mouth'], ['coin', 'A small piece of money'], ['corn', 'A yellow grain eaten as food'], ['cord', 'What you tug to draw a curtain shut'], ['card', 'A stiff folded greeting for a birthday'],
+    ] },
+    { difficulty: 'fiendish', endClue: 'A secret word that lets you in', top: 'pass', bottom: 'word', middle: [
+      ['past', 'The time that has already gone'], ['cast', 'The actors in a play'], ['cart', 'A small wagon you push'], ['card', 'A stiff folded greeting for a birthday'], ['cord', 'What you tug to draw a curtain shut'],
+    ] },
+    { difficulty: 'fiendish', endClue: 'The part of a shoe that covers the foot', top: 'foot', bottom: 'wear', middle: [
+      ['boot', 'A kick, or heavy footwear'], ['boat', 'A small craft that travels on water'], ['beat', 'To strike repeatedly, or a rhythm'], ['bead', 'A small piece of glass or wood used in jewellery'], ['bear', 'A large, furry mammal'],
+    ] },
+    { difficulty: 'fiendish', endClue: 'A band of the earth that shares one clock', top: 'time', bottom: 'zone', middle: [
+      ['lime', 'A sour green citrus fruit'], ['line', 'A long thin mark'], ['lone', 'Standing as the only one'],
+    ] },
+    { difficulty: 'fiendish', endClue: 'Made by hand rather than by machine', top: 'hand', bottom: 'made', middle: [
+      ['band', 'A group of musicians or a strip of material'], ['bane', 'Something that causes great trouble'], ['bake', 'Turn dough into a loaf in the oven'], ['make', 'Create or build something'], ['mate', 'A friend or partner'],
+    ] },
   ];
 
   function steps(a, b) {
@@ -2909,6 +2286,7 @@ h1 {
     id: 'crossclimb',
     name: 'Crossclimb',
     tagline: 'Climb a ladder of words.',
+    ladders: DEALS,
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },
@@ -2932,6 +2310,7 @@ apple arrow beach berry black bread brown brush candy chair charm cloud coral da
 butter candle castle bridge garden forest island market orange purple yellow silver winter summer spring basket bottle branch breeze bucket button canyon circle clover coffee copper cotton cradle cricket dancer desert donkey dragon drawer flight flower friend helmet jacket jungle kettle kitten ladder marble meadow mirror needle orchid pebble picnic pillow planet pocket potato rabbit ribbon rocket sailor season shadow singer sister sketch sleeve soccer socket square stream string summer sunset temple tennis timber tomato tunnel turkey turtle valley violet walnut window
 lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library morning picture rainbow silence sunrise thunder village whisper blossom compass crystal evening harbour meadowlark`.split(/\s+/).filter((word, i, all) => word.length >= 4 && word.length <= 7 && all.indexOf(word) === i && word !== word.split('').reverse().join(''));
   const DICT = new Set(WORDS);
+  const PREFIXES = new Set(WORDS.flatMap((word) => Array.from({ length: word.length }, (_, i) => word.slice(0, i + 1))));
 
   function byLength(len) {
     return WORDS.filter((word) => word.length === len);
@@ -2960,14 +2339,24 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     let total = 0;
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!blocked[r][c]) total++;
     const used = Array.from({ length: n }, () => Array(n).fill(false));
-    const starts = [];
+    let starts = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!blocked[r][c]) starts.push([r, c]);
-    shuffle(rng, starts);
+    const colours = [0, 0];
+    starts.forEach(([r, c]) => { colours[(r + c) % 2]++; });
+    // A path alternates checkerboard colours and can only have two dead ends.
+    if (Math.abs(colours[0] - colours[1]) > 1) return null;
+    const ends = starts.filter(([r, c]) => neighbors(n, blocked, used, r, c).length === 1);
+    if (ends.length > 2 || starts.some(([r, c]) => !neighbors(n, blocked, used, r, c).length)) return null;
+    if (ends.length) starts = ends;
+    if (colours[0] !== colours[1]) starts = starts.filter(([r, c]) => colours[(r + c) % 2] > colours[1 - (r + c) % 2]);
+    starts = shuffle(rng, starts);
+    let nodes = 0;
     function dfs(path) {
+      // Some wall arrangements have no path; don't lock the page searching them.
+      if (++nodes > 20000) return false;
       if (path.length === total) return true;
       const [r, c] = path[path.length - 1];
-      const next = neighbors(n, blocked, used, r, c);
-      shuffle(rng, next);
+      const next = shuffle(rng, neighbors(n, blocked, used, r, c));
       next.sort((a, b) => neighbors(n, blocked, used, a[0], a[1]).length - neighbors(n, blocked, used, b[0], b[1]).length);
       for (let i = 0; i < next.length; i++) {
         const [rr, cc] = next[i];
@@ -2980,6 +2369,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       return false;
     }
     for (let s = 0; s < Math.min(6, starts.length); s++) {
+      nodes = 0;
       for (let r = 0; r < n; r++) used[r].fill(false);
       const path = [starts[s]];
       used[starts[s][0]][starts[s][1]] = true;
@@ -3028,6 +2418,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       function spell(r, c, word, depth, nextMin) {
         nodes++;
         if (count >= limit || nodes > cap) return;
+        if (!PREFIXES.has(word)) return;
         if (depth === len) {
           if (DICT.has(word)) bt(li + 1, nextMin);
           return;
@@ -3060,11 +2451,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const lengths = spec.lengths;
     const spots = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) spots.push([r, c]);
-    for (let attempt = 0; attempt < 12; attempt++) {
+    for (let attempt = 0; attempt < 24; attempt++) {
       const rng = makeRng(String(seed) + ':wend:' + difficulty + ':' + attempt);
       let carved = null;
       let walls = null;
-      for (let wallTry = 0; wallTry < 8 && !carved; wallTry++) {
+      for (let wallTry = 0; wallTry < 32 && !carved; wallTry++) {
         walls = shuffle(rng, spots.slice()).slice(0, spec.walls);
         carved = carve(n, lengths.slice().sort((a, b) => b - a), walls, rng);
       }
@@ -3141,26 +2532,28 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   const ORDER = ['zip', 'sudoku', 'murdoku', 'queens', 'tango', 'patches', 'pinpoint', 'crossclimb', 'wend'];
   const WORDS = ['amber', 'lantern', 'quiet', 'cedar', 'linen', 'copper', 'harbor', 'meadow', 'velvet', 'paper', 'orchard', 'willow', 'candle', 'marble', 'thistle', 'river', 'saffron', 'pewter', 'garden', 'ivory', 'cinder', 'maple', 'birch', 'honey', 'flint', 'pearl', 'olive', 'hearth', 'clover', 'spruce', 'cobalt', 'sorrel', 'yarrow', 'pebble', 'autumn', 'silver', 'brass', 'nectar', 'fable', 'linenwood'];
   const GLASS = ['#e6d3b4', '#8eae9c', '#e0b08a', '#9aafc4', '#e3b7b0', '#c9c296', '#6f8f86', '#d7aeb8', '#b7c49a', '#a9c4c6'];
-  const WEAVES = [
-    'repeating-linear-gradient(90deg,#efe6d4 0 5px,#e3d5bf 5px 6px)',
-    'repeating-linear-gradient(0deg,#efe2cf 0 5px,#e6d3bc 5px 6px)',
-    'repeating-linear-gradient(45deg,#eadcc6 0 4px,#e3d2b8 4px 5px)',
-    'repeating-linear-gradient(90deg,#f3e7d4 0 2px,#e7d5be 2px 4px)',
-    'linear-gradient(180deg,#f0e4d0,#e5d4bc)',
-    'repeating-linear-gradient(135deg,#efe6d4 0 6px,#e4d4be 6px 7px)',
-    'linear-gradient(90deg,#f4ead8,#e8d7c0)',
-    'repeating-linear-gradient(0deg,#f1e6d4 0 3px,#e6d5bf 3px 4px)'
-  ];
+  const WEAVES = ['#d9edf0', '#f8e6bc', '#e6def2', '#dbe8cc', '#f4d5d0', '#dde5f6', '#d0e8df', '#f1dcbb'];
   const RULES = {
-    zip: 'One line, through every square. Touch the numbers in order. The heavy borders are walls.',
-    queens: 'One queen in each row, each column, and each colour. Two queens may not touch, even on a corner.',
-    tango: 'Each row and column is split evenly between suns and moons. Never three of the same in a line. An equals sign means the neighbours match. A cross means they differ.',
+    zip: 'One line, through every square. Visit the numbers in order and finish at the last number. The heavy borders are walls. Drag to draw; moving back one square erases that step. With a keyboard, use arrows to move and Space to extend the line.',
+    queens: 'One queen in each row, each column, and each colour. Two queens may not touch, even on a corner. Tap to cycle through a crown, a dot, and an empty square.',
+    tango: 'Each row and column is split evenly between suns and moons. Never three of the same in a line. An equals sign means the neighbours match. A cross means they differ. Shaded symbols are fixed clues. Tap an empty square to cycle through sun, moon and empty.',
     sudoku: 'Each row, column, and box contains every digit once.',
-    patches: 'Cover the cloth with rectangles. Each patch holds one stitch. A number is its size. A shape means square, wide, or tall.',
+    patches: 'Cover the board with rectangles, without overlaps or gaps. Each rectangle contains exactly one clue. Its number is the area in squares; its symbol means square, wider than tall, or taller than wide. A diamond allows any proportion. Drag between opposite corners; tap a placed patch to remove it. With a keyboard, use arrows and Space to choose its two corners.',
     murdoku: 'Everyone has their own row and their own column. The slips tell you where they stood.',
-    pinpoint: 'Five words share one category. Name it. Fewer words make a sharper guess.',
+    pinpoint: 'Five clues share a connection: a familiar category, a word that fits with each clue, or a letter pattern. Enter the connection and choose Guess. A wrong guess reveals the next clue; Next clue reveals one without a guess. When all five are shown, Hint reveals the answer. Common synonyms are accepted.',
     crossclimb: 'Fill the rungs, then arrange them so each neighbouring word changes exactly one letter. The top and bottom then share one clue, and together they name one thing.',
-    wend: 'Drag through touching letters to spell the hidden words. Every open letter is used once. Walls cannot be crossed. A real word on the wrong path does not count.'
+    wend: 'Drag through letters sharing an edge to spell the hidden words. The lengths below show what to look for. Every open letter is used once. Walls cannot be crossed. A real word on the wrong path does not count. With a keyboard, use arrows and Space to select letters; a complete hidden word locks into place.'
+  };
+  const INTRO = {
+    zip: 'Start at 1. Draw one continuous line through every square, visiting the numbers in order.',
+    queens: 'Place one crown in every row, column and coloured region. Crowns cannot touch.',
+    tango: 'Fill each row and column with equal suns and moons. No three alike in a row.',
+    sudoku: 'Fill each row, column and outlined box with every digit once. Select a cell, then a number.',
+    patches: 'Drag a rectangle around each clue. Its number is the area; its shape is the proportion.',
+    murdoku: 'Select a person, then place them using the clues. Each person needs a separate row and column.',
+    pinpoint: 'Find the connection between five clues. Guess whenever you like, or reveal the next clue.',
+    crossclimb: 'Solve the clues, then use the arrows to arrange a ladder: change one letter at every step.',
+    wend: 'Drag along letters sharing an edge to find words of the lengths shown below. Use every letter once.'
   };
   const FALLBACK = {
     zip: ['Zip', 'One path through every cell.'],
@@ -3216,7 +2609,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   }
   function save(partial) {
     const next = Object.assign({ mistakes: true, best: {}, difficulty: {} }, prefs(), partial);
-    localStorage.setItem('nook.v1', JSON.stringify(next));
+    try { localStorage.setItem('nook.v1', JSON.stringify(next)); } catch (err) { /* Play still works without storage. */ }
     return next;
   }
   function mistakesOn() {
@@ -3228,6 +2621,16 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     let b = WORDS[Math.floor(Math.random() * WORDS.length)];
     if (a === b) b = WORDS[(WORDS.indexOf(a) + 7) % WORDS.length];
     return a + '-' + b + '-' + (Math.floor(Math.random() * 9) + 1);
+  }
+  function anotherSeed() {
+    let seed = freshSeed();
+    if (!state.puzzle || !['pinpoint', 'crossclimb'].includes(state.game)) return seed;
+    for (let i = 0; i < 20; i++) {
+      const p = engines()[state.game].generate(state.difficulty, seed);
+      if (state.game === 'pinpoint' ? p.category !== state.puzzle.category : p.top !== state.puzzle.top || p.bottom !== state.puzzle.bottom) return seed;
+      seed = freshSeed();
+    }
+    return seed;
   }
   function dailySeed(game, difficulty) {
     const d = new Date();
@@ -3272,8 +2675,15 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const best = (prefs().best || {})[state.game + '/' + state.difficulty];
     return best == null ? '' : 'best ' + fmt(best * 1000);
   }
+  function pauseClock() {
+    if (state.timing) state.elapsed = performance.now() - state.started;
+    state.timing = false;
+    clearInterval(state.tick);
+    state.tick = 0;
+  }
   function markSolved() {
     if (state.solved) return;
+    pauseClock();
     state.solved = true;
     state.timing = false;
     const key = state.game + '/' + state.difficulty;
@@ -3328,11 +2738,16 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (zipBlocked(last[0], last[1], r, c)) return 'no';
     const num = numbers[r][c];
     if (num && num !== zipNeed(path)) return 'no';
+    const max = Math.max.apply(null, numbers.flat());
+    if (num === max && path.length !== state.puzzle.rows * state.puzzle.cols - 1) return 'no';
     path.push([r, c]);
     return 'extend';
   }
   function zipSolved() {
-    return state.play.path.length === state.puzzle.rows * state.puzzle.cols;
+    const path = state.play.path;
+    if (path.length !== state.puzzle.rows * state.puzzle.cols) return false;
+    const last = path[path.length - 1];
+    return state.puzzle.numbers[last[0]][last[1]] === Math.max.apply(null, state.puzzle.numbers.flat());
   }
 
   function queenList() {
@@ -3351,7 +2766,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         const a = qs[i];
         const b = qs[j];
         const region = state.puzzle.regions[a[0]][a[1]] === state.puzzle.regions[b[0]][b[1]];
-        const diag = Math.abs(a[0] - b[0]) === Math.abs(a[1] - b[1]);
+        const diag = Math.abs(a[0] - b[0]) === 1 && Math.abs(a[1] - b[1]) === 1;
         if (a[0] === b[0] || a[1] === b[1] || region || diag) bad[a[0]][a[1]] = bad[b[0]][b[1]] = true;
       }
     }
@@ -3592,7 +3007,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (game === 'crossclimb') {
       if (!crossWordsIn()) return 'Answer each rung.';
       if (!crossChain()) return 'Now change one letter at each step.';
-      if (state.play.top !== state.puzzle.top || state.play.bottom !== state.puzzle.bottom) return state.puzzle.endClue;
+      if (!crossSolved()) return state.puzzle.endClue;
       return 'The ladder is complete.';
     }
     if (game === 'wend') {
@@ -3603,8 +3018,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     return person ? 'Where was ' + person.name + '?' : 'Place everyone.';
   }
   function pinpointSolved() {
-    const text = state.play.text.trim().toLowerCase().replace(/\s+/g, ' ');
-    return state.puzzle.accept.indexOf(text) !== -1;
+    function normalize(text) { return text.toLowerCase().replace(/[“”"'‘’]/g, '').replace(/[-–—]/g, ' ').trim().replace(/\s+/g, ' '); }
+    const text = normalize(state.play.text);
+    return state.puzzle.accept.some(function (answer) { return normalize(answer) === text; });
   }
   function letterSteps(a, b) {
     if (!a || !b || a.length !== b.length) return 99;
@@ -3616,13 +3032,18 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     return state.puzzle.rungs.every(function (rung, i) { return state.play.typed[i] === rung.answer; });
   }
   function crossChain() {
-    const seq = [state.puzzle.top].concat(state.play.order.map(function (i) { return state.puzzle.rungs[i].answer; }), [state.puzzle.bottom]);
+    const seq = state.play.order.map(function (i) { return state.play.typed[i]; });
     for (let i = 1; i < seq.length; i++) if (letterSteps(seq[i - 1], seq[i]) !== 1) return false;
     return true;
   }
   function crossEndsOpen() { return crossWordsIn() && crossChain(); }
   function crossSolved() {
-    return crossEndsOpen() && state.play.top === state.puzzle.top && state.play.bottom === state.puzzle.bottom;
+    if (!crossEndsOpen()) return false;
+    const top = state.play.top;
+    const bottom = state.play.bottom;
+    const pair = (top === state.puzzle.top && bottom === state.puzzle.bottom) || (top === state.puzzle.bottom && bottom === state.puzzle.top);
+    const seq = state.play.order.map(function (i) { return state.play.typed[i]; });
+    return pair && letterSteps(top, seq[0]) === 1 && letterSteps(seq[seq.length - 1], bottom) === 1;
   }
 
   function hint() {
@@ -3639,7 +3060,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     } else if (puzzle.game === 'queens') {
       for (let r = 0; r < puzzle.n; r++) {
         const spot = puzzle.solution.find(function (cell) { return cell[0] === r; });
-        if (state.play.marks[r][spot[1]] === 'queen') continue;
+        if (state.play.marks[r][spot[1]] === 'queen' && state.play.marks[r].filter(function (mark) { return mark === 'queen'; }).length === 1) continue;
         for (let c = 0; c < puzzle.n; c++) if (state.play.marks[r][c] === 'queen') state.play.marks[r][c] = null;
         state.play.marks[r][spot[1]] = 'queen';
         break;
@@ -3647,7 +3068,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     } else if (puzzle.game === 'tango') {
       for (let r = 0; r < puzzle.n && !state.solved; r++) {
         for (let c = 0; c < puzzle.n; c++) {
-          if (puzzle.givens[r][c] || state.play.marks[r][c]) continue;
+          if (puzzle.givens[r][c] || state.play.marks[r][c] === puzzle.solution[r][c]) continue;
           state.play.marks[r][c] = puzzle.solution[r][c];
           r = puzzle.n;
           break;
@@ -3656,7 +3077,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     } else if (puzzle.game === 'sudoku') {
       for (let r = 0; r < puzzle.size; r++) {
         for (let c = 0; c < puzzle.size; c++) {
-          if (sudokuDigit(r, c)) continue;
+          if (puzzle.givens[r][c] || state.play.values[r][c] === puzzle.solution[r][c]) continue;
           state.play.values[r][c] = puzzle.solution[r][c];
           state.play.notes[r][c] = 0;
           r = puzzle.size;
@@ -3676,9 +3097,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
           }
         }
         if (match) continue;
+        const overlaps = new Set([id]);
+        for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) overlaps.add(state.play.cells[r][c]);
         for (let r = 0; r < puzzle.rows; r++) {
           for (let c = 0; c < puzzle.cols; c++) {
-            if (state.play.cells[r][c] === id) state.play.cells[r][c] = -1;
+            if (overlaps.has(state.play.cells[r][c])) state.play.cells[r][c] = -1;
           }
         }
         for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) state.play.cells[r][c] = id;
@@ -3692,7 +3115,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         if (have && have[0] === want[0] && have[1] === want[1]) continue;
         puzzle.people.forEach(function (other) {
           const at = state.play.pos[other.id];
-          if (at && at[0] === want[0] && at[1] === want[1]) state.play.pos[other.id] = null;
+          if (other.id !== person.id && at && (at[0] === want[0] || at[1] === want[1])) delete state.play.pos[other.id];
         });
         state.play.pos[person.id] = [want[0], want[1]];
         state.play.selected = person.id;
@@ -3711,7 +3134,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
           break;
         }
       }
-      if (!filled && !crossChain()) {
+      if (!filled && (!crossChain() || letterSteps(puzzle.top, state.play.typed[state.play.order[0]]) !== 1)) {
         state.play.order = puzzle.solution.slice(1, -1).map(function (word) {
           return puzzle.rungs.findIndex(function (rung) { return rung.answer === word; });
         });
@@ -3725,7 +3148,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         let prefix = 0;
         const trace = state.play.trace;
         while (prefix < trace.length && prefix < next.cells.length && trace[prefix][0] === next.cells[prefix][0] && trace[prefix][1] === next.cells[prefix][1]) prefix += 1;
-        if (prefix >= next.cells.length) {
+        if (prefix >= next.cells.length - 1) {
           state.play.found.push({ word: next.word, cells: next.cells.map(function (cell) { return [cell[0], cell[1]]; }) });
           state.play.trace = [];
         } else state.play.trace = next.cells.slice(0, prefix + 1).map(function (cell) { return [cell[0], cell[1]]; });
@@ -3759,6 +3182,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const cell = cellFromEvent(event);
     if (!cell) return;
     state.drag = { r: cell[0], c: cell[1], x: event.clientX, y: event.clientY, moved: false, dirty: false };
+    const cellNode = board.querySelector('[data-row="' + cell[0] + '"][data-col="' + cell[1] + '"]');
+    if (cellNode) cellNode.focus({ preventScroll: true });
+    if (board.setPointerCapture && event.pointerId != null) board.setPointerCapture(event.pointerId);
     if (state.puzzle.game === 'zip' || state.puzzle.game === 'patches' || state.puzzle.game === 'wend') pushUndo();
     if (state.puzzle.game === 'wend') {
       const before = state.play.trace.length;
@@ -3782,6 +3208,17 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   function onPointerMove(event) {
     if (!state.drag || state.solved) return;
     if (Math.abs(event.clientX - state.drag.x) + Math.abs(event.clientY - state.drag.y) > 8) state.drag.moved = true;
+    if (state.drag.moved && (state.puzzle.game === 'zip' || state.puzzle.game === 'wend') && !event.interpolated) {
+      const x = state.drag.lastX == null ? state.drag.x : state.drag.lastX;
+      const y = state.drag.lastY == null ? state.drag.y : state.drag.lastY;
+      const board = document.querySelector('.board');
+      const unit = board.getBoundingClientRect().width / state.puzzle.rows;
+      const steps = Math.ceil(Math.hypot(event.clientX - x, event.clientY - y) / (unit / 4));
+      for (let i = 1; i <= steps; i++) onPointerMove({ clientX: x + (event.clientX - x) * i / steps, clientY: y + (event.clientY - y) * i / steps, interpolated: true });
+      state.drag.lastX = event.clientX;
+      state.drag.lastY = event.clientY;
+      return;
+    }
     const cell = cellFromEvent(event);
     if (!cell) return;
     if (state.puzzle.game === 'wend' && state.drag.moved) {
@@ -3848,6 +3285,14 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
           for (let c = 0; c < state.play.cells[r].length; c++) if (state.play.cells[r][c] === occupant) state.play.cells[r][c] = -1;
         }
         afterMove(false);
+      } else {
+        const id = patchOk(cell[0], cell[1], cell[0], cell[1]);
+        if (id >= 0) {
+          pushUndo();
+          state.play.cells[cell[0]][cell[1]] = id;
+          startClock();
+          afterMove(false);
+        }
       }
       return;
     }
@@ -3909,6 +3354,46 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (Math.abs(last[0] - r) + Math.abs(last[1] - c) !== 1) return;
     trace.push([r, c]);
   }
+  function onPointerCancel() {
+    if (!state.drag) return;
+    if (['zip', 'patches', 'wend'].includes(state.game)) {
+      const before = state.undo.pop();
+      if (before) state.play = JSON.parse(before);
+    }
+    state.drag = null;
+    render();
+  }
+  function activateCell(r, c) {
+    if (!state.puzzle || state.solved) return;
+    if (state.game === 'zip') {
+      pushUndo();
+      if (!['extend', 'back'].includes(zipTouch(r, c))) { state.undo.pop(); return; }
+      startClock();
+      afterMove(false);
+    } else if (state.game === 'wend') {
+      pushUndo();
+      const before = JSON.stringify(state.play.trace);
+      wendTouch(r, c);
+      if (before === JSON.stringify(state.play.trace)) { state.undo.pop(); return; }
+      const trace = state.play.trace;
+      const word = state.puzzle.solution.find(function (word) { return word.cells.length === trace.length && word.cells.every(function (cell, i) { return cell[0] === trace[i][0] && cell[1] === trace[i][1]; }); });
+      if (word) { state.play.found.push({ word: word.word, cells: word.cells }); state.play.trace = []; }
+      startClock();
+      afterMove(false);
+    } else if (state.game === 'patches') {
+      if (!state.patchAnchor) { state.patchAnchor = [r, c]; render(); return; }
+      const anchor = state.patchAnchor;
+      state.patchAnchor = null;
+      const r0 = Math.min(anchor[0], r), c0 = Math.min(anchor[1], c), r1 = Math.max(anchor[0], r), c1 = Math.max(anchor[1], c);
+      const id = patchOk(r0, c0, r1, c1);
+      if (id >= 0) {
+        pushUndo();
+        for (let rr = r0; rr <= r1; rr++) for (let cc = c0; cc <= c1; cc++) state.play.cells[rr][cc] = id;
+        startClock();
+        afterMove(false);
+      } else render();
+    } else tapCell(r, c);
+  }
   function tapCell(r, c) {
     const puzzle = state.puzzle;
     if (puzzle.game === 'queens') {
@@ -3933,17 +3418,18 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         render();
         return;
       }
-      if (state.play.armed && !state.play.pencil) {
-        pushUndo();
-        state.play.values[r][c] = state.play.armed;
-        state.play.notes[r][c] = 0;
-        startClock();
-      }
       state.play.sel = [r, c];
       afterMove(false);
     } else if (puzzle.game === 'murdoku') {
       const occ = personAt(r, c);
       if (occ) {
+        if (state.play.selected === occ.id) {
+          pushUndo();
+          delete state.play.pos[occ.id];
+          startClock();
+          afterMove(false);
+          return;
+        }
         state.play.selected = occ.id;
         render();
         return;
@@ -3962,6 +3448,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     }
   }
   function onDigit(d) {
+    if (!state.play || state.solved) return;
     const play = state.play;
     if (!play.sel) {
       play.armed = play.armed === d ? null : d;
@@ -4008,6 +3495,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     for (let r = 0; r < n; r++) {
       for (let c = 0; c < n; c++) {
         const classes = ['cell'];
+        if (state.patchAnchor && state.patchAnchor[0] === r && state.patchAnchor[1] === c) classes.push('sel');
         let inner = '';
         if (game === 'zip') {
           const num = puzzle.numbers[r][c];
@@ -4021,7 +3509,6 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         } else if (game === 'queens') {
           const mark = state.play.marks[r][c];
           if (bad && bad[r][c]) classes.push('bad');
-          inner = '<span class="cell-fill" style="background:' + GLASS[puzzle.regions[r][c] % GLASS.length] + '"></span>';
           if (mark === 'queen') inner += crown();
           if (mark === 'dot') inner += '<i class="dot"></i>';
         } else if (game === 'tango') {
@@ -4056,7 +3543,6 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
           if (id >= 0 && r + 1 < n && state.play.cells[r + 1][c] >= 0 && state.play.cells[r + 1][c] !== id) classes.push('seam-s');
           const preview = state.drag && state.drag.preview;
           if (preview && r >= preview[0] && r <= preview[2] && c >= preview[1] && c <= preview[3]) classes.push('preview');
-          if (id >= 0) inner += '<span class="cloth" style="background:' + WEAVES[id % WEAVES.length] + '"></span>';
           const clue = puzzle.clues.find(function (item) { return item.r === r && item.c === c; });
           if (clue) {
             let glyph = '';
@@ -4077,7 +3563,6 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
           if (c + 1 < n && puzzle.roomOf[r][c] !== puzzle.roomOf[r][c + 1]) classes.push('room-e');
           if (r + 1 < n && puzzle.roomOf[r][c] !== puzzle.roomOf[r + 1][c]) classes.push('room-s');
           if (state.solved && puzzle.roomOf[r][c] === victimRoom) classes.push('lit');
-          inner += '<span class="wash" style="background:' + GLASS[roomIndex % GLASS.length] + '"></span>';
           if (labelHere) inner += '<span class="room-name">' + esc(room.name) + '</span>';
           if (obj) inner += '<span class="furn ' + esc(obj.kind) + '"><i></i><em>' + esc(obj.kind) + '</em></span>';
           if (person) {
@@ -4094,7 +3579,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
             inner = '<span class="letter">' + esc(puzzle.letters[r][c]) + '</span>';
           }
         }
-        html += '<div class="' + classes.join(' ') + '" style="' + washStyle(game, r, c) + '">' + inner + '</div>';
+        const label = 'Row ' + (r + 1) + ', column ' + (c + 1) + (game === 'sudoku' ? ', ' + (sudokuDigit(r, c) || 'empty') : game === 'tango' ? ', ' + (tangoAt(r, c) || 'empty') : game === 'zip' && puzzle.numbers[r][c] ? ', ' + puzzle.numbers[r][c] : game === 'wend' ? ', ' + (puzzle.letters[r][c] || 'wall') : '');
+        const active = state.play.sel || [0, 0];
+        html += '<div class="' + classes.join(' ') + '" role="button" tabindex="' + (r === active[0] && c === active[1] ? '0' : '-1') + '" data-row="' + r + '" data-col="' + c + '" aria-label="' + esc(label) + '" style="' + washStyle(game, r, c) + '">' + inner + '</div>';
       }
     }
     return (game === 'zip' ? zipOverlay() : game === 'wend' ? pathTrace(state.play.trace) : '') + html;
@@ -4275,7 +3762,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         const open = i < state.play.shown;
         html += '<li class="' + (open ? 'open' : 'hid') + '"><span>' + String(i + 1).padStart(2, '0') + '</span>' + (open ? esc(puzzle.words[i]) : '····') + '</li>';
       }
-      html += '</ol><form class="guess"><input data-guess type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="The category" value="' + esc(state.play.text) + '"><button type="button" class="solid" data-act="guess">Guess</button></form>';
+      html += '</ol><form class="guess"><input data-guess type="text" aria-label="Your connection" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="The connection" value="' + esc(state.play.text) + '"' + (state.solved ? ' readonly' : '') + '><button type="button" class="solid" data-act="guess"' + (state.solved ? ' disabled' : '') + '>Guess</button></form>';
       return html;
     }
     let html = '<ol class="rungs">';
@@ -4283,11 +3770,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       const rung = puzzle.rungs[idx];
       const typed = state.play.typed[idx];
       const hit = typed === rung.answer ? ' hit' : '';
-      html += '<li class="rung' + hit + '"><button type="button" data-act="up" data-at="' + at + '" aria-label="Move up">↑</button><label><input data-rung="' + idx + '" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + esc(typed) + '"><em>' + esc(rung.clue) + '</em></label><button type="button" data-act="down" data-at="' + at + '" aria-label="Move down">↓</button></li>';
+      html += '<li class="rung' + hit + '"><button type="button" data-act="up" data-at="' + at + '" aria-label="Move rung up"' + (at === 0 || state.solved ? ' disabled' : '') + '>↑</button><label><input data-rung="' + idx + '" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + esc(typed) + '"' + (state.solved ? ' readonly' : '') + '><em>' + esc(rung.clue) + '</em></label><button type="button" data-act="down" data-at="' + at + '" aria-label="Move rung down"' + (at === state.play.order.length - 1 || state.solved ? ' disabled' : '') + '>↓</button></li>';
     });
     html += '</ol>';
     if (crossEndsOpen()) {
-      html = '<p class="end-clue">' + esc(puzzle.endClue) + '</p><div class="ends"><input data-end="top" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Top" value="' + esc(state.play.top) + '">' + html + '<input data-end="bottom" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Bottom" value="' + esc(state.play.bottom) + '"></div>';
+      html = '<p class="end-clue">' + esc(puzzle.endClue) + '</p><div class="ends"><input data-end="top" aria-label="Top word" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Top word" value="' + esc(state.play.top) + '"' + (state.solved ? ' readonly' : '') + '>' + html + '<input data-end="bottom" aria-label="Bottom word" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Bottom word" value="' + esc(state.play.bottom) + '"' + (state.solved ? ' readonly' : '') + '></div>';
     }
     return html;
   }
@@ -4359,7 +3846,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   function playHTML() {
     const info = meta(state.game);
     const diffs = info.difficulties.map(function (diff) {
-      return '<button type="button" data-diff="' + diff.id + '" class="' + (diff.id === state.difficulty ? 'on' : '') + '">' + esc(diff.label) + '</button>';
+      return '<button type="button" data-diff="' + diff.id + '" aria-pressed="' + (diff.id === state.difficulty) + '" class="' + (diff.id === state.difficulty ? 'on' : '') + '">' + esc(diff.label) + '</button>';
     }).join('');
     const round = state.round ? '<p class="status">' + (state.round.index + 1) + ' of ' + ORDER.length + ' tonight</p>' : '';
     const n = state.puzzle ? (state.puzzle.rows || state.puzzle.n || state.puzzle.size || 6) : 6;
@@ -4367,12 +3854,25 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const word = state.puzzle && (state.puzzle.game === 'pinpoint' || state.puzzle.game === 'crossclimb');
     const another = state.solved ? '<button type="button" class="solid" data-act="another">' + (state.round ? (state.round.index === ORDER.length - 1 ? 'Tonight’s note' : 'Next') : 'Another') + '</button>' : '';
     const rules = state.puzzle && state.puzzle.game === 'murdoku'
-      ? 'Everyone has their own row and their own column. ' + esc(state.puzzle.people.find(function (person) { return person.role === 'victim'; }).name) + ' shared a room with one other person. That person stayed behind.'
+      ? 'Everyone has their own row and their own column. Select a name, then a square to place them. Tap their selected token to pick them up. Blocking furniture cannot be occupied. “Beside” means sharing an edge in the same room; a corner is where two room edges meet. The slips all hold true. ' + esc(state.puzzle.people.find(function (person) { return person.role === 'victim'; }).name) + ' shared a room with one other person. Place everyone to discover who stayed behind.'
       : RULES[state.game];
     const board = word
       ? '<div class="sheet">' + (state.puzzle ? sheetHTML() : '') + '</div>'
       : '<div class="board-wrap"><div class="board ' + esc(state.game || '') + (state.puzzle ? '' : ' pending') + '" style="--n:' + n + '">' + (state.puzzle ? boardHTML() : '') + '</div>' + (state.puzzle && state.puzzle.game === 'wend' ? blanksHTML() : '') + '</div>';
-    return '<main class="play"><header class="bar"><button type="button" class="back" data-act="table">Games</button><div class="titles"><h1>' + esc(info.name) + '</h1><p class="status" id="status">' + esc(statusLine()) + '</p>' + round + '</div><div class="clock"><span id="clock-num">' + fmt(state.elapsed) + '</span><small>' + esc(bestLine()) + '</small></div>' + (state.round ? '' : '<div class="switch"><span class="diff-label">Difficulty</span>' + diffs + '</div>') + '<button type="button" class="seed" data-act="copy" title="' + esc(state.seed) + '">Share</button></header><div class="stage' + (side ? ' with-side' : '') + (word ? ' word' : '') + (state.solved ? ' solved' : '') + '">' + board + (side && state.puzzle ? '<div class="side">' + sideHTML() + '</div>' : '') + '</div><details class="rules"><summary>Rules</summary><p>' + rules + '</p></details><div class="dock"><button type="button" data-act="undo">Undo</button><button type="button" data-act="hint">Hint</button><button type="button" data-act="new">New</button><button type="button" data-act="mistakes" aria-pressed="' + (mistakesOn() ? 'true' : 'false') + '">Mistakes</button>' + another + '</div></main>' + (state.toast ? '<div class="toast">' + esc(state.toast) + '</div>' : '');
+    const mistakeControl = ['queens', 'tango', 'sudoku', 'murdoku'].includes(state.game) ? '<button type="button" data-act="mistakes" aria-pressed="' + mistakesOn() + '">Check errors</button>' : '';
+    const hintLabel = state.game === 'pinpoint' && state.play && state.play.shown < 5 ? 'Next clue' : 'Hint';
+    const dock = state.puzzle ? '<div class="dock"><button type="button" data-act="undo"' + (state.undo.length ? '' : ' disabled') + '>Undo</button><button type="button" data-act="hint"' + (state.solved ? ' disabled' : '') + '>' + hintLabel + '</button>' + mistakeControl + '<button type="button" data-act="new">New puzzle</button>' + another + '</div>' : '';
+    return '<main class="play"><header class="bar"><button type="button" class="back" data-act="table">← Games</button><div class="titles"><h1>' + esc(info.name) + '</h1>' + round + '</div><div class="clock"><span id="clock-num">' + fmt(state.elapsed) + '</span><small>' + esc(bestLine()) + '</small></div>' + (state.round ? '' : '<div class="switch"><span class="diff-label">Difficulty</span>' + diffs + '</div>') + '<button type="button" class="seed" data-act="copy">Share</button></header><p class="game-intro">' + esc(INTRO[state.game]) + '</p>' + (state.puzzle ? '<p class="difficulty-note">' + esc(difficultyNote()) + '</p>' : '') + '<p class="progress-line" id="status" role="status">' + esc(statusLine()) + '</p><div class="stage' + (side ? ' with-side' : '') + (word ? ' word' : '') + (state.solved ? ' solved' : '') + '">' + board + (side && state.puzzle ? '<div class="side">' + sideHTML() + '</div>' : '') + '</div>' + dock + '<details class="rules"><summary>How to play</summary><p>' + rules + '</p></details></main>' + (state.toast ? '<div class="toast" role="status">' + esc(state.toast) + '</div>' : '');
+  }
+  function difficultyNote() {
+    const p = state.puzzle;
+    const label = DIFF[state.difficulty] || state.difficulty;
+    if (p.game === 'pinpoint') return label + ' · ' + (state.solved && p.description ? p.category + ': ' + p.description : 'Five clues, one connection');
+    if (p.game === 'crossclimb') return label + ' · ' + p.letters + '-letter words · ' + p.rungs.length + ' clues';
+    if (p.game === 'murdoku') return label + ' · ' + p.people.length + ' people · ' + p.rooms.length + ' rooms';
+    const n = p.rows || p.n || p.size;
+    const technique = p.game === 'sudoku' && p.rating ? ['','Single candidates','Hidden singles and locked candidates','Naked pairs'][p.rating.tier] : '';
+    return label + ' · ' + n + ' × ' + n + (technique ? ' · ' + technique : '');
   }
   function summaryHTML() {
     const items = state.summary.map(function (item) {
@@ -4384,11 +3884,25 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const app = document.getElementById('app') || document.body.appendChild(document.createElement('div'));
     if (!app.id) app.id = 'app';
     const focus = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-act');
+    const inputFocus = document.activeElement && document.activeElement.tagName === 'INPUT' ? ['data-guess', 'data-rung', 'data-end'].find(function (key) { return document.activeElement.hasAttribute(key); }) : null;
+    const inputValue = inputFocus && document.activeElement.getAttribute(inputFocus);
+    const selection = inputFocus && document.activeElement.selectionStart;
+    const cellFocus = document.activeElement && document.activeElement.classList.contains('cell') ? [document.activeElement.dataset.row, document.activeElement.dataset.col] : null;
+    const rulesOpen = !!document.querySelector('.rules[open]');
     app.innerHTML = state.view === 'table' ? tableHTML() : state.view === 'summary' ? summaryHTML() : playHTML();
     if (focus) {
       const next = app.querySelector('[data-act="' + focus + '"]');
       if (next) next.focus();
     }
+    if (inputFocus) {
+      const input = app.querySelector('[' + inputFocus + '="' + inputValue + '"]');
+      if (input) { input.focus({ preventScroll: true }); input.setSelectionRange(selection, selection); }
+    }
+    if (cellFocus) {
+      const cell = app.querySelector('[data-row="' + cellFocus[0] + '"][data-col="' + cellFocus[1] + '"]');
+      if (cell) { app.querySelectorAll('.cell').forEach(function (node) { node.tabIndex = -1; }); cell.tabIndex = 0; cell.focus({ preventScroll: true }); }
+    }
+    if (rulesOpen && app.querySelector('.rules')) app.querySelector('.rules').open = true;
     document.title = state.view === 'table' ? 'Nook' : 'Nook · ' + meta(state.game).name;
   }
   function stash() {
@@ -4401,13 +3915,19 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       difficulty: state.difficulty,
       seed: state.seed,
       play: state.play,
+      puzzle: JSON.stringify(state.puzzle),
       undo: state.undo.slice(-30),
       elapsed: Math.max(0, Math.round(elapsed))
     };
     save(data);
   }
+  let pendingGame = 0;
   function openGame(id, difficulty, seed, push) {
     stash();
+    pauseClock();
+    clearTimeout(pendingGame);
+    const available = meta(id).difficulties;
+    if (!available.some(function (diff) { return diff.id === difficulty; })) difficulty = available[0].id;
     state.view = 'game';
     state.game = id;
     state.difficulty = difficulty;
@@ -4418,6 +3938,8 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     state.elapsed = 0;
     state.timing = false;
     state.solved = false;
+    state.drag = null;
+    state.patchAnchor = null;
     state.status = 'Setting the pieces…';
     const data = prefs();
     data.difficulty = data.difficulty || {};
@@ -4427,7 +3949,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (push) history.pushState({ view: 'game' }, '', url);
     else history.replaceState({ view: 'game' }, '', url);
     render();
-    setTimeout(function () {
+    pendingGame = setTimeout(function () {
       const engine = engines()[id];
       if (!engine) {
         state.status = 'That deal did not hold.';
@@ -4439,12 +3961,15 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         state.play = freshPlay(state.puzzle);
         state.walls = state.puzzle.game === 'zip' ? zipWalls(state.puzzle) : state.puzzle.game === 'wend' ? new Set(state.puzzle.walls.map(function (wall) { return wall[0] + ',' + wall[1]; })) : null;
         const resume = prefs().resume;
-        if (resume && resume.game === id && resume.difficulty === difficulty && resume.seed === seed && resume.play) {
+        if (resume && resume.game === id && resume.difficulty === difficulty && resume.seed === seed && resume.play && resume.puzzle === JSON.stringify(state.puzzle)) {
           state.play = resume.play;
           state.undo = Array.isArray(resume.undo) ? resume.undo : [];
           state.elapsed = resume.elapsed || 0;
           state.timing = false;
           startClock();
+        } else if (resume && resume.game === id && resume.difficulty === difficulty && resume.seed === seed) {
+          save({ resume: null });
+          state.toast = 'This puzzle has changed. Here is the updated board.';
         }
         state.status = engine.tagline;
       } catch (err) {
@@ -4455,6 +3980,10 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   }
   function showTable(push) {
     stash();
+    pauseClock();
+    clearTimeout(pendingGame);
+    state.timing = false;
+    state.drag = null;
     state.view = 'table';
     state.round = null;
     state.summary = null;
@@ -4473,8 +4002,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     }
     if (act === 'copy') {
       const done = function () { state.toast = 'Link copied.'; render(); setTimeout(function () { state.toast = ''; render(); }, 1400); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done).catch(done);
-      else done();
+      const failed = function () { state.toast = 'Copy the page address to share this puzzle.'; render(); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done).catch(failed);
+      else failed();
       return;
     }
     if (act === 'mistakes') {
@@ -4487,8 +4017,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       if (!prev) return;
       state.play = JSON.parse(prev);
       state.solved = false;
-      state.timing = state.elapsed > 0;
-      if (state.timing) state.started = performance.now() - state.elapsed;
+      if (state.elapsed > 0) startClock();
       render();
       return;
     }
@@ -4497,7 +4026,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       const had = state.timing && !state.solved;
       state.round = null;
       if (had) state.toast = 'The last one is on the shelf.';
-      openGame(state.game, state.difficulty, freshSeed(), false);
+      openGame(state.game, state.difficulty, anotherSeed(), false);
       if (had) setTimeout(function () {
         state.toast = '';
         const note = document.querySelector('.toast');
@@ -4521,13 +4050,14 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         openGame(next, diff, dailySeed(next, diff), false);
         return;
       }
-      openGame(state.game, state.difficulty, freshSeed(), false);
+      openGame(state.game, state.difficulty, anotherSeed(), false);
       return;
     }
     if (act === 'guess') {
       if (!state.puzzle || state.puzzle.game !== 'pinpoint' || state.solved) return;
       const field = document.querySelector('[data-guess]');
       if (field) state.play.text = field.value;
+      if (!state.play.text.trim()) { state.play.note = 'Enter a connection, or choose Next clue.'; render(); return; }
       if (pinpointSolved()) {
         state.play.note = '';
         markSolved();
@@ -4536,8 +4066,10 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       }
       pushUndo();
       startClock();
-      if (state.play.shown < state.puzzle.words.length) state.play.shown += 1;
-      state.play.note = 'Not that. Another word is on the table.';
+      if (state.play.shown < state.puzzle.words.length) {
+        state.play.shown += 1;
+        state.play.note = 'Not quite. Here is another clue.';
+      } else state.play.note = 'Not quite. All five clues are shown. Try another connection or use Hint.';
       render();
       const sheet = document.querySelector('.sheet');
       if (sheet) {
@@ -4561,7 +4093,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       state.play.order[at] = state.play.order[to];
       state.play.order[to] = tmp;
       startClock();
-      render();
+      afterMove(false);
       return;
     }
     if (act === 'pencil') {
@@ -4585,12 +4117,14 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const input = event.target;
     if (input.getAttribute('data-guess') != null) {
       state.play.text = input.value;
+      startClock();
       return;
     }
     const rung = input.getAttribute('data-rung');
     if (rung != null && state.puzzle.game === 'crossclimb') {
       const clean = input.value.toLowerCase().replace(/[^a-z]/g, '').slice(0, state.puzzle.letters);
       if (clean !== input.value) input.value = clean;
+      pushUndo();
       state.play.typed[Number(rung)] = clean;
       startClock();
       refreshCross();
@@ -4600,6 +4134,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (end && state.puzzle.game === 'crossclimb') {
       const clean = input.value.toLowerCase().replace(/[^a-z]/g, '').slice(0, state.puzzle.letters);
       if (clean !== input.value) input.value = clean;
+      pushUndo();
       state.play[end] = clean;
       startClock();
       if (crossSolved()) {
@@ -4626,8 +4161,15 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     document.addEventListener('pointerdown', onPointerDown, { passive: false });
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerCancel);
+    app.addEventListener('submit', function (event) { event.preventDefault(); if (state.game === 'pinpoint') onAct('guess'); });
     app.addEventListener('input', onField);
     app.addEventListener('click', function (event) {
+      const cell = event.target.closest('.cell');
+      if (cell && event.detail === 0) {
+        activateCell(Number(cell.dataset.row), Number(cell.dataset.col));
+        return;
+      }
       const fresh = event.target.closest('[data-fresh]');
       if (fresh) {
         const id = fresh.getAttribute('data-fresh');
@@ -4676,6 +4218,26 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         }
         return;
       }
+      const focusedCell = event.target.closest && event.target.closest('.cell');
+      if (focusedCell && state.puzzle && !state.solved) {
+        const r = Number(focusedCell.dataset.row), c = Number(focusedCell.dataset.col);
+        const n = state.puzzle.rows || state.puzzle.n || state.puzzle.size;
+        const directions = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+        if (directions[event.key]) {
+          event.preventDefault();
+          const dir = directions[event.key];
+          const next = document.querySelector('[data-row="' + Math.max(0, Math.min(n - 1, r + dir[0])) + '"][data-col="' + Math.max(0, Math.min(n - 1, c + dir[1])) + '"]');
+          if (next) { focusedCell.tabIndex = -1; next.tabIndex = 0; next.focus(); }
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          activateCell(r, c);
+          const next = document.querySelector('[data-row="' + r + '"][data-col="' + c + '"]');
+          if (next) next.focus();
+          return;
+        }
+      }
       if (event.key === 'Escape') showTable(true);
       if (event.key === 'u' || event.key === 'U') onAct('undo');
       if (event.key === 'h' || event.key === 'H') onAct('hint');
@@ -4686,7 +4248,8 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     });
     window.addEventListener('pagehide', stash);
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden') stash();
+      if (document.visibilityState === 'hidden') { stash(); pauseClock(); }
+      else if (state.view === 'game' && state.elapsed > 0 && !state.solved) startClock();
     });
     window.addEventListener('popstate', function () {
       const raw = location.hash.replace(/^#/, '');

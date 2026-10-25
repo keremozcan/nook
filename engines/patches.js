@@ -138,36 +138,6 @@
     return found;
   }
 
-  function forceSingleton(rects) {
-    let best = 0;
-    for (let i = 1; i < rects.length; i++) {
-      if (rects[i].h * rects[i].w > rects[best].h * rects[best].w) best = i;
-    }
-    const rect = rects[best];
-    if (rect.h * rect.w === 1) return rects;
-    if (rect.w >= rect.h && rect.w >= 2) {
-      const sliver = { r: rect.r, c: rect.c, h: rect.h, w: 1 };
-      rect.c += 1;
-      rect.w -= 1;
-      rects.push(sliver);
-      if (sliver.w === 1 && sliver.h > 1 && rect.h >= 2) {
-        /* keep the sliver; it may be tall */
-      }
-      if (sliver.h > 1) {
-        const cell = { r: sliver.r, c: sliver.c, h: 1, w: 1 };
-        sliver.r += 1;
-        sliver.h -= 1;
-        rects.push(cell);
-      }
-      return rects;
-    }
-    const cell = { r: rect.r, c: rect.c, h: 1, w: 1 };
-    rect.r += 1;
-    rect.h -= 1;
-    rects.push(cell);
-    return rects;
-  }
-
   function generate(difficulty, seed) {
     const side = difficulty === 'easy' ? 6 : difficulty === 'tricky' ? 7 : 8;
     const leaf = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 4 : 5;
@@ -189,17 +159,10 @@
           if (count(built.clues, side, side) === 1) loosened++;
           else built.clues[i] = { r: built.clues[i].r, c: built.clues[i].c, area: built.clues[i].area, shape: prev };
         }
-        if (!loosened) {
-          forceSingleton(rects);
-          const again = build(rects, side, side, rng);
-          if (count(again.clues, side, side) !== 1) continue;
-          const singleton = again.clues.findIndex((cl) => cl.area === 1);
-          if (singleton < 0) continue;
-          again.clues[singleton] = { r: again.clues[singleton].r, c: again.clues[singleton].c, area: 1, shape: 'any' };
-          if (count(again.clues, side, side) !== 1) continue;
-          built.clues = again.clues;
-          built.solution = again.solution;
-        }
+        // A singleton area-1 clue is not a useful substitute for withheld
+        // shape information: it pins a cell outright. Retry instead of
+        // labeling that fallback puzzle fiendish.
+        if (loosened < 2) continue;
       }
       return {
         game: 'patches',

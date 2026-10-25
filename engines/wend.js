@@ -11,6 +11,7 @@ apple arrow beach berry black bread brown brush candy chair charm cloud coral da
 butter candle castle bridge garden forest island market orange purple yellow silver winter summer spring basket bottle branch breeze bucket button canyon circle clover coffee copper cotton cradle cricket dancer desert donkey dragon drawer flight flower friend helmet jacket jungle kettle kitten ladder marble meadow mirror needle orchid pebble picnic pillow planet pocket potato rabbit ribbon rocket sailor season shadow singer sister sketch sleeve soccer socket square stream string summer sunset temple tennis timber tomato tunnel turkey turtle valley violet walnut window
 lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library morning picture rainbow silence sunrise thunder village whisper blossom compass crystal evening harbour meadowlark`.split(/\s+/).filter((word, i, all) => word.length >= 4 && word.length <= 7 && all.indexOf(word) === i && word !== word.split('').reverse().join(''));
   const DICT = new Set(WORDS);
+  const PREFIXES = new Set(WORDS.flatMap((word) => Array.from({ length: word.length }, (_, i) => word.slice(0, i + 1))));
 
   function byLength(len) {
     return WORDS.filter((word) => word.length === len);
@@ -39,14 +40,24 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     let total = 0;
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!blocked[r][c]) total++;
     const used = Array.from({ length: n }, () => Array(n).fill(false));
-    const starts = [];
+    let starts = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!blocked[r][c]) starts.push([r, c]);
-    shuffle(rng, starts);
+    const colours = [0, 0];
+    starts.forEach(([r, c]) => { colours[(r + c) % 2]++; });
+    // A path alternates checkerboard colours and can only have two dead ends.
+    if (Math.abs(colours[0] - colours[1]) > 1) return null;
+    const ends = starts.filter(([r, c]) => neighbors(n, blocked, used, r, c).length === 1);
+    if (ends.length > 2 || starts.some(([r, c]) => !neighbors(n, blocked, used, r, c).length)) return null;
+    if (ends.length) starts = ends;
+    if (colours[0] !== colours[1]) starts = starts.filter(([r, c]) => colours[(r + c) % 2] > colours[1 - (r + c) % 2]);
+    starts = shuffle(rng, starts);
+    let nodes = 0;
     function dfs(path) {
+      // Some wall arrangements have no path; don't lock the page searching them.
+      if (++nodes > 20000) return false;
       if (path.length === total) return true;
       const [r, c] = path[path.length - 1];
-      const next = neighbors(n, blocked, used, r, c);
-      shuffle(rng, next);
+      const next = shuffle(rng, neighbors(n, blocked, used, r, c));
       next.sort((a, b) => neighbors(n, blocked, used, a[0], a[1]).length - neighbors(n, blocked, used, b[0], b[1]).length);
       for (let i = 0; i < next.length; i++) {
         const [rr, cc] = next[i];
@@ -59,6 +70,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       return false;
     }
     for (let s = 0; s < Math.min(6, starts.length); s++) {
+      nodes = 0;
       for (let r = 0; r < n; r++) used[r].fill(false);
       const path = [starts[s]];
       used[starts[s][0]][starts[s][1]] = true;
@@ -107,6 +119,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       function spell(r, c, word, depth, nextMin) {
         nodes++;
         if (count >= limit || nodes > cap) return;
+        if (!PREFIXES.has(word)) return;
         if (depth === len) {
           if (DICT.has(word)) bt(li + 1, nextMin);
           return;
@@ -139,11 +152,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const lengths = spec.lengths;
     const spots = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) spots.push([r, c]);
-    for (let attempt = 0; attempt < 12; attempt++) {
+    for (let attempt = 0; attempt < 24; attempt++) {
       const rng = makeRng(String(seed) + ':wend:' + difficulty + ':' + attempt);
       let carved = null;
       let walls = null;
-      for (let wallTry = 0; wallTry < 8 && !carved; wallTry++) {
+      for (let wallTry = 0; wallTry < 32 && !carved; wallTry++) {
         walls = shuffle(rng, spots.slice()).slice(0, spec.walls);
         carved = carve(n, lengths.slice().sort((a, b) => b - a), walls, rng);
       }

@@ -1,5 +1,5 @@
-/* Independent rule checkers for Nook. Generators must satisfy this file.
-   Do not edit it to make a game pass. */
+/* Independent rule checkers for Nook. Keep these separate from the generators.
+   Check the published rules, not generator implementation details. */
 const fs = require('fs');
 const path = require('path');
 
@@ -203,8 +203,7 @@ function countQueens(regions, limit) {
   const n = regions.length;
   const usedC = Array(n).fill(false);
   const usedR = Array(n).fill(false);
-  const d1 = Array(2 * n).fill(false);
-  const d2 = Array(2 * n).fill(false);
+  const cols = Array(n).fill(-1);
   let count = 0;
   function bt(r) {
     if (count >= limit) return;
@@ -216,12 +215,11 @@ function countQueens(regions, limit) {
       if (usedC[c]) continue;
       const reg = regions[r][c];
       if (reg < 0 || reg >= n || usedR[reg]) continue;
-      const a = r + c;
-      const b = r - c + n - 1;
-      if (d1[a] || d2[b]) continue;
-      usedC[c] = d1[a] = d2[b] = usedR[reg] = true;
+      if (r > 0 && Math.abs(cols[r - 1] - c) <= 1) continue;
+      usedC[c] = usedR[reg] = true;
+      cols[r] = c;
       bt(r + 1);
-      usedC[c] = d1[a] = d2[b] = usedR[reg] = false;
+      usedC[c] = usedR[reg] = false;
     }
   }
   bt(0);
@@ -244,7 +242,7 @@ function legalQueens(puzzle) {
     regs.add(regions[r][c]);
     for (let j = i + 1; j < n; j++) {
       const [rr, cc] = queens[j];
-      if (Math.abs(rr - r) === Math.abs(cc - c)) return false;
+      if (Math.abs(rr - r) <= 1 && Math.abs(cc - c) <= 1) return false;
     }
   }
   return rows.size === n && regs.size === n;

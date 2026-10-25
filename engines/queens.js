@@ -15,7 +15,7 @@
       for (const c of order[r]) {
         let ok = true;
         for (let i = 0; i < r; i++) {
-          if (cols[i] === c || Math.abs(cols[i] - c) === r - i) {
+          if (cols[i] === c || (r - i === 1 && Math.abs(cols[i] - c) === 1)) {
             ok = false;
             break;
           }
@@ -36,39 +36,28 @@
     queens.forEach(([r, c], i) => {
       region[r][c] = i;
     });
+    // Let regions grow to different sizes. Equal-sized regions leave too many
+    // interchangeable crown placements under the no-touch rule.
     let empty = n * n - n;
-    let spins = 0;
-    const limit = n * n * n * 4;
-    while (empty > 0 && spins < limit) {
-      spins++;
-      const sizes = Array(n).fill(0);
-      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (region[r][c] >= 0) sizes[region[r][c]]++;
-      let bestId = -1;
-      let bestSize = 1e9;
-      let bestOptions = null;
-      for (let id = 0; id < n; id++) {
-        const options = [];
-        for (let r = 0; r < n; r++) {
-          for (let c = 0; c < n; c++) {
-            if (region[r][c] !== id) continue;
-            for (const [dr, dc] of DIRS) {
-              const rr = r + dr;
-              const cc = c + dc;
-              if (rr >= 0 && cc >= 0 && rr < n && cc < n && region[rr][cc] < 0) options.push([rr, cc]);
-            }
+    while (empty > 0) {
+      const frontier = [];
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          const id = region[r][c];
+          if (id < 0) continue;
+          for (const [dr, dc] of DIRS) {
+            const rr = r + dr;
+            const cc = c + dc;
+            if (rr >= 0 && cc >= 0 && rr < n && cc < n && region[rr][cc] < 0) frontier.push([rr, cc, id]);
           }
         }
-        if (!options.length || sizes[id] > bestSize) continue;
-        bestSize = sizes[id];
-        bestId = id;
-        bestOptions = options;
       }
-      if (!bestOptions) return null;
-      const pick = bestOptions[int(rng, 0, bestOptions.length - 1)];
-      region[pick[0]][pick[1]] = bestId;
+      if (!frontier.length) return null;
+      const [r, c, id] = frontier[int(rng, 0, frontier.length - 1)];
+      region[r][c] = id;
       empty--;
     }
-    return empty === 0 ? region : null;
+    return region;
   }
 
   function count(regions, limit) {
@@ -76,8 +65,7 @@
     const cap = limit || 2;
     const usedC = Array(n).fill(false);
     const usedR = Array(n).fill(false);
-    const d1 = Array(2 * n).fill(false);
-    const d2 = Array(2 * n).fill(false);
+    const columns = Array(n).fill(-1);
     let found = 0;
     function bt(r) {
       if (found >= cap) return;
@@ -89,12 +77,12 @@
         if (usedC[c]) continue;
         const reg = regions[r][c];
         if (usedR[reg]) continue;
-        const a = r + c;
-        const b = r - c + n - 1;
-        if (d1[a] || d2[b]) continue;
-        usedC[c] = d1[a] = d2[b] = usedR[reg] = true;
+        if (r > 0 && Math.abs(columns[r - 1] - c) === 1) continue;
+        columns[r] = c;
+        usedC[c] = usedR[reg] = true;
         bt(r + 1);
-        usedC[c] = d1[a] = d2[b] = usedR[reg] = false;
+        usedC[c] = usedR[reg] = false;
+        columns[r] = -1;
         if (found >= cap) return;
       }
     }
@@ -144,7 +132,9 @@
 
   function repair(region, queens, rng) {
     const n = region.length;
-    let score = count(region, 8);
+    // Keep enough of the solution count to distinguish improvements. Capping
+    // at eight made boards with hundreds of solutions look equally good.
+    let score = count(region, 1000);
     for (let round = 0; round < 30; round++) {
       if (score === 1) return true;
       const moves = [];
@@ -167,7 +157,7 @@
         if (!canLeave(region, move[0], move[1])) continue;
         const old = region[move[0]][move[1]];
         region[move[0]][move[1]] = move[2];
-        const next = count(region, 8);
+        const next = count(region, 1000);
         region[move[0]][move[1]] = old;
         if (next > 0 && next < bestScore) {
           best = move;
@@ -185,7 +175,7 @@
       const shake = legal[int(rng, 0, legal.length - 1)];
       const old = region[shake[0]][shake[1]];
       region[shake[0]][shake[1]] = shake[2];
-      const next = count(region, 8);
+      const next = count(region, 1000);
       if (next <= 0) region[shake[0]][shake[1]] = old;
       else score = next;
     }

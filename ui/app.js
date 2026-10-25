@@ -2,26 +2,28 @@
   const ORDER = ['zip', 'sudoku', 'murdoku', 'queens', 'tango', 'patches', 'pinpoint', 'crossclimb', 'wend'];
   const WORDS = ['amber', 'lantern', 'quiet', 'cedar', 'linen', 'copper', 'harbor', 'meadow', 'velvet', 'paper', 'orchard', 'willow', 'candle', 'marble', 'thistle', 'river', 'saffron', 'pewter', 'garden', 'ivory', 'cinder', 'maple', 'birch', 'honey', 'flint', 'pearl', 'olive', 'hearth', 'clover', 'spruce', 'cobalt', 'sorrel', 'yarrow', 'pebble', 'autumn', 'silver', 'brass', 'nectar', 'fable', 'linenwood'];
   const GLASS = ['#e6d3b4', '#8eae9c', '#e0b08a', '#9aafc4', '#e3b7b0', '#c9c296', '#6f8f86', '#d7aeb8', '#b7c49a', '#a9c4c6'];
-  const WEAVES = [
-    'repeating-linear-gradient(90deg,#efe6d4 0 5px,#e3d5bf 5px 6px)',
-    'repeating-linear-gradient(0deg,#efe2cf 0 5px,#e6d3bc 5px 6px)',
-    'repeating-linear-gradient(45deg,#eadcc6 0 4px,#e3d2b8 4px 5px)',
-    'repeating-linear-gradient(90deg,#f3e7d4 0 2px,#e7d5be 2px 4px)',
-    'linear-gradient(180deg,#f0e4d0,#e5d4bc)',
-    'repeating-linear-gradient(135deg,#efe6d4 0 6px,#e4d4be 6px 7px)',
-    'linear-gradient(90deg,#f4ead8,#e8d7c0)',
-    'repeating-linear-gradient(0deg,#f1e6d4 0 3px,#e6d5bf 3px 4px)'
-  ];
+  const WEAVES = ['#d9edf0', '#f8e6bc', '#e6def2', '#dbe8cc', '#f4d5d0', '#dde5f6', '#d0e8df', '#f1dcbb'];
   const RULES = {
-    zip: 'One line, through every square. Touch the numbers in order. The heavy borders are walls.',
-    queens: 'One queen in each row, each column, and each colour. Two queens may not touch, even on a corner.',
-    tango: 'Each row and column is split evenly between suns and moons. Never three of the same in a line. An equals sign means the neighbours match. A cross means they differ.',
+    zip: 'One line, through every square. Visit the numbers in order and finish at the last number. The heavy borders are walls. Drag to draw; moving back one square erases that step. With a keyboard, use arrows to move and Space to extend the line.',
+    queens: 'One queen in each row, each column, and each colour. Two queens may not touch, even on a corner. Tap to cycle through a crown, a dot, and an empty square.',
+    tango: 'Each row and column is split evenly between suns and moons. Never three of the same in a line. An equals sign means the neighbours match. A cross means they differ. Shaded symbols are fixed clues. Tap an empty square to cycle through sun, moon and empty.',
     sudoku: 'Each row, column, and box contains every digit once.',
-    patches: 'Cover the cloth with rectangles. Each patch holds one stitch. A number is its size. A shape means square, wide, or tall.',
+    patches: 'Cover the board with rectangles, without overlaps or gaps. Each rectangle contains exactly one clue. Its number is the area in squares; its symbol means square, wider than tall, or taller than wide. A diamond allows any proportion. Drag between opposite corners; tap a placed patch to remove it. With a keyboard, use arrows and Space to choose its two corners.',
     murdoku: 'Everyone has their own row and their own column. The slips tell you where they stood.',
-    pinpoint: 'Five words share one category. Name it. Fewer words make a sharper guess.',
+    pinpoint: 'Five clues share a connection: a familiar category, a word that fits with each clue, or a letter pattern. Enter the connection and choose Guess. A wrong guess reveals the next clue; Next clue reveals one without a guess. When all five are shown, Hint reveals the answer. Common synonyms are accepted.',
     crossclimb: 'Fill the rungs, then arrange them so each neighbouring word changes exactly one letter. The top and bottom then share one clue, and together they name one thing.',
-    wend: 'Drag through touching letters to spell the hidden words. Every open letter is used once. Walls cannot be crossed. A real word on the wrong path does not count.'
+    wend: 'Drag through letters sharing an edge to spell the hidden words. The lengths below show what to look for. Every open letter is used once. Walls cannot be crossed. A real word on the wrong path does not count. With a keyboard, use arrows and Space to select letters; a complete hidden word locks into place.'
+  };
+  const INTRO = {
+    zip: 'Start at 1. Draw one continuous line through every square, visiting the numbers in order.',
+    queens: 'Place one crown in every row, column and coloured region. Crowns cannot touch.',
+    tango: 'Fill each row and column with equal suns and moons. No three alike in a row.',
+    sudoku: 'Fill each row, column and outlined box with every digit once. Select a cell, then a number.',
+    patches: 'Drag a rectangle around each clue. Its number is the area; its shape is the proportion.',
+    murdoku: 'Select a person, then place them using the clues. Each person needs a separate row and column.',
+    pinpoint: 'Find the connection between five clues. Guess whenever you like, or reveal the next clue.',
+    crossclimb: 'Solve the clues, then use the arrows to arrange a ladder: change one letter at every step.',
+    wend: 'Drag along letters sharing an edge to find words of the lengths shown below. Use every letter once.'
   };
   const FALLBACK = {
     zip: ['Zip', 'One path through every cell.'],
@@ -77,7 +79,7 @@
   }
   function save(partial) {
     const next = Object.assign({ mistakes: true, best: {}, difficulty: {} }, prefs(), partial);
-    localStorage.setItem('nook.v1', JSON.stringify(next));
+    try { localStorage.setItem('nook.v1', JSON.stringify(next)); } catch (err) { /* Play still works without storage. */ }
     return next;
   }
   function mistakesOn() {
@@ -89,6 +91,16 @@
     let b = WORDS[Math.floor(Math.random() * WORDS.length)];
     if (a === b) b = WORDS[(WORDS.indexOf(a) + 7) % WORDS.length];
     return a + '-' + b + '-' + (Math.floor(Math.random() * 9) + 1);
+  }
+  function anotherSeed() {
+    let seed = freshSeed();
+    if (!state.puzzle || !['pinpoint', 'crossclimb'].includes(state.game)) return seed;
+    for (let i = 0; i < 20; i++) {
+      const p = engines()[state.game].generate(state.difficulty, seed);
+      if (state.game === 'pinpoint' ? p.category !== state.puzzle.category : p.top !== state.puzzle.top || p.bottom !== state.puzzle.bottom) return seed;
+      seed = freshSeed();
+    }
+    return seed;
   }
   function dailySeed(game, difficulty) {
     const d = new Date();
@@ -133,8 +145,15 @@
     const best = (prefs().best || {})[state.game + '/' + state.difficulty];
     return best == null ? '' : 'best ' + fmt(best * 1000);
   }
+  function pauseClock() {
+    if (state.timing) state.elapsed = performance.now() - state.started;
+    state.timing = false;
+    clearInterval(state.tick);
+    state.tick = 0;
+  }
   function markSolved() {
     if (state.solved) return;
+    pauseClock();
     state.solved = true;
     state.timing = false;
     const key = state.game + '/' + state.difficulty;
@@ -189,11 +208,16 @@
     if (zipBlocked(last[0], last[1], r, c)) return 'no';
     const num = numbers[r][c];
     if (num && num !== zipNeed(path)) return 'no';
+    const max = Math.max.apply(null, numbers.flat());
+    if (num === max && path.length !== state.puzzle.rows * state.puzzle.cols - 1) return 'no';
     path.push([r, c]);
     return 'extend';
   }
   function zipSolved() {
-    return state.play.path.length === state.puzzle.rows * state.puzzle.cols;
+    const path = state.play.path;
+    if (path.length !== state.puzzle.rows * state.puzzle.cols) return false;
+    const last = path[path.length - 1];
+    return state.puzzle.numbers[last[0]][last[1]] === Math.max.apply(null, state.puzzle.numbers.flat());
   }
 
   function queenList() {
@@ -212,7 +236,7 @@
         const a = qs[i];
         const b = qs[j];
         const region = state.puzzle.regions[a[0]][a[1]] === state.puzzle.regions[b[0]][b[1]];
-        const diag = Math.abs(a[0] - b[0]) === Math.abs(a[1] - b[1]);
+        const diag = Math.abs(a[0] - b[0]) === 1 && Math.abs(a[1] - b[1]) === 1;
         if (a[0] === b[0] || a[1] === b[1] || region || diag) bad[a[0]][a[1]] = bad[b[0]][b[1]] = true;
       }
     }
@@ -453,7 +477,7 @@
     if (game === 'crossclimb') {
       if (!crossWordsIn()) return 'Answer each rung.';
       if (!crossChain()) return 'Now change one letter at each step.';
-      if (state.play.top !== state.puzzle.top || state.play.bottom !== state.puzzle.bottom) return state.puzzle.endClue;
+      if (!crossSolved()) return state.puzzle.endClue;
       return 'The ladder is complete.';
     }
     if (game === 'wend') {
@@ -464,8 +488,9 @@
     return person ? 'Where was ' + person.name + '?' : 'Place everyone.';
   }
   function pinpointSolved() {
-    const text = state.play.text.trim().toLowerCase().replace(/\s+/g, ' ');
-    return state.puzzle.accept.indexOf(text) !== -1;
+    function normalize(text) { return text.toLowerCase().replace(/[“”"'‘’]/g, '').replace(/[-–—]/g, ' ').trim().replace(/\s+/g, ' '); }
+    const text = normalize(state.play.text);
+    return state.puzzle.accept.some(function (answer) { return normalize(answer) === text; });
   }
   function letterSteps(a, b) {
     if (!a || !b || a.length !== b.length) return 99;
@@ -477,13 +502,18 @@
     return state.puzzle.rungs.every(function (rung, i) { return state.play.typed[i] === rung.answer; });
   }
   function crossChain() {
-    const seq = [state.puzzle.top].concat(state.play.order.map(function (i) { return state.puzzle.rungs[i].answer; }), [state.puzzle.bottom]);
+    const seq = state.play.order.map(function (i) { return state.play.typed[i]; });
     for (let i = 1; i < seq.length; i++) if (letterSteps(seq[i - 1], seq[i]) !== 1) return false;
     return true;
   }
   function crossEndsOpen() { return crossWordsIn() && crossChain(); }
   function crossSolved() {
-    return crossEndsOpen() && state.play.top === state.puzzle.top && state.play.bottom === state.puzzle.bottom;
+    if (!crossEndsOpen()) return false;
+    const top = state.play.top;
+    const bottom = state.play.bottom;
+    const pair = (top === state.puzzle.top && bottom === state.puzzle.bottom) || (top === state.puzzle.bottom && bottom === state.puzzle.top);
+    const seq = state.play.order.map(function (i) { return state.play.typed[i]; });
+    return pair && letterSteps(top, seq[0]) === 1 && letterSteps(seq[seq.length - 1], bottom) === 1;
   }
 
   function hint() {
@@ -500,7 +530,7 @@
     } else if (puzzle.game === 'queens') {
       for (let r = 0; r < puzzle.n; r++) {
         const spot = puzzle.solution.find(function (cell) { return cell[0] === r; });
-        if (state.play.marks[r][spot[1]] === 'queen') continue;
+        if (state.play.marks[r][spot[1]] === 'queen' && state.play.marks[r].filter(function (mark) { return mark === 'queen'; }).length === 1) continue;
         for (let c = 0; c < puzzle.n; c++) if (state.play.marks[r][c] === 'queen') state.play.marks[r][c] = null;
         state.play.marks[r][spot[1]] = 'queen';
         break;
@@ -508,7 +538,7 @@
     } else if (puzzle.game === 'tango') {
       for (let r = 0; r < puzzle.n && !state.solved; r++) {
         for (let c = 0; c < puzzle.n; c++) {
-          if (puzzle.givens[r][c] || state.play.marks[r][c]) continue;
+          if (puzzle.givens[r][c] || state.play.marks[r][c] === puzzle.solution[r][c]) continue;
           state.play.marks[r][c] = puzzle.solution[r][c];
           r = puzzle.n;
           break;
@@ -517,7 +547,7 @@
     } else if (puzzle.game === 'sudoku') {
       for (let r = 0; r < puzzle.size; r++) {
         for (let c = 0; c < puzzle.size; c++) {
-          if (sudokuDigit(r, c)) continue;
+          if (puzzle.givens[r][c] || state.play.values[r][c] === puzzle.solution[r][c]) continue;
           state.play.values[r][c] = puzzle.solution[r][c];
           state.play.notes[r][c] = 0;
           r = puzzle.size;
@@ -537,9 +567,11 @@
           }
         }
         if (match) continue;
+        const overlaps = new Set([id]);
+        for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) overlaps.add(state.play.cells[r][c]);
         for (let r = 0; r < puzzle.rows; r++) {
           for (let c = 0; c < puzzle.cols; c++) {
-            if (state.play.cells[r][c] === id) state.play.cells[r][c] = -1;
+            if (overlaps.has(state.play.cells[r][c])) state.play.cells[r][c] = -1;
           }
         }
         for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) state.play.cells[r][c] = id;
@@ -553,7 +585,7 @@
         if (have && have[0] === want[0] && have[1] === want[1]) continue;
         puzzle.people.forEach(function (other) {
           const at = state.play.pos[other.id];
-          if (at && at[0] === want[0] && at[1] === want[1]) state.play.pos[other.id] = null;
+          if (other.id !== person.id && at && (at[0] === want[0] || at[1] === want[1])) delete state.play.pos[other.id];
         });
         state.play.pos[person.id] = [want[0], want[1]];
         state.play.selected = person.id;
@@ -572,7 +604,7 @@
           break;
         }
       }
-      if (!filled && !crossChain()) {
+      if (!filled && (!crossChain() || letterSteps(puzzle.top, state.play.typed[state.play.order[0]]) !== 1)) {
         state.play.order = puzzle.solution.slice(1, -1).map(function (word) {
           return puzzle.rungs.findIndex(function (rung) { return rung.answer === word; });
         });
@@ -586,7 +618,7 @@
         let prefix = 0;
         const trace = state.play.trace;
         while (prefix < trace.length && prefix < next.cells.length && trace[prefix][0] === next.cells[prefix][0] && trace[prefix][1] === next.cells[prefix][1]) prefix += 1;
-        if (prefix >= next.cells.length) {
+        if (prefix >= next.cells.length - 1) {
           state.play.found.push({ word: next.word, cells: next.cells.map(function (cell) { return [cell[0], cell[1]]; }) });
           state.play.trace = [];
         } else state.play.trace = next.cells.slice(0, prefix + 1).map(function (cell) { return [cell[0], cell[1]]; });
@@ -620,6 +652,9 @@
     const cell = cellFromEvent(event);
     if (!cell) return;
     state.drag = { r: cell[0], c: cell[1], x: event.clientX, y: event.clientY, moved: false, dirty: false };
+    const cellNode = board.querySelector('[data-row="' + cell[0] + '"][data-col="' + cell[1] + '"]');
+    if (cellNode) cellNode.focus({ preventScroll: true });
+    if (board.setPointerCapture && event.pointerId != null) board.setPointerCapture(event.pointerId);
     if (state.puzzle.game === 'zip' || state.puzzle.game === 'patches' || state.puzzle.game === 'wend') pushUndo();
     if (state.puzzle.game === 'wend') {
       const before = state.play.trace.length;
@@ -643,6 +678,17 @@
   function onPointerMove(event) {
     if (!state.drag || state.solved) return;
     if (Math.abs(event.clientX - state.drag.x) + Math.abs(event.clientY - state.drag.y) > 8) state.drag.moved = true;
+    if (state.drag.moved && (state.puzzle.game === 'zip' || state.puzzle.game === 'wend') && !event.interpolated) {
+      const x = state.drag.lastX == null ? state.drag.x : state.drag.lastX;
+      const y = state.drag.lastY == null ? state.drag.y : state.drag.lastY;
+      const board = document.querySelector('.board');
+      const unit = board.getBoundingClientRect().width / state.puzzle.rows;
+      const steps = Math.ceil(Math.hypot(event.clientX - x, event.clientY - y) / (unit / 4));
+      for (let i = 1; i <= steps; i++) onPointerMove({ clientX: x + (event.clientX - x) * i / steps, clientY: y + (event.clientY - y) * i / steps, interpolated: true });
+      state.drag.lastX = event.clientX;
+      state.drag.lastY = event.clientY;
+      return;
+    }
     const cell = cellFromEvent(event);
     if (!cell) return;
     if (state.puzzle.game === 'wend' && state.drag.moved) {
@@ -709,6 +755,14 @@
           for (let c = 0; c < state.play.cells[r].length; c++) if (state.play.cells[r][c] === occupant) state.play.cells[r][c] = -1;
         }
         afterMove(false);
+      } else {
+        const id = patchOk(cell[0], cell[1], cell[0], cell[1]);
+        if (id >= 0) {
+          pushUndo();
+          state.play.cells[cell[0]][cell[1]] = id;
+          startClock();
+          afterMove(false);
+        }
       }
       return;
     }
@@ -770,6 +824,46 @@
     if (Math.abs(last[0] - r) + Math.abs(last[1] - c) !== 1) return;
     trace.push([r, c]);
   }
+  function onPointerCancel() {
+    if (!state.drag) return;
+    if (['zip', 'patches', 'wend'].includes(state.game)) {
+      const before = state.undo.pop();
+      if (before) state.play = JSON.parse(before);
+    }
+    state.drag = null;
+    render();
+  }
+  function activateCell(r, c) {
+    if (!state.puzzle || state.solved) return;
+    if (state.game === 'zip') {
+      pushUndo();
+      if (!['extend', 'back'].includes(zipTouch(r, c))) { state.undo.pop(); return; }
+      startClock();
+      afterMove(false);
+    } else if (state.game === 'wend') {
+      pushUndo();
+      const before = JSON.stringify(state.play.trace);
+      wendTouch(r, c);
+      if (before === JSON.stringify(state.play.trace)) { state.undo.pop(); return; }
+      const trace = state.play.trace;
+      const word = state.puzzle.solution.find(function (word) { return word.cells.length === trace.length && word.cells.every(function (cell, i) { return cell[0] === trace[i][0] && cell[1] === trace[i][1]; }); });
+      if (word) { state.play.found.push({ word: word.word, cells: word.cells }); state.play.trace = []; }
+      startClock();
+      afterMove(false);
+    } else if (state.game === 'patches') {
+      if (!state.patchAnchor) { state.patchAnchor = [r, c]; render(); return; }
+      const anchor = state.patchAnchor;
+      state.patchAnchor = null;
+      const r0 = Math.min(anchor[0], r), c0 = Math.min(anchor[1], c), r1 = Math.max(anchor[0], r), c1 = Math.max(anchor[1], c);
+      const id = patchOk(r0, c0, r1, c1);
+      if (id >= 0) {
+        pushUndo();
+        for (let rr = r0; rr <= r1; rr++) for (let cc = c0; cc <= c1; cc++) state.play.cells[rr][cc] = id;
+        startClock();
+        afterMove(false);
+      } else render();
+    } else tapCell(r, c);
+  }
   function tapCell(r, c) {
     const puzzle = state.puzzle;
     if (puzzle.game === 'queens') {
@@ -794,17 +888,18 @@
         render();
         return;
       }
-      if (state.play.armed && !state.play.pencil) {
-        pushUndo();
-        state.play.values[r][c] = state.play.armed;
-        state.play.notes[r][c] = 0;
-        startClock();
-      }
       state.play.sel = [r, c];
       afterMove(false);
     } else if (puzzle.game === 'murdoku') {
       const occ = personAt(r, c);
       if (occ) {
+        if (state.play.selected === occ.id) {
+          pushUndo();
+          delete state.play.pos[occ.id];
+          startClock();
+          afterMove(false);
+          return;
+        }
         state.play.selected = occ.id;
         render();
         return;
@@ -823,6 +918,7 @@
     }
   }
   function onDigit(d) {
+    if (!state.play || state.solved) return;
     const play = state.play;
     if (!play.sel) {
       play.armed = play.armed === d ? null : d;
@@ -869,6 +965,7 @@
     for (let r = 0; r < n; r++) {
       for (let c = 0; c < n; c++) {
         const classes = ['cell'];
+        if (state.patchAnchor && state.patchAnchor[0] === r && state.patchAnchor[1] === c) classes.push('sel');
         let inner = '';
         if (game === 'zip') {
           const num = puzzle.numbers[r][c];
@@ -882,7 +979,6 @@
         } else if (game === 'queens') {
           const mark = state.play.marks[r][c];
           if (bad && bad[r][c]) classes.push('bad');
-          inner = '<span class="cell-fill" style="background:' + GLASS[puzzle.regions[r][c] % GLASS.length] + '"></span>';
           if (mark === 'queen') inner += crown();
           if (mark === 'dot') inner += '<i class="dot"></i>';
         } else if (game === 'tango') {
@@ -917,7 +1013,6 @@
           if (id >= 0 && r + 1 < n && state.play.cells[r + 1][c] >= 0 && state.play.cells[r + 1][c] !== id) classes.push('seam-s');
           const preview = state.drag && state.drag.preview;
           if (preview && r >= preview[0] && r <= preview[2] && c >= preview[1] && c <= preview[3]) classes.push('preview');
-          if (id >= 0) inner += '<span class="cloth" style="background:' + WEAVES[id % WEAVES.length] + '"></span>';
           const clue = puzzle.clues.find(function (item) { return item.r === r && item.c === c; });
           if (clue) {
             let glyph = '';
@@ -938,7 +1033,6 @@
           if (c + 1 < n && puzzle.roomOf[r][c] !== puzzle.roomOf[r][c + 1]) classes.push('room-e');
           if (r + 1 < n && puzzle.roomOf[r][c] !== puzzle.roomOf[r + 1][c]) classes.push('room-s');
           if (state.solved && puzzle.roomOf[r][c] === victimRoom) classes.push('lit');
-          inner += '<span class="wash" style="background:' + GLASS[roomIndex % GLASS.length] + '"></span>';
           if (labelHere) inner += '<span class="room-name">' + esc(room.name) + '</span>';
           if (obj) inner += '<span class="furn ' + esc(obj.kind) + '"><i></i><em>' + esc(obj.kind) + '</em></span>';
           if (person) {
@@ -955,7 +1049,9 @@
             inner = '<span class="letter">' + esc(puzzle.letters[r][c]) + '</span>';
           }
         }
-        html += '<div class="' + classes.join(' ') + '" style="' + washStyle(game, r, c) + '">' + inner + '</div>';
+        const label = 'Row ' + (r + 1) + ', column ' + (c + 1) + (game === 'sudoku' ? ', ' + (sudokuDigit(r, c) || 'empty') : game === 'tango' ? ', ' + (tangoAt(r, c) || 'empty') : game === 'zip' && puzzle.numbers[r][c] ? ', ' + puzzle.numbers[r][c] : game === 'wend' ? ', ' + (puzzle.letters[r][c] || 'wall') : '');
+        const active = state.play.sel || [0, 0];
+        html += '<div class="' + classes.join(' ') + '" role="button" tabindex="' + (r === active[0] && c === active[1] ? '0' : '-1') + '" data-row="' + r + '" data-col="' + c + '" aria-label="' + esc(label) + '" style="' + washStyle(game, r, c) + '">' + inner + '</div>';
       }
     }
     return (game === 'zip' ? zipOverlay() : game === 'wend' ? pathTrace(state.play.trace) : '') + html;
@@ -1136,7 +1232,7 @@
         const open = i < state.play.shown;
         html += '<li class="' + (open ? 'open' : 'hid') + '"><span>' + String(i + 1).padStart(2, '0') + '</span>' + (open ? esc(puzzle.words[i]) : '····') + '</li>';
       }
-      html += '</ol><form class="guess"><input data-guess type="text" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="The category" value="' + esc(state.play.text) + '"><button type="button" class="solid" data-act="guess">Guess</button></form>';
+      html += '</ol><form class="guess"><input data-guess type="text" aria-label="Your connection" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="The connection" value="' + esc(state.play.text) + '"' + (state.solved ? ' readonly' : '') + '><button type="button" class="solid" data-act="guess"' + (state.solved ? ' disabled' : '') + '>Guess</button></form>';
       return html;
     }
     let html = '<ol class="rungs">';
@@ -1144,11 +1240,11 @@
       const rung = puzzle.rungs[idx];
       const typed = state.play.typed[idx];
       const hit = typed === rung.answer ? ' hit' : '';
-      html += '<li class="rung' + hit + '"><button type="button" data-act="up" data-at="' + at + '" aria-label="Move up">↑</button><label><input data-rung="' + idx + '" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + esc(typed) + '"><em>' + esc(rung.clue) + '</em></label><button type="button" data-act="down" data-at="' + at + '" aria-label="Move down">↓</button></li>';
+      html += '<li class="rung' + hit + '"><button type="button" data-act="up" data-at="' + at + '" aria-label="Move rung up"' + (at === 0 || state.solved ? ' disabled' : '') + '>↑</button><label><input data-rung="' + idx + '" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + esc(typed) + '"' + (state.solved ? ' readonly' : '') + '><em>' + esc(rung.clue) + '</em></label><button type="button" data-act="down" data-at="' + at + '" aria-label="Move rung down"' + (at === state.play.order.length - 1 || state.solved ? ' disabled' : '') + '>↓</button></li>';
     });
     html += '</ol>';
     if (crossEndsOpen()) {
-      html = '<p class="end-clue">' + esc(puzzle.endClue) + '</p><div class="ends"><input data-end="top" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Top" value="' + esc(state.play.top) + '">' + html + '<input data-end="bottom" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Bottom" value="' + esc(state.play.bottom) + '"></div>';
+      html = '<p class="end-clue">' + esc(puzzle.endClue) + '</p><div class="ends"><input data-end="top" aria-label="Top word" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Top word" value="' + esc(state.play.top) + '"' + (state.solved ? ' readonly' : '') + '>' + html + '<input data-end="bottom" aria-label="Bottom word" type="text" maxlength="' + puzzle.letters + '" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Bottom word" value="' + esc(state.play.bottom) + '"' + (state.solved ? ' readonly' : '') + '></div>';
     }
     return html;
   }
@@ -1220,7 +1316,7 @@
   function playHTML() {
     const info = meta(state.game);
     const diffs = info.difficulties.map(function (diff) {
-      return '<button type="button" data-diff="' + diff.id + '" class="' + (diff.id === state.difficulty ? 'on' : '') + '">' + esc(diff.label) + '</button>';
+      return '<button type="button" data-diff="' + diff.id + '" aria-pressed="' + (diff.id === state.difficulty) + '" class="' + (diff.id === state.difficulty ? 'on' : '') + '">' + esc(diff.label) + '</button>';
     }).join('');
     const round = state.round ? '<p class="status">' + (state.round.index + 1) + ' of ' + ORDER.length + ' tonight</p>' : '';
     const n = state.puzzle ? (state.puzzle.rows || state.puzzle.n || state.puzzle.size || 6) : 6;
@@ -1228,12 +1324,25 @@
     const word = state.puzzle && (state.puzzle.game === 'pinpoint' || state.puzzle.game === 'crossclimb');
     const another = state.solved ? '<button type="button" class="solid" data-act="another">' + (state.round ? (state.round.index === ORDER.length - 1 ? 'Tonight’s note' : 'Next') : 'Another') + '</button>' : '';
     const rules = state.puzzle && state.puzzle.game === 'murdoku'
-      ? 'Everyone has their own row and their own column. ' + esc(state.puzzle.people.find(function (person) { return person.role === 'victim'; }).name) + ' shared a room with one other person. That person stayed behind.'
+      ? 'Everyone has their own row and their own column. Select a name, then a square to place them. Tap their selected token to pick them up. Blocking furniture cannot be occupied. “Beside” means sharing an edge in the same room; a corner is where two room edges meet. The slips all hold true. ' + esc(state.puzzle.people.find(function (person) { return person.role === 'victim'; }).name) + ' shared a room with one other person. Place everyone to discover who stayed behind.'
       : RULES[state.game];
     const board = word
       ? '<div class="sheet">' + (state.puzzle ? sheetHTML() : '') + '</div>'
       : '<div class="board-wrap"><div class="board ' + esc(state.game || '') + (state.puzzle ? '' : ' pending') + '" style="--n:' + n + '">' + (state.puzzle ? boardHTML() : '') + '</div>' + (state.puzzle && state.puzzle.game === 'wend' ? blanksHTML() : '') + '</div>';
-    return '<main class="play"><header class="bar"><button type="button" class="back" data-act="table">Games</button><div class="titles"><h1>' + esc(info.name) + '</h1><p class="status" id="status">' + esc(statusLine()) + '</p>' + round + '</div><div class="clock"><span id="clock-num">' + fmt(state.elapsed) + '</span><small>' + esc(bestLine()) + '</small></div>' + (state.round ? '' : '<div class="switch"><span class="diff-label">Difficulty</span>' + diffs + '</div>') + '<button type="button" class="seed" data-act="copy" title="' + esc(state.seed) + '">Share</button></header><div class="stage' + (side ? ' with-side' : '') + (word ? ' word' : '') + (state.solved ? ' solved' : '') + '">' + board + (side && state.puzzle ? '<div class="side">' + sideHTML() + '</div>' : '') + '</div><details class="rules"><summary>Rules</summary><p>' + rules + '</p></details><div class="dock"><button type="button" data-act="undo">Undo</button><button type="button" data-act="hint">Hint</button><button type="button" data-act="new">New</button><button type="button" data-act="mistakes" aria-pressed="' + (mistakesOn() ? 'true' : 'false') + '">Mistakes</button>' + another + '</div></main>' + (state.toast ? '<div class="toast">' + esc(state.toast) + '</div>' : '');
+    const mistakeControl = ['queens', 'tango', 'sudoku', 'murdoku'].includes(state.game) ? '<button type="button" data-act="mistakes" aria-pressed="' + mistakesOn() + '">Check errors</button>' : '';
+    const hintLabel = state.game === 'pinpoint' && state.play && state.play.shown < 5 ? 'Next clue' : 'Hint';
+    const dock = state.puzzle ? '<div class="dock"><button type="button" data-act="undo"' + (state.undo.length ? '' : ' disabled') + '>Undo</button><button type="button" data-act="hint"' + (state.solved ? ' disabled' : '') + '>' + hintLabel + '</button>' + mistakeControl + '<button type="button" data-act="new">New puzzle</button>' + another + '</div>' : '';
+    return '<main class="play"><header class="bar"><button type="button" class="back" data-act="table">← Games</button><div class="titles"><h1>' + esc(info.name) + '</h1>' + round + '</div><div class="clock"><span id="clock-num">' + fmt(state.elapsed) + '</span><small>' + esc(bestLine()) + '</small></div>' + (state.round ? '' : '<div class="switch"><span class="diff-label">Difficulty</span>' + diffs + '</div>') + '<button type="button" class="seed" data-act="copy">Share</button></header><p class="game-intro">' + esc(INTRO[state.game]) + '</p>' + (state.puzzle ? '<p class="difficulty-note">' + esc(difficultyNote()) + '</p>' : '') + '<p class="progress-line" id="status" role="status">' + esc(statusLine()) + '</p><div class="stage' + (side ? ' with-side' : '') + (word ? ' word' : '') + (state.solved ? ' solved' : '') + '">' + board + (side && state.puzzle ? '<div class="side">' + sideHTML() + '</div>' : '') + '</div>' + dock + '<details class="rules"><summary>How to play</summary><p>' + rules + '</p></details></main>' + (state.toast ? '<div class="toast" role="status">' + esc(state.toast) + '</div>' : '');
+  }
+  function difficultyNote() {
+    const p = state.puzzle;
+    const label = DIFF[state.difficulty] || state.difficulty;
+    if (p.game === 'pinpoint') return label + ' · ' + (state.solved && p.description ? p.category + ': ' + p.description : 'Five clues, one connection');
+    if (p.game === 'crossclimb') return label + ' · ' + p.letters + '-letter words · ' + p.rungs.length + ' clues';
+    if (p.game === 'murdoku') return label + ' · ' + p.people.length + ' people · ' + p.rooms.length + ' rooms';
+    const n = p.rows || p.n || p.size;
+    const technique = p.game === 'sudoku' && p.rating ? ['','Single candidates','Hidden singles and locked candidates','Naked pairs'][p.rating.tier] : '';
+    return label + ' · ' + n + ' × ' + n + (technique ? ' · ' + technique : '');
   }
   function summaryHTML() {
     const items = state.summary.map(function (item) {
@@ -1245,11 +1354,25 @@
     const app = document.getElementById('app') || document.body.appendChild(document.createElement('div'));
     if (!app.id) app.id = 'app';
     const focus = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-act');
+    const inputFocus = document.activeElement && document.activeElement.tagName === 'INPUT' ? ['data-guess', 'data-rung', 'data-end'].find(function (key) { return document.activeElement.hasAttribute(key); }) : null;
+    const inputValue = inputFocus && document.activeElement.getAttribute(inputFocus);
+    const selection = inputFocus && document.activeElement.selectionStart;
+    const cellFocus = document.activeElement && document.activeElement.classList.contains('cell') ? [document.activeElement.dataset.row, document.activeElement.dataset.col] : null;
+    const rulesOpen = !!document.querySelector('.rules[open]');
     app.innerHTML = state.view === 'table' ? tableHTML() : state.view === 'summary' ? summaryHTML() : playHTML();
     if (focus) {
       const next = app.querySelector('[data-act="' + focus + '"]');
       if (next) next.focus();
     }
+    if (inputFocus) {
+      const input = app.querySelector('[' + inputFocus + '="' + inputValue + '"]');
+      if (input) { input.focus({ preventScroll: true }); input.setSelectionRange(selection, selection); }
+    }
+    if (cellFocus) {
+      const cell = app.querySelector('[data-row="' + cellFocus[0] + '"][data-col="' + cellFocus[1] + '"]');
+      if (cell) { app.querySelectorAll('.cell').forEach(function (node) { node.tabIndex = -1; }); cell.tabIndex = 0; cell.focus({ preventScroll: true }); }
+    }
+    if (rulesOpen && app.querySelector('.rules')) app.querySelector('.rules').open = true;
     document.title = state.view === 'table' ? 'Nook' : 'Nook · ' + meta(state.game).name;
   }
   function stash() {
@@ -1262,13 +1385,19 @@
       difficulty: state.difficulty,
       seed: state.seed,
       play: state.play,
+      puzzle: JSON.stringify(state.puzzle),
       undo: state.undo.slice(-30),
       elapsed: Math.max(0, Math.round(elapsed))
     };
     save(data);
   }
+  let pendingGame = 0;
   function openGame(id, difficulty, seed, push) {
     stash();
+    pauseClock();
+    clearTimeout(pendingGame);
+    const available = meta(id).difficulties;
+    if (!available.some(function (diff) { return diff.id === difficulty; })) difficulty = available[0].id;
     state.view = 'game';
     state.game = id;
     state.difficulty = difficulty;
@@ -1279,6 +1408,8 @@
     state.elapsed = 0;
     state.timing = false;
     state.solved = false;
+    state.drag = null;
+    state.patchAnchor = null;
     state.status = 'Setting the pieces…';
     const data = prefs();
     data.difficulty = data.difficulty || {};
@@ -1288,7 +1419,7 @@
     if (push) history.pushState({ view: 'game' }, '', url);
     else history.replaceState({ view: 'game' }, '', url);
     render();
-    setTimeout(function () {
+    pendingGame = setTimeout(function () {
       const engine = engines()[id];
       if (!engine) {
         state.status = 'That deal did not hold.';
@@ -1300,12 +1431,15 @@
         state.play = freshPlay(state.puzzle);
         state.walls = state.puzzle.game === 'zip' ? zipWalls(state.puzzle) : state.puzzle.game === 'wend' ? new Set(state.puzzle.walls.map(function (wall) { return wall[0] + ',' + wall[1]; })) : null;
         const resume = prefs().resume;
-        if (resume && resume.game === id && resume.difficulty === difficulty && resume.seed === seed && resume.play) {
+        if (resume && resume.game === id && resume.difficulty === difficulty && resume.seed === seed && resume.play && resume.puzzle === JSON.stringify(state.puzzle)) {
           state.play = resume.play;
           state.undo = Array.isArray(resume.undo) ? resume.undo : [];
           state.elapsed = resume.elapsed || 0;
           state.timing = false;
           startClock();
+        } else if (resume && resume.game === id && resume.difficulty === difficulty && resume.seed === seed) {
+          save({ resume: null });
+          state.toast = 'This puzzle has changed. Here is the updated board.';
         }
         state.status = engine.tagline;
       } catch (err) {
@@ -1316,6 +1450,10 @@
   }
   function showTable(push) {
     stash();
+    pauseClock();
+    clearTimeout(pendingGame);
+    state.timing = false;
+    state.drag = null;
     state.view = 'table';
     state.round = null;
     state.summary = null;
@@ -1334,8 +1472,9 @@
     }
     if (act === 'copy') {
       const done = function () { state.toast = 'Link copied.'; render(); setTimeout(function () { state.toast = ''; render(); }, 1400); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done).catch(done);
-      else done();
+      const failed = function () { state.toast = 'Copy the page address to share this puzzle.'; render(); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done).catch(failed);
+      else failed();
       return;
     }
     if (act === 'mistakes') {
@@ -1348,8 +1487,7 @@
       if (!prev) return;
       state.play = JSON.parse(prev);
       state.solved = false;
-      state.timing = state.elapsed > 0;
-      if (state.timing) state.started = performance.now() - state.elapsed;
+      if (state.elapsed > 0) startClock();
       render();
       return;
     }
@@ -1358,7 +1496,7 @@
       const had = state.timing && !state.solved;
       state.round = null;
       if (had) state.toast = 'The last one is on the shelf.';
-      openGame(state.game, state.difficulty, freshSeed(), false);
+      openGame(state.game, state.difficulty, anotherSeed(), false);
       if (had) setTimeout(function () {
         state.toast = '';
         const note = document.querySelector('.toast');
@@ -1382,13 +1520,14 @@
         openGame(next, diff, dailySeed(next, diff), false);
         return;
       }
-      openGame(state.game, state.difficulty, freshSeed(), false);
+      openGame(state.game, state.difficulty, anotherSeed(), false);
       return;
     }
     if (act === 'guess') {
       if (!state.puzzle || state.puzzle.game !== 'pinpoint' || state.solved) return;
       const field = document.querySelector('[data-guess]');
       if (field) state.play.text = field.value;
+      if (!state.play.text.trim()) { state.play.note = 'Enter a connection, or choose Next clue.'; render(); return; }
       if (pinpointSolved()) {
         state.play.note = '';
         markSolved();
@@ -1397,8 +1536,10 @@
       }
       pushUndo();
       startClock();
-      if (state.play.shown < state.puzzle.words.length) state.play.shown += 1;
-      state.play.note = 'Not that. Another word is on the table.';
+      if (state.play.shown < state.puzzle.words.length) {
+        state.play.shown += 1;
+        state.play.note = 'Not quite. Here is another clue.';
+      } else state.play.note = 'Not quite. All five clues are shown. Try another connection or use Hint.';
       render();
       const sheet = document.querySelector('.sheet');
       if (sheet) {
@@ -1422,7 +1563,7 @@
       state.play.order[at] = state.play.order[to];
       state.play.order[to] = tmp;
       startClock();
-      render();
+      afterMove(false);
       return;
     }
     if (act === 'pencil') {
@@ -1446,12 +1587,14 @@
     const input = event.target;
     if (input.getAttribute('data-guess') != null) {
       state.play.text = input.value;
+      startClock();
       return;
     }
     const rung = input.getAttribute('data-rung');
     if (rung != null && state.puzzle.game === 'crossclimb') {
       const clean = input.value.toLowerCase().replace(/[^a-z]/g, '').slice(0, state.puzzle.letters);
       if (clean !== input.value) input.value = clean;
+      pushUndo();
       state.play.typed[Number(rung)] = clean;
       startClock();
       refreshCross();
@@ -1461,6 +1604,7 @@
     if (end && state.puzzle.game === 'crossclimb') {
       const clean = input.value.toLowerCase().replace(/[^a-z]/g, '').slice(0, state.puzzle.letters);
       if (clean !== input.value) input.value = clean;
+      pushUndo();
       state.play[end] = clean;
       startClock();
       if (crossSolved()) {
@@ -1487,8 +1631,15 @@
     document.addEventListener('pointerdown', onPointerDown, { passive: false });
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerCancel);
+    app.addEventListener('submit', function (event) { event.preventDefault(); if (state.game === 'pinpoint') onAct('guess'); });
     app.addEventListener('input', onField);
     app.addEventListener('click', function (event) {
+      const cell = event.target.closest('.cell');
+      if (cell && event.detail === 0) {
+        activateCell(Number(cell.dataset.row), Number(cell.dataset.col));
+        return;
+      }
       const fresh = event.target.closest('[data-fresh]');
       if (fresh) {
         const id = fresh.getAttribute('data-fresh');
@@ -1537,6 +1688,26 @@
         }
         return;
       }
+      const focusedCell = event.target.closest && event.target.closest('.cell');
+      if (focusedCell && state.puzzle && !state.solved) {
+        const r = Number(focusedCell.dataset.row), c = Number(focusedCell.dataset.col);
+        const n = state.puzzle.rows || state.puzzle.n || state.puzzle.size;
+        const directions = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+        if (directions[event.key]) {
+          event.preventDefault();
+          const dir = directions[event.key];
+          const next = document.querySelector('[data-row="' + Math.max(0, Math.min(n - 1, r + dir[0])) + '"][data-col="' + Math.max(0, Math.min(n - 1, c + dir[1])) + '"]');
+          if (next) { focusedCell.tabIndex = -1; next.tabIndex = 0; next.focus(); }
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          activateCell(r, c);
+          const next = document.querySelector('[data-row="' + r + '"][data-col="' + c + '"]');
+          if (next) next.focus();
+          return;
+        }
+      }
       if (event.key === 'Escape') showTable(true);
       if (event.key === 'u' || event.key === 'U') onAct('undo');
       if (event.key === 'h' || event.key === 'H') onAct('hint');
@@ -1547,7 +1718,8 @@
     });
     window.addEventListener('pagehide', stash);
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden') stash();
+      if (document.visibilityState === 'hidden') { stash(); pauseClock(); }
+      else if (state.view === 'game' && state.elapsed > 0 && !state.solved) startClock();
     });
     window.addEventListener('popstate', function () {
       const raw = location.hash.replace(/^#/, '');
