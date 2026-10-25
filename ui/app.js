@@ -115,9 +115,11 @@
     if (state.undo.length > 200) state.undo.shift();
   }
   function startClock() {
-    if (state.timing || state.solved) return;
-    state.timing = true;
-    state.started = performance.now() - state.elapsed;
+    if (state.solved) return;
+    if (!state.timing) {
+      state.timing = true;
+      state.started = performance.now() - state.elapsed;
+    }
     if (!state.tick) {
       state.tick = setInterval(function () {
         if (!state.timing) return;
@@ -140,6 +142,7 @@
     const data = prefs();
     data.best = data.best || {};
     if (data.best[key] == null || secs < data.best[key]) data.best[key] = secs;
+    if (data.resume && data.resume.game === state.game && data.resume.seed === state.seed && data.resume.difficulty === state.difficulty) data.resume = null;
     save(data);
   }
 
@@ -619,23 +622,22 @@
     state.drag = { r: cell[0], c: cell[1], x: event.clientX, y: event.clientY, moved: false, dirty: false };
     if (state.puzzle.game === 'zip' || state.puzzle.game === 'patches' || state.puzzle.game === 'wend') pushUndo();
     if (state.puzzle.game === 'wend') {
-      const before = JSON.stringify(state.play.trace);
+      const before = state.play.trace.length;
       wendTouch(cell[0], cell[1]);
-      if (JSON.stringify(state.play.trace) !== before) {
+      if (state.play.trace.length !== before) {
         state.drag.dirty = true;
         startClock();
+        paintLive();
       }
-      paintBoard();
     }
     if (state.puzzle.game === 'zip') {
-      const before = JSON.stringify(state.play.path);
       const result = zipTouch(cell[0], cell[1]);
-      if (JSON.stringify(state.play.path) !== before) {
+      if (result === 'extend' || result === 'back') {
         state.drag.dirty = true;
         state.drag.reject = false;
         startClock();
+        paintLive();
       } else if (result === 'no') state.drag.reject = true;
-      paintBoard();
     }
   }
   function onPointerMove(event) {
@@ -644,31 +646,33 @@
     const cell = cellFromEvent(event);
     if (!cell) return;
     if (state.puzzle.game === 'wend' && state.drag.moved) {
-      const before = JSON.stringify(state.play.trace);
+      const before = state.play.trace.length;
       wendTouch(cell[0], cell[1]);
-      if (JSON.stringify(state.play.trace) !== before) {
+      if (state.play.trace.length !== before) {
         state.drag.dirty = true;
         startClock();
+        schedulePaint();
       }
-      paintBoard();
     }
     if (state.puzzle.game === 'zip' && state.drag.moved) {
-      const before = JSON.stringify(state.play.path);
       const result = zipTouch(cell[0], cell[1]);
-      if (JSON.stringify(state.play.path) !== before) {
+      if (result === 'extend' || result === 'back') {
         state.drag.dirty = true;
         state.drag.reject = false;
         startClock();
+        schedulePaint();
       } else if (result === 'no') state.drag.reject = true;
-      paintBoard();
     }
     if (state.puzzle.game === 'patches' && state.drag.moved) {
       const r0 = Math.min(state.drag.r, cell[0]);
       const c0 = Math.min(state.drag.c, cell[1]);
       const r1 = Math.max(state.drag.r, cell[0]);
       const c1 = Math.max(state.drag.c, cell[1]);
-      state.drag.preview = [r0, c0, r1, c1];
-      paintBoard();
+      const prev = state.drag.preview;
+      if (!prev || prev[0] !== r0 || prev[1] !== c0 || prev[2] !== r1 || prev[3] !== c1) {
+        state.drag.preview = [r0, c0, r1, c1];
+        schedulePaint();
+      }
     }
   }
   function onPointerUp(event) {
@@ -997,7 +1001,92 @@
         marks += '<text x="' + x + '" y="' + y + '" text-anchor="middle" dominant-baseline="central" fill="#1c1612" font-family="Georgia, serif" font-size="' + (46 / n).toFixed(2) + '">' + num + '</text>';
       }
     }
-    return '<svg class="trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' + traceParts(state.play.path) + marks + '</svg>';
+    return '<svg class="trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><g class="line">' + traceParts(state.play.path) + '</g><g class="marks">' + marks + '</g></svg>';
+  }
+  function cellsOf(board) {
+    const nodes = [];
+    for (let i = 0; i < board.children.length; i++) {
+      if (board.children[i].classList.contains('cell')) nodes.push(board.children[i]);
+    }
+    return nodes;
+  }
+  let paintFrame = 0;
+  function schedulePaint() {
+    if (paintFrame) return;
+    paintFrame = requestAnimationFrame(function () {
+      paintFrame = 0;
+      if (state.drag && state.puzzle) paintLive();
+    });
+  }
+  function paintStatus() {
+    const status = document.getElementById('status');
+    if (!status) return;
+    const next = statusLine();
+    if (status.textContent !== next) status.textContent = next;
+  }
+  function paintZip() {
+    const board = document.querySelector('.board.zip');
+    const line = board && board.querySelector('.trace .line');
+    if (!line) return false;
+    const n = state.puzzle.rows;
+    line.innerHTML = traceParts(state.play.path);
+    const nodes = cellsOf(board);
+    const on = {};
+    state.play.path.forEach(function (cell) { on[cell[0] + ',' + cell[1]] = 1; });
+    const head = state.play.path[state.play.path.length - 1];
+    for (let i = 0; i < nodes.length; i++) {
+      const r = Math.floor(i / n);
+      const c = i % n;
+      nodes[i].classList.toggle('on-path', !!on[r + ',' + c]);
+      nodes[i].classList.toggle('head', !!(head && head[0] === r && head[1] === c));
+      nodes[i].classList.toggle('start', !state.play.path.length && state.puzzle.numbers[r][c] === 1);
+    }
+    paintStatus();
+    return true;
+  }
+  function paintWend() {
+    const board = document.querySelector('.board.wend');
+    if (!board) return false;
+    let svg = board.querySelector('.trace');
+    const body = traceParts(state.play.trace);
+    if (!svg && body) {
+      board.insertAdjacentHTML('afterbegin', '<svg class="trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>');
+      svg = board.querySelector('.trace');
+    }
+    if (svg) svg.innerHTML = body;
+    const n = state.puzzle.rows;
+    const nodes = cellsOf(board);
+    const on = {};
+    state.play.trace.forEach(function (cell) { on[cell[0] + ',' + cell[1]] = 1; });
+    for (let i = 0; i < nodes.length; i++) {
+      const r = Math.floor(i / n);
+      const c = i % n;
+      if (nodes[i].classList.contains('wall') || nodes[i].classList.contains('locked')) continue;
+      nodes[i].classList.toggle('on-path', !!on[r + ',' + c]);
+    }
+    paintStatus();
+    return true;
+  }
+  function paintPatches() {
+    const board = document.querySelector('.board.patches');
+    if (!board) return false;
+    const n = state.puzzle.rows;
+    const nodes = cellsOf(board);
+    const preview = state.drag && state.drag.preview;
+    for (let i = 0; i < nodes.length; i++) {
+      const r = Math.floor(i / n);
+      const c = i % n;
+      const inside = preview && r >= preview[0] && r <= preview[2] && c >= preview[1] && c <= preview[3];
+      nodes[i].classList.toggle('preview', !!inside);
+    }
+    return true;
+  }
+  function paintLive() {
+    const game = state.puzzle && state.puzzle.game;
+    if (game === 'zip' && paintZip()) return;
+    if (game === 'wend' && paintWend()) return;
+    if (game === 'patches' && paintPatches()) return;
+    paintBoard();
   }
   function paintBoard() {
     const board = document.querySelector('.board');
@@ -1082,12 +1171,51 @@
     if (id === 'crossclimb') return '<svg class="mini-svg" viewBox="0 0 88 64" aria-hidden="true"><rect x="18" y="8" width="52" height="10" fill="#efe6d6"/><rect x="18" y="24" width="52" height="10" fill="#efe6d6"/><rect x="18" y="40" width="52" height="10" fill="#efe6d6"/><path d="M22 8 V54 M66 8 V54" stroke="#b08d57" stroke-width="2"/></svg>';
     return '<svg class="mini-svg" viewBox="0 0 88 64" aria-hidden="true"><rect x="14" y="8" width="14" height="14" fill="#f4efe6"/><rect x="30" y="8" width="14" height="14" fill="#f4efe6"/><rect x="46" y="8" width="14" height="14" fill="#1a1614"/><rect x="14" y="24" width="14" height="14" fill="#f4efe6"/><rect x="30" y="24" width="14" height="14" fill="#f6e3d6"/><rect x="46" y="24" width="14" height="14" fill="#f4efe6"/><text x="17" y="19" fill="#1c1612" font-family="Georgia" font-size="10">W</text><text x="33" y="35" fill="#8c4a32" font-family="Georgia" font-size="10">E</text></svg>';
   }
+  const SHELVES = [
+    ['Boards', ['zip', 'queens', 'tango', 'sudoku', 'patches', 'murdoku']],
+    ['Words', ['pinpoint', 'crossclimb', 'wend']]
+  ];
+  const HOW = {
+    zip: 'Draw one line',
+    queens: 'Place the crowns',
+    tango: 'Balance sun and moon',
+    sudoku: 'Fill every box',
+    patches: 'Sew the cloth',
+    murdoku: 'Seat the house',
+    pinpoint: 'Name the category',
+    crossclimb: 'Climb the ladder',
+    wend: 'Spell the words'
+  };
+  const DIFF = { mini: 'Mini', easy: 'Easy', tricky: 'Tricky', fiendish: 'Fiendish' };
+  function resumeOf() {
+    const resume = prefs().resume;
+    if (!resume || !resume.game || !resume.play) return null;
+    return resume;
+  }
+  function bestSecs(id) {
+    const best = prefs().best || {};
+    let secs = null;
+    Object.keys(best).forEach(function (key) {
+      if (key.slice(0, id.length + 1) === id + '/' && (secs == null || best[key] < secs)) secs = best[key];
+    });
+    return secs;
+  }
+  function tileHTML(id) {
+    const info = meta(id);
+    const resume = resumeOf();
+    const paused = resume && resume.game === id;
+    const stored = (prefs().difficulty || {})[id];
+    const how = paused ? 'Carry on' : HOW[id] + (stored && stored !== 'easy' ? ' · ' + (DIFF[stored] || stored) : '');
+    const best = bestSecs(id);
+    const bestHTML = best != null && !paused ? '<span class="tile-best">' + fmt(best * 1000) + '</span>' : '';
+    const fresh = paused ? '<button type="button" class="fresh" data-fresh="' + id + '">New</button>' : '';
+    return '<div class="tile-wrap' + (paused ? ' paused' : '') + '"><button type="button" class="tile" data-game="' + id + '"><span class="mark">' + mini(id) + '</span><span class="tile-name">' + esc(info.name) + '</span><span class="tile-how">' + esc(how) + bestHTML + '</span></button>' + fresh + '</div>';
+  }
   function tableHTML() {
-    const cards = ORDER.map(function (id, index) {
-      const info = meta(id);
-      return '<button type="button" class="card" data-game="' + id + '"><span class="idx">' + String(index + 1).padStart(2, '0') + '</span><span class="card-copy"><span class="card-name">' + esc(info.name) + '</span><span class="card-tag">' + esc(info.tagline) + '</span></span><span class="mini">' + mini(id) + '</span></button>';
+    const shelves = SHELVES.map(function (shelf) {
+      return '<section class="shelf-block"><h2>' + shelf[0] + '</h2><div class="shelf">' + shelf[1].map(tileHTML).join('') + '</div></section>';
     }).join('');
-    return '<main class="home"><p class="eyebrow">Nine puzzles for the table</p><h1>Nook</h1><p class="lede">A fresh puzzle whenever you want one. Nothing to buy, and nothing waiting to interrupt.</p><div class="table-actions"><button type="button" class="solid" data-act="tonight">Tonight’s nine</button></div><div class="cards">' + cards + '</div></main>';
+    return '<main class="home"><header class="mast"><p class="eyebrow">Nine puzzles</p><h1>Nook</h1><p class="lede">No ads. Nothing to buy.</p></header><button type="button" class="tonight" data-act="tonight"><span class="tonight-copy"><span class="eyebrow">Tonight</span><span class="tonight-title">Nine in a row</span></span><span class="tonight-go">Start</span></button>' + shelves + '</main>';
   }
   function playHTML() {
     const info = meta(state.game);
@@ -1104,14 +1232,14 @@
       : RULES[state.game];
     const board = word
       ? '<div class="sheet">' + (state.puzzle ? sheetHTML() : '') + '</div>'
-      : '<div class="board-wrap"><div class="board ' + esc(state.game || '') + '" style="--n:' + n + '">' + (state.puzzle ? boardHTML() : '') + '</div>' + (state.puzzle && state.puzzle.game === 'wend' ? blanksHTML() : '') + '</div>';
-    return '<main class="play"><header class="bar"><button type="button" class="back" data-act="table">Table</button><div class="titles"><h1>' + esc(info.name) + '</h1><p class="status" id="status">' + esc(statusLine()) + '</p>' + round + '</div><div class="clock"><span id="clock-num">' + fmt(state.elapsed) + '</span><small>' + esc(bestLine()) + '</small></div>' + (state.round ? '' : '<div class="switch"><span class="diff-label">Difficulty</span>' + diffs + '</div>') + '<button type="button" class="seed" data-act="copy">' + esc(state.seed) + '</button></header><div class="stage' + (side ? ' with-side' : '') + (word ? ' word' : '') + (state.solved ? ' solved' : '') + '">' + board + (side && state.puzzle ? '<div class="side">' + sideHTML() + '</div>' : '') + '</div><div class="dock"><button type="button" data-act="undo">Undo</button><button type="button" data-act="hint">Hint</button><button type="button" data-act="new">New</button><button type="button" data-act="mistakes" aria-pressed="' + (mistakesOn() ? 'true' : 'false') + '">Mistakes</button>' + another + '</div><details class="rules"><summary>Rules</summary><p>' + rules + '</p></details></main>' + (state.toast ? '<div class="toast">' + esc(state.toast) + '</div>' : '');
+      : '<div class="board-wrap"><div class="board ' + esc(state.game || '') + (state.puzzle ? '' : ' pending') + '" style="--n:' + n + '">' + (state.puzzle ? boardHTML() : '') + '</div>' + (state.puzzle && state.puzzle.game === 'wend' ? blanksHTML() : '') + '</div>';
+    return '<main class="play"><header class="bar"><button type="button" class="back" data-act="table">Games</button><div class="titles"><h1>' + esc(info.name) + '</h1><p class="status" id="status">' + esc(statusLine()) + '</p>' + round + '</div><div class="clock"><span id="clock-num">' + fmt(state.elapsed) + '</span><small>' + esc(bestLine()) + '</small></div>' + (state.round ? '' : '<div class="switch"><span class="diff-label">Difficulty</span>' + diffs + '</div>') + '<button type="button" class="seed" data-act="copy" title="' + esc(state.seed) + '">Share</button></header><div class="stage' + (side ? ' with-side' : '') + (word ? ' word' : '') + (state.solved ? ' solved' : '') + '">' + board + (side && state.puzzle ? '<div class="side">' + sideHTML() + '</div>' : '') + '</div><details class="rules"><summary>Rules</summary><p>' + rules + '</p></details><div class="dock"><button type="button" data-act="undo">Undo</button><button type="button" data-act="hint">Hint</button><button type="button" data-act="new">New</button><button type="button" data-act="mistakes" aria-pressed="' + (mistakesOn() ? 'true' : 'false') + '">Mistakes</button>' + another + '</div></main>' + (state.toast ? '<div class="toast">' + esc(state.toast) + '</div>' : '');
   }
   function summaryHTML() {
     const items = state.summary.map(function (item) {
       return '<li>' + esc(meta(item.game).name) + '<span>' + fmt(item.ms) + '</span></li>';
     }).join('');
-    return '<main class="summary"><p class="eyebrow">Tonight</p><h1>Laid to rest.</h1><p class="lede">Nine puzzles, one table. The times are only for you.</p><ol>' + items + '</ol><button type="button" class="solid" data-act="table">The table</button></main>';
+    return '<main class="summary"><p class="eyebrow">Tonight</p><h1>Laid to rest.</h1><p class="lede">Nine puzzles, one table. The times are only for you.</p><ol>' + items + '</ol><button type="button" class="solid" data-act="table">All games</button></main>';
   }
   function render() {
     const app = document.getElementById('app') || document.body.appendChild(document.createElement('div'));
@@ -1124,7 +1252,23 @@
     }
     document.title = state.view === 'table' ? 'Nook' : 'Nook · ' + meta(state.game).name;
   }
+  function stash() {
+    if (state.view !== 'game' || !state.puzzle || !state.play || state.solved) return;
+    if (!state.timing && state.elapsed <= 0) return;
+    const elapsed = state.timing ? performance.now() - state.started : state.elapsed;
+    const data = prefs();
+    data.resume = {
+      game: state.game,
+      difficulty: state.difficulty,
+      seed: state.seed,
+      play: state.play,
+      undo: state.undo.slice(-30),
+      elapsed: Math.max(0, Math.round(elapsed))
+    };
+    save(data);
+  }
   function openGame(id, difficulty, seed, push) {
+    stash();
     state.view = 'game';
     state.game = id;
     state.difficulty = difficulty;
@@ -1155,6 +1299,14 @@
         state.puzzle = engine.generate(difficulty, seed);
         state.play = freshPlay(state.puzzle);
         state.walls = state.puzzle.game === 'zip' ? zipWalls(state.puzzle) : state.puzzle.game === 'wend' ? new Set(state.puzzle.walls.map(function (wall) { return wall[0] + ',' + wall[1]; })) : null;
+        const resume = prefs().resume;
+        if (resume && resume.game === id && resume.difficulty === difficulty && resume.seed === seed && resume.play) {
+          state.play = resume.play;
+          state.undo = Array.isArray(resume.undo) ? resume.undo : [];
+          state.elapsed = resume.elapsed || 0;
+          state.timing = false;
+          startClock();
+        }
         state.status = engine.tagline;
       } catch (err) {
         state.status = 'That deal did not hold.';
@@ -1163,6 +1315,7 @@
     }, 20);
   }
   function showTable(push) {
+    stash();
     state.view = 'table';
     state.round = null;
     state.summary = null;
@@ -1202,8 +1355,15 @@
     }
     if (act === 'hint') { hint(); return; }
     if (act === 'new') {
+      const had = state.timing && !state.solved;
       state.round = null;
+      if (had) state.toast = 'The last one is on the shelf.';
       openGame(state.game, state.difficulty, freshSeed(), false);
+      if (had) setTimeout(function () {
+        state.toast = '';
+        const note = document.querySelector('.toast');
+        if (note) note.remove();
+      }, 2200);
       return;
     }
     if (act === 'another') {
@@ -1245,6 +1405,11 @@
         sheet.classList.remove('shake');
         void sheet.offsetWidth;
         sheet.classList.add('shake');
+      }
+      const again = document.querySelector('[data-guess]');
+      if (again) {
+        again.focus();
+        again.select();
       }
       return;
     }
@@ -1324,12 +1489,26 @@
     document.addEventListener('pointerup', onPointerUp);
     app.addEventListener('input', onField);
     app.addEventListener('click', function (event) {
+      const fresh = event.target.closest('[data-fresh]');
+      if (fresh) {
+        const id = fresh.getAttribute('data-fresh');
+        const data = prefs();
+        if (data.resume && data.resume.game === id) {
+          data.resume = null;
+          save(data);
+        }
+        state.round = null;
+        const stored = (prefs().difficulty || {})[id] || 'easy';
+        openGame(id, stored, freshSeed(), true);
+        return;
+      }
       const game = event.target.closest('[data-game]');
       if (game) {
         const id = game.getAttribute('data-game');
-        const stored = (prefs().difficulty || {})[id] || (id === 'sudoku' ? 'easy' : 'easy');
+        const resume = resumeOf();
         state.round = null;
-        openGame(id, stored, freshSeed(), true);
+        if (resume && resume.game === id) openGame(id, resume.difficulty, resume.seed, true);
+        else openGame(id, (prefs().difficulty || {})[id] || 'easy', freshSeed(), true);
         return;
       }
       const person = event.target.closest('[data-person]');
@@ -1366,9 +1545,13 @@
       if (state.puzzle && state.puzzle.game === 'sudoku' && /^[1-9]$/.test(event.key) && Number(event.key) <= state.puzzle.size) onDigit(Number(event.key));
       if (state.puzzle && state.puzzle.game === 'sudoku' && (event.key === 'Backspace' || event.key === 'Delete')) onAct('clear');
     });
+    window.addEventListener('pagehide', stash);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') stash();
+    });
     window.addEventListener('popstate', function () {
       const raw = location.hash.replace(/^#/, '');
-      if (!raw) { state.view = 'table'; state.round = null; render(); return; }
+      if (!raw) { showTable(false); return; }
       const parts = raw.split('/');
       const game = parts[0];
       const difficulty = parts[1];
