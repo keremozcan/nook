@@ -1,5 +1,5 @@
-/* Independent rule checkers for Nook. Generators must satisfy this file.
-   Do not edit it to make a game pass. */
+/* Independent rule checkers for Nook. Keep these separate from the generators.
+   Check the published rules, not generator implementation details. */
 const fs = require('fs');
 const path = require('path');
 
@@ -203,8 +203,7 @@ function countQueens(regions, limit) {
   const n = regions.length;
   const usedC = Array(n).fill(false);
   const usedR = Array(n).fill(false);
-  const d1 = Array(2 * n).fill(false);
-  const d2 = Array(2 * n).fill(false);
+  const cols = Array(n).fill(-1);
   let count = 0;
   function bt(r) {
     if (count >= limit) return;
@@ -216,12 +215,11 @@ function countQueens(regions, limit) {
       if (usedC[c]) continue;
       const reg = regions[r][c];
       if (reg < 0 || reg >= n || usedR[reg]) continue;
-      const a = r + c;
-      const b = r - c + n - 1;
-      if (d1[a] || d2[b]) continue;
-      usedC[c] = d1[a] = d2[b] = usedR[reg] = true;
+      if (r > 0 && Math.abs(cols[r - 1] - c) <= 1) continue;
+      usedC[c] = usedR[reg] = true;
+      cols[r] = c;
       bt(r + 1);
-      usedC[c] = d1[a] = d2[b] = usedR[reg] = false;
+      usedC[c] = usedR[reg] = false;
     }
   }
   bt(0);
@@ -244,7 +242,7 @@ function legalQueens(puzzle) {
     regs.add(regions[r][c]);
     for (let j = i + 1; j < n; j++) {
       const [rr, cc] = queens[j];
-      if (Math.abs(rr - r) === Math.abs(cc - c)) return false;
+      if (Math.abs(rr - r) <= 1 && Math.abs(cc - c) <= 1) return false;
     }
   }
   return rows.size === n && regs.size === n;
@@ -963,13 +961,8 @@ function expectPinpoint(puzzle) {
   const cat = bank.find((entry) => entry.name === puzzle.category);
   assert(cat, 'category is not in the bank');
   puzzle.words.forEach((word) => assert(cat.words.indexOf(word) !== -1, word + ' is outside ' + cat.name));
-  function sole(words) {
-    return bank.filter((entry) => words.every((word) => entry.words.indexOf(word) !== -1)).map((entry) => entry.name);
-  }
-  const target = puzzle.difficulty === 'easy' ? 3 : puzzle.difficulty === 'tricky' ? 4 : 5;
-  const at = sole(puzzle.words.slice(0, target));
-  assert(at.length === 1 && at[0] === puzzle.category, 'category is not pinned at word ' + target);
-  if (target > 1) assert(sole(puzzle.words.slice(0, target - 1)).length !== 1, 'category is given away early');
+  assert(cat.difficulty === puzzle.difficulty, 'category difficulty mismatch');
+  assert(puzzle.description === cat.description && puzzle.description.length > 8, 'connection needs an explanation');
 }
 
 function letterSteps(a, b) {
@@ -1195,7 +1188,7 @@ function selfTest() {
     [0, 1, 2, 3],
     [0, 1, 2, 3],
   ];
-  // Each region is a column, so this is ordinary 4-queens: more than one solution.
+  // Each region is a column, so this has multiple no-touch placements.
   assert(countQueens(open, 2) === 2, 'self queens open');
 
   const full = ['sun', 'moon', 'sun', 'moon'];

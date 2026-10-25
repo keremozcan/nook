@@ -33,9 +33,9 @@ const html = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1c1612">
+<meta name="theme-color" content="#f5f8f8">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="Nook. Nine puzzles, no ads, no accounts.">
 <title>Nook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -225,8 +225,8 @@
     }
     if (clue.kind === 'beside') {
       return clue.negate
-        ? name + ' was not beside ' + article(clue.object) + ' ' + clue.object + '.'
-        : name + ' was beside ' + article(clue.object) + ' ' + clue.object + '.';
+        ? name + ' was not beside ' + article(clue.object) + ' ' + clue.object + ' in the same room.'
+        : name + ' was beside ' + article(clue.object) + ' ' + clue.object + ' in the same room.';
     }
     if (clue.kind === 'corner') {
       return clue.negate ? name + ' was not in a corner of the room.' : name + ' was in a corner of the room.';
