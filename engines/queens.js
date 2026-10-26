@@ -60,34 +60,42 @@
     return region;
   }
 
-  function count(regions, limit) {
+  // Count crown placements (up to limit): one per row, column and region, none touching.
+  // Also returns the first placement whose columns differ from `known`, if any.
+  function search(regions, limit, known) {
     const n = regions.length;
-    const cap = limit || 2;
-    const usedC = Array(n).fill(false);
-    const usedR = Array(n).fill(false);
+    // Regions that have no square below row r must already hold a crown after row r.
+    const done = Array(n).fill(0);
+    for (let id = 0; id < n; id++) {
+      let last = -1;
+      for (let r = 0; r < n; r++) if (regions[r].indexOf(id) !== -1) last = r;
+      for (let r = Math.max(last, 0); r < n; r++) done[r] |= 1 << id;
+    }
     const columns = Array(n).fill(-1);
     let found = 0;
-    function bt(r) {
-      if (found >= cap) return;
+    let other = null;
+    function bt(r, colMask, regMask) {
       if (r === n) {
         found++;
+        if (!other && known && columns.some((c, i) => c !== known[i])) other = columns.slice();
         return;
       }
-      for (let c = 0; c < n; c++) {
-        if (usedC[c]) continue;
-        const reg = regions[r][c];
-        if (usedR[reg]) continue;
-        if (r > 0 && Math.abs(columns[r - 1] - c) === 1) continue;
+      for (let c = 0; c < n && found < limit; c++) {
+        if (colMask & (1 << c)) continue;
+        if (r > 0 && Math.abs(columns[r - 1] - c) <= 1) continue;
+        const bit = 1 << regions[r][c];
+        if (regMask & bit) continue;
+        if (done[r] & ~(regMask | bit)) continue;
         columns[r] = c;
-        usedC[c] = usedR[reg] = true;
-        bt(r + 1);
-        usedC[c] = usedR[reg] = false;
-        columns[r] = -1;
-        if (found >= cap) return;
+        bt(r + 1, colMask | (1 << c), regMask | bit);
       }
     }
-    bt(0);
-    return found;
+    bt(0, 0, 0);
+    return { count: found, other };
+  }
+
+  function count(regions, limit) {
+    return search(regions, limit || 2).count;
   }
 
   function isQueen(queens, r, c) {
@@ -130,56 +138,31 @@
     return seen.size === size;
   }
 
+  // While another placement exists, move one of its crown squares (not a real crown) into a
+  // neighbouring region: that region then holds two of its crowns, so it stops working,
+  // and the real placement is untouched.
   function repair(region, queens, rng) {
     const n = region.length;
-    // Keep enough of the solution count to distinguish improvements. Capping
-    // at eight made boards with hundreds of solutions look equally good.
-    let score = count(region, 1000);
-    for (let round = 0; round < 30; round++) {
-      if (score === 1) return true;
+    const known = queens.map(([, c]) => c);
+    for (let round = 0; round < 12 * n; round++) {
+      const { count: found, other } = search(region, 2, known);
+      if (found === 1) return true;
+      if (!other) return false;
       const moves = [];
-      for (let r = 0; r < n; r++) {
-        for (let c = 0; c < n; c++) {
-          if (isQueen(queens, r, c)) continue;
-          const id = region[r][c];
-          for (const [dr, dc] of DIRS) {
-            const rr = r + dr;
-            const cc = c + dc;
-            if (rr < 0 || cc < 0 || rr >= n || cc >= n) continue;
-            if (region[rr][cc] !== id) moves.push([r, c, region[rr][cc]]);
-          }
+      other.forEach((c, r) => {
+        if (c === known[r]) return;
+        for (const [dr, dc] of DIRS) {
+          const rr = r + dr;
+          const cc = c + dc;
+          if (rr < 0 || cc < 0 || rr >= n || cc >= n || region[rr][cc] === region[r][c]) continue;
+          if (canLeave(region, r, c)) moves.push([r, c, region[rr][cc]]);
         }
-      }
-      const sample = shuffle(rng, moves).slice(0, 28);
-      let best = null;
-      let bestScore = score;
-      for (const move of sample) {
-        if (!canLeave(region, move[0], move[1])) continue;
-        const old = region[move[0]][move[1]];
-        region[move[0]][move[1]] = move[2];
-        const next = count(region, 1000);
-        region[move[0]][move[1]] = old;
-        if (next > 0 && next < bestScore) {
-          best = move;
-          bestScore = next;
-          if (next === 1) break;
-        }
-      }
-      if (best) {
-        region[best[0]][best[1]] = best[2];
-        score = bestScore;
-        continue;
-      }
-      const legal = sample.filter((move) => canLeave(region, move[0], move[1]));
-      if (!legal.length) return score === 1;
-      const shake = legal[int(rng, 0, legal.length - 1)];
-      const old = region[shake[0]][shake[1]];
-      region[shake[0]][shake[1]] = shake[2];
-      const next = count(region, 1000);
-      if (next <= 0) region[shake[0]][shake[1]] = old;
-      else score = next;
+      });
+      if (!moves.length) return false;
+      const [r, c, id] = moves[int(rng, 0, moves.length - 1)];
+      region[r][c] = id;
     }
-    return score === 1;
+    return false;
   }
 
   function fillTiny(region, queens) {
