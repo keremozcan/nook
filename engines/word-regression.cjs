@@ -28,13 +28,30 @@ function legalUniqueLadder(ladder) {
   if (words.some((word, i) => i && letterSteps(words[i - 1], word) !== 1)) return false;
   if (ladder.middle.some((row) => !Array.isArray(row) || row.length !== 2 || row[1].length < 9)) return false;
   if (new Set(ladder.middle.map((row) => row[1])).size !== ladder.middle.length) return false;
+  if (ladder.middle.some((row) => row[1].toLowerCase().includes(row[0]))) return false;
+  const endClue = ladder.endClue.toLowerCase();
+  if (endClue.includes(ladder.top) || endClue.includes(ladder.bottom)) return false;
+  const chains = (path) => path.every((word, i) => !i || letterSteps(path[i - 1], word) === 1);
   let valid = 0;
+  let middleOrders = 0;
   permutations(middle).forEach((order) => {
-    const path = [ladder.top].concat(order, [ladder.bottom]);
-    if (path.every((word, i) => !i || letterSteps(path[i - 1], word) === 1)) valid++;
+    if (chains(order)) middleOrders++;
+    if (chains([ladder.top].concat(order, [ladder.bottom]))) valid++;
   });
-  return valid === 1;
+  return valid === 1 && middleOrders === 2;
 }
+
+// The engine's own check must agree, and reject each kind of bad ladder.
+const sample = { difficulty: 'easy', endClue: 'Where a pet budgie or canary lives', top: 'bird', bottom: 'cage', middle: [
+  ['bard', 'A poet who tells stories'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
+] };
+assert(crossclimb.validDeal(sample), 'sample ladder should be valid');
+assert(!crossclimb.validDeal(Object.assign({}, sample, { endClue: 'A small cage for a bird' })), 'end clue naming an end word');
+assert(!crossclimb.validDeal(Object.assign({}, sample, { middle: [sample.middle[0], ['card', 'A birthday card'], sample.middle[2]] })), 'rung clue naming its answer');
+assert(!crossclimb.validDeal({ difficulty: 'easy', endClue: 'Shoes, trainers and slippers, all together', top: 'foot', bottom: 'wear', middle: [
+  ['boot', 'A sturdy shoe'], ['boat', 'A small craft'], ['beat', 'A rhythm'], ['bead', 'A small glass ball'], ['bear', 'A large furry animal'],
+] }), 'middle rungs that chain in more than one order');
+crossclimb.ladders.forEach((ladder) => assert(crossclimb.validDeal(ladder), 'engine rejects ' + ladder.top + ' to ' + ladder.bottom));
 
 function testPinpoint() {
   const names = new Set();

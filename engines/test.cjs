@@ -1012,14 +1012,22 @@ function expectCrossclimb(puzzle) {
     }
     return out;
   }
+  function chains(seq) {
+    for (let i = 1; i < seq.length; i++) if (letterSteps(seq[i - 1], seq[i]) !== 1) return false;
+    return true;
+  }
   let good = 0;
+  let middleOrders = 0;
   permutations(answers).forEach((order) => {
-    const seq = [puzzle.top].concat(order, [puzzle.bottom]);
-    let ok = true;
-    for (let i = 1; i < seq.length; i++) if (letterSteps(seq[i - 1], seq[i]) !== 1) ok = false;
-    if (ok) good++;
+    if (chains(order)) middleOrders++;
+    if (chains([puzzle.top].concat(order, [puzzle.bottom]))) good++;
   });
   assert(good === 1, 'crossclimb orders ' + good);
+  // The middle rungs alone fit one order, read either way.
+  assert(middleOrders === 2, 'crossclimb middle orders ' + middleOrders);
+  puzzle.rungs.forEach((rung) => assert(rung.clue.toLowerCase().indexOf(rung.answer) === -1, 'clue gives away ' + rung.answer));
+  const endClue = puzzle.endClue.toLowerCase();
+  assert(endClue.indexOf(puzzle.top) === -1 && endClue.indexOf(puzzle.bottom) === -1, 'end clue gives away an end word');
 }
 
 function expectWend(puzzle, difficulty) {
