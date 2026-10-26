@@ -971,6 +971,11 @@ function expectPinpoint(puzzle) {
   const cat = bank.find((entry) => entry.name === puzzle.category);
   assert(cat, 'category is not in the bank');
   puzzle.words.forEach((word) => assert(cat.words.indexOf(word) !== -1, word + ' is outside ' + cat.name));
+  assert(puzzle.words.join() === cat.words.join(), 'pinpoint clues keep their curated order');
+  const matches = require('./pinpoint.js').matches;
+  assert(matches(puzzle, puzzle.category) && matches(puzzle, ' The ' + puzzle.category.toUpperCase() + '! '), 'pinpoint rejects its own answer');
+  puzzle.accept.forEach((answer) => assert(matches(puzzle, answer), 'pinpoint rejects ' + answer));
+  assert(!matches(puzzle, '') && !matches(puzzle, 'something else entirely'), 'pinpoint accepts a wrong answer');
   assert(cat.difficulty === puzzle.difficulty, 'category difficulty mismatch');
   assert(puzzle.description === cat.description && puzzle.description.length > 8, 'connection needs an explanation');
 }

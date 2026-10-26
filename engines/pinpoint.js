@@ -4,56 +4,98 @@
   else (root.NOOK_ENGINES = root.NOOK_ENGINES || {})[api.id] = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   const R = (typeof module === 'object' && module.exports) ? require('./rng.js') : globalThis.NOOK_RNG;
-  const { makeRng, pick, shuffle } = R;
+  const { makeRng, pick } = R;
 
-  // Each row is a complete, curated round; difficulty is editorial, based on
-  // the directness of the shared connection rather than bank overlap counts.
+  // Answers for "put X before each clue" rounds.
+  function after(word, extra) {
+    return [word, word + ' words', word + ' compounds', 'words after ' + word, 'words that follow ' + word,
+      'words that start with ' + word, 'words starting with ' + word, 'starts with ' + word].concat(extra || []);
+  }
+
+  // Answers for "put X after each clue" rounds.
+  function before(word, extra) {
+    return [word, word + ' words', word + ' compounds', 'words before ' + word, 'words that go before ' + word,
+      'words that end with ' + word, 'words ending with ' + word, 'ends with ' + word].concat(extra || []);
+  }
+
+  // Answers for "each clue contains X" rounds.
+  function inside(word) {
+    return [word, word + ' words', 'words with ' + word, 'words containing ' + word, 'contains ' + word,
+      'hidden ' + word, word + ' inside', word + ' in every word'];
+  }
+
+  // Each round is curated by hand. Words are in the order they are shown: the first is the
+  // least revealing, often fitting another idea, and each one narrows it further.
   const BANK = [
-    // Easy: familiar concrete categories.
-    { difficulty: 'easy', name: 'Farm animals', accept: ['farm animal', 'farm animals', 'animals'], description: 'Animals commonly raised on a farm.', words: ['cow', 'horse', 'sheep', 'pig', 'goat'] },
-    { difficulty: 'easy', name: 'Planets', accept: ['planet'], description: 'Planets in our solar system.', words: ['mercury', 'venus', 'earth', 'mars', 'jupiter'] },
-    { difficulty: 'easy', name: 'Musical instruments', accept: ['instrument', 'instruments', 'musical instrument', 'musical instruments'], description: 'Things played to make music.', words: ['piano', 'flute', 'violin', 'drum', 'harp'] },
-    { difficulty: 'easy', name: 'Kitchen utensils', accept: ['utensil', 'utensils', 'kitchen tools'], description: 'Tools used to prepare or eat food.', words: ['spoon', 'fork', 'whisk', 'ladle', 'spatula'] },
-    { difficulty: 'easy', name: 'Garden flowers', accept: ['flower', 'flowers'], description: 'Flowers often grown in a garden.', words: ['rose', 'tulip', 'daisy', 'poppy', 'lily'] },
-    { difficulty: 'easy', name: 'Weekdays', accept: ['weekday', 'working days', 'days'], description: 'The five days from Monday through Friday.', words: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
-    { difficulty: 'easy', name: 'Birds', accept: ['bird', 'birds'], description: 'Common kinds of birds.', words: ['robin', 'sparrow', 'eagle', 'swan', 'parrot'] },
-    { difficulty: 'easy', name: 'Sports', accept: ['sport', 'games'], description: 'Sports people play or compete in.', words: ['tennis', 'rugby', 'golf', 'rowing', 'boxing'] },
-    { difficulty: 'easy', name: 'Weather words', accept: ['weather', 'types of weather'], description: 'Things you might see or feel in the weather.', words: ['rain', 'snow', 'hail', 'fog', 'wind'] },
-    { difficulty: 'easy', name: 'Trees', accept: ['tree', 'trees'], description: 'Kinds of trees.', words: ['oak', 'birch', 'maple', 'willow', 'cedar'] },
-    { difficulty: 'easy', name: 'Body parts', accept: ['body part', 'parts of the body'], description: 'Parts of a person’s body.', words: ['elbow', 'ankle', 'thumb', 'wrist', 'shoulder'] },
-    { difficulty: 'easy', name: 'School supplies', accept: ['school supply', 'school supplies', 'stationery'], description: 'Things pupils commonly take to school.', words: ['pencil', 'ruler', 'eraser', 'notebook', 'crayon'] },
-    { difficulty: 'easy', name: 'Citrus fruits', accept: ['citrus', 'citrus fruit', 'fruit', 'fruits'], description: 'Fruits in the citrus family.', words: ['orange', 'lemon', 'lime', 'grapefruit', 'tangerine'] },
-    { difficulty: 'easy', name: 'Things with wheels', accept: ['vehicles', 'things that have wheels', 'wheels'], description: 'Vehicles that move on wheels.', words: ['bicycle', 'scooter', 'car', 'bus', 'wagon'] },
+    // Easy: familiar things.
+    { difficulty: 'easy', name: 'Farm animals', accept: ['farm animal', 'farmyard animals', 'livestock'], description: 'Animals raised on a farm.', words: ['horse', 'goat', 'pig', 'sheep', 'cow'] },
+    { difficulty: 'easy', name: 'Planets', accept: ['planet', 'solar system', 'planets in the solar system'], description: 'Planets in our solar system.', words: ['mercury', 'earth', 'mars', 'venus', 'jupiter'] },
+    { difficulty: 'easy', name: 'Musical instruments', accept: ['instrument', 'instruments', 'musical instrument', 'things you play music on'], description: 'Things played to make music.', words: ['drum', 'flute', 'harp', 'piano', 'violin'] },
+    { difficulty: 'easy', name: 'Kitchen utensils', accept: ['utensil', 'utensils', 'kitchen tools', 'cooking tools', 'cooking utensils', 'kitchen equipment'], description: 'Tools used to prepare or serve food.', words: ['fork', 'spoon', 'whisk', 'spatula', 'ladle'] },
+    { difficulty: 'easy', name: 'Garden flowers', accept: ['flower', 'flowers'], description: 'Flowers often grown in a garden. The first few are girls’ names too.', words: ['rose', 'lily', 'daisy', 'poppy', 'tulip'] },
+    { difficulty: 'easy', name: 'Weekdays', accept: ['weekday', 'week days', 'working days', 'school days', 'days', 'days of the week'], description: 'The five days from Monday to Friday.', words: ['wednesday', 'friday', 'tuesday', 'thursday', 'monday'] },
+    { difficulty: 'easy', name: 'Birds', accept: ['bird', 'types of bird'], description: 'Common kinds of bird.', words: ['robin', 'swan', 'eagle', 'parrot', 'sparrow'] },
+    { difficulty: 'easy', name: 'Sports', accept: ['sport', 'games', 'olympic sports'], description: 'Sports people play or compete in.', words: ['boxing', 'rowing', 'golf', 'rugby', 'tennis'] },
+    { difficulty: 'easy', name: 'Weather words', accept: ['weather', 'types of weather', 'weather types'], description: 'Things you might see or feel in the weather.', words: ['hail', 'wind', 'fog', 'snow', 'rain'] },
+    { difficulty: 'easy', name: 'Trees', accept: ['tree', 'types of tree', 'wood', 'types of wood'], description: 'Kinds of tree.', words: ['willow', 'cedar', 'maple', 'birch', 'oak'] },
+    { difficulty: 'easy', name: 'Body parts', accept: ['body part', 'parts of the body', 'parts of your body'], description: 'Parts of a person’s body.', words: ['shoulder', 'elbow', 'thumb', 'wrist', 'ankle'] },
+    { difficulty: 'easy', name: 'School supplies', accept: ['school supply', 'stationery', 'stationary', 'school things', 'school equipment'], description: 'Things pupils take to school.', words: ['ruler', 'notebook', 'scissors', 'crayon', 'pencil'] },
+    { difficulty: 'easy', name: 'Citrus fruits', accept: ['citrus', 'citrus fruit', 'fruit'], description: 'Fruits in the citrus family.', words: ['orange', 'lime', 'lemon', 'tangerine', 'grapefruit'] },
+    { difficulty: 'easy', name: 'Things with wheels', accept: ['vehicles', 'transport', 'wheels', 'wheeled things', 'things that have wheels'], description: 'Things that move on wheels.', words: ['wagon', 'scooter', 'bus', 'car', 'bicycle'] },
 
-    // Tricky: common prefixes, suffixes and shared-word compounds.
-    { difficulty: 'tricky', name: 'Words that can follow “rain”', accept: ['rain', 'rain words', 'words that start with rain'], description: 'Put rain before each clue to make a familiar word.', words: ['coat', 'bow', 'drop', 'fall', 'water'] },
-    { difficulty: 'tricky', name: 'Words that can precede “house”', accept: ['house', 'house compounds', 'words that end with house'], description: 'Put house after each clue to make a familiar word.', words: ['bird', 'light', 'club', 'farm', 'green'] },
-    { difficulty: 'tricky', name: 'Words that can follow “hand”', accept: ['hand', 'hand compounds', 'words that start with hand'], description: 'Put hand before each clue to make a familiar word.', words: ['shake', 'bag', 'made', 'rail', 'stand'] },
-    { difficulty: 'tricky', name: 'Words that can precede “light”', accept: ['light', 'light compounds', 'words that end with light'], description: 'Put light after each clue to make a familiar word.', words: ['sun', 'day', 'star', 'moon', 'lamp'] },
-    { difficulty: 'tricky', name: 'Things with a handle', accept: ['handled things', 'objects with handles', 'handles'], description: 'Each object can have a handle you hold.', words: ['mug', 'bucket', 'suitcase', 'umbrella', 'briefcase'] },
-    { difficulty: 'tricky', name: 'Words that can follow “tooth”', accept: ['tooth', 'tooth compounds', 'words after tooth'], description: 'Put tooth before each word to make a familiar compound.', words: ['brush', 'paste', 'fairy', 'ache', 'pick'] },
-    { difficulty: 'tricky', name: 'Words that can follow “snow”', accept: ['snow', 'snow compounds', 'words after snow'], description: 'Put snow before each word to make a familiar compound.', words: ['ball', 'flake', 'man', 'storm', 'drift'] },
-    { difficulty: 'tricky', name: 'Words that can follow “foot”', accept: ['foot', 'foot compounds', 'words after foot'], description: 'Put foot before each word to make a familiar word or phrase.', words: ['ball', 'print', 'step', 'path', 'stool'] },
-    { difficulty: 'tricky', name: 'Words with a silent “k”', accept: ['silent k', 'silent k words', 'words with silent k'], description: 'The k is written but not spoken at the start.', words: ['knee', 'knife', 'knock', 'knit', 'know'] },
-    { difficulty: 'tricky', name: 'Words with a silent “w”', accept: ['silent w', 'silent w words', 'words with silent w'], description: 'The w is written but not spoken at the start.', words: ['write', 'wrong', 'wrist', 'wren', 'wrap'] },
-    { difficulty: 'tricky', name: 'Words that can follow “star”', accept: ['star', 'star compounds', 'words after star'], description: 'Put star before each word to make a familiar compound.', words: ['fish', 'light', 'dust', 'ship', 'fruit'] },
-    { difficulty: 'tricky', name: 'Words that can precede “berry”', accept: ['berry', 'berries', 'berry words'], description: 'Put berry after each clue to name a familiar fruit.', words: ['blue', 'straw', 'black', 'goose', 'elder'] },
-    { difficulty: 'tricky', name: 'Words that can follow “book”', accept: ['book', 'book compounds', 'words after book'], description: 'Put book before each word to make a familiar word or phrase.', words: ['shelf', 'mark', 'worm', 'case', 'club'] },
+    // Tricky: shared words, letter patterns and everyday objects.
+    { difficulty: 'tricky', name: 'Words that can follow “rain”', accept: after('rain'), description: 'Put rain before each clue to make a familiar word.', words: ['fall', 'water', 'bow', 'drop', 'coat'] },
+    { difficulty: 'tricky', name: 'Words that can precede “house”', accept: before('house'), description: 'Put house after each clue to make a familiar word.', words: ['club', 'bird', 'farm', 'light', 'green'] },
+    { difficulty: 'tricky', name: 'Words that can follow “hand”', accept: after('hand'), description: 'Put hand before each clue to make a familiar word.', words: ['stand', 'rail', 'made', 'bag', 'shake'] },
+    { difficulty: 'tricky', name: 'Words that can precede “light”', accept: before('light'), description: 'Put light after each clue to make a familiar word.', words: ['day', 'star', 'moon', 'sun', 'lamp'] },
+    { difficulty: 'tricky', name: 'Things with a handle', accept: ['handle', 'handles', 'things with handles', 'things that have a handle', 'objects with handles'], description: 'Each one has a handle you hold.', words: ['umbrella', 'bucket', 'suitcase', 'mug', 'briefcase'] },
+    { difficulty: 'tricky', name: 'Words that can follow “tooth”', accept: after('tooth', ['teeth']), description: 'Put tooth before each clue to make a familiar word.', words: ['pick', 'fairy', 'brush', 'ache', 'paste'] },
+    { difficulty: 'tricky', name: 'Words that can follow “snow”', accept: after('snow'), description: 'Put snow before each clue to make a familiar word.', words: ['ball', 'man', 'storm', 'drift', 'flake'] },
+    { difficulty: 'tricky', name: 'Words that can follow “foot”', accept: after('foot', ['feet']), description: 'Put foot before each clue to make a familiar word.', words: ['stool', 'path', 'print', 'step', 'ball'] },
+    { difficulty: 'tricky', name: 'Words with a silent “k”', accept: ['silent k', 'silent k words', 'words with silent k', 'kn', 'kn words', 'words starting with kn', 'words beginning with kn', 'starts with kn'], description: 'Each starts with a k that is written but not spoken.', words: ['know', 'knit', 'knock', 'knife', 'knee'] },
+    { difficulty: 'tricky', name: 'Words with a silent “w”', accept: ['silent w', 'silent w words', 'words with silent w', 'wr', 'wr words', 'words starting with wr', 'words beginning with wr', 'starts with wr'], description: 'Each starts with a w that is written but not spoken.', words: ['wrong', 'write', 'wrap', 'wrist', 'wren'] },
+    { difficulty: 'tricky', name: 'Words that can follow “star”', accept: after('star'), description: 'Put star before each clue to make a familiar word.', words: ['light', 'ship', 'fruit', 'dust', 'fish'] },
+    { difficulty: 'tricky', name: 'Words that can precede “berry”', accept: before('berry', ['berries', 'types of berry']), description: 'Put berry after each clue to name a fruit.', words: ['black', 'blue', 'elder', 'goose', 'straw'] },
+    { difficulty: 'tricky', name: 'Words that can follow “book”', accept: after('book'), description: 'Put book before each clue to make a familiar word.', words: ['club', 'case', 'mark', 'worm', 'shelf'] },
 
-    // Fiendish: less direct compounds and letter patterns; still child-safe.
-    { difficulty: 'fiendish', name: 'Words that can follow “ever”', accept: ['ever', 'ever compounds', 'words after ever'], description: 'Put ever before each word to make a familiar word.', words: ['green', 'lasting', 'more', 'present', 'changing'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “over”', accept: ['over', 'over compounds', 'words after over'], description: 'Put over before each word to make a familiar word.', words: ['board', 'due', 'time', 'load', 'coat'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “under”', accept: ['under', 'under compounds', 'words after under'], description: 'Put under before each word to make a familiar word.', words: ['water', 'ground', 'line', 'stand', 'pass'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “some”', accept: ['some', 'some compounds', 'words after some'], description: 'Put some before each word to make a familiar word.', words: ['where', 'what', 'how', 'times', 'body'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “any”', accept: ['any', 'any compounds', 'words after any'], description: 'Put any before each word to make a familiar word.', words: ['where', 'thing', 'more', 'way', 'one'] },
-    { difficulty: 'fiendish', name: 'Words containing “light”', accept: ['light', 'light words', 'words with light'], description: 'Each word contains the letters light in that order.', words: ['highlight', 'flightless', 'moonlight', 'slightly', 'delightful'] },
-    { difficulty: 'fiendish', name: 'Words containing “rain”', accept: ['rain', 'rain words', 'words with rain'], description: 'Each word contains rain in that order.', words: ['rainbow', 'brain', 'train', 'drain', 'brainstorm'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “water”', accept: ['water', 'water compounds', 'words after water'], description: 'Put water before each word to make a familiar compound.', words: ['fall', 'melon', 'proof', 'wheel', 'colour'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “cross”', accept: ['cross', 'cross compounds', 'words after cross'], description: 'Put cross before each clue to make a familiar word.', words: ['word', 'roads', 'walk', 'bow', 'fire'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “day”', accept: ['day', 'day compounds', 'words after day'], description: 'Put day before each word to make a familiar compound.', words: ['break', 'dream', 'light', 'time', 'care'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “back”', accept: ['back', 'back compounds', 'words after back'], description: 'Put back before each word to make a familiar word or phrase.', words: ['pack', 'yard', 'drop', 'bone', 'ground'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “fire”', accept: ['fire', 'fire compounds', 'words after fire'], description: 'Put fire before each word to make a familiar compound.', words: ['fly', 'wood', 'place', 'work', 'fighter'] },
+    // Fiendish: less direct shared words and hidden letters.
+    { difficulty: 'fiendish', name: 'Words that can follow “ever”', accept: after('ever'), description: 'Put ever before each clue to make a familiar word.', words: ['more', 'green', 'present', 'changing', 'lasting'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “over”', accept: after('over'), description: 'Put over before each clue to make a familiar word.', words: ['board', 'time', 'coat', 'load', 'due'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “under”', accept: after('under'), description: 'Put under before each clue to make a familiar word.', words: ['water', 'line', 'pass', 'ground', 'stand'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “some”', accept: after('some'), description: 'Put some before each clue to make a familiar word.', words: ['body', 'where', 'how', 'what', 'times'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “any”', accept: after('any'), description: 'Put any before each clue to make a familiar word.', words: ['one', 'thing', 'where', 'way', 'more'] },
+    { difficulty: 'fiendish', name: 'Words containing “light”', accept: inside('light'), description: 'Each word has light hidden inside it.', words: ['slightly', 'delightful', 'flightless', 'highlight', 'moonlight'] },
+    { difficulty: 'fiendish', name: 'Words containing “rain”', accept: inside('rain'), description: 'Each word has rain hidden inside it.', words: ['train', 'brain', 'drain', 'brainstorm', 'rainbow'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “water”', accept: after('water'), description: 'Put water before each clue to make a familiar word.', words: ['fall', 'proof', 'wheel', 'colour', 'melon'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “cross”', accept: after('cross'), description: 'Put cross before each clue to make a familiar word.', words: ['bow', 'fire', 'word', 'walk', 'roads'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “day”', accept: after('day'), description: 'Put day before each clue to make a familiar word.', words: ['time', 'light', 'break', 'care', 'dream'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “back”', accept: after('back'), description: 'Put back before each clue to make a familiar word.', words: ['ground', 'drop', 'yard', 'bone', 'pack'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “fire”', accept: after('fire'), description: 'Put fire before each clue to make a familiar word.', words: ['work', 'wood', 'place', 'fly', 'fighter'] },
   ];
+
+  function singular(word) {
+    if (word.length > 4 && word.endsWith('ies')) return word.slice(0, -3) + 'y';
+    if (/(sses|xes|ches|shes)$/.test(word)) return word.slice(0, -2);
+    if (word.length > 3 && word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1);
+    return word;
+  }
+
+  // Lower case, no punctuation, no articles, every word singular.
+  function normalize(text) {
+    return String(text || '').toLowerCase()
+      .replace(/['‘’]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim()
+      .split(' ')
+      .filter((word) => word && word !== 'a' && word !== 'an' && word !== 'the')
+      .map(singular)
+      .join(' ');
+  }
+
+  function matches(puzzle, text) {
+    const guess = normalize(text);
+    return Boolean(guess) && puzzle.accept.some((answer) => normalize(answer) === guess);
+  }
 
   function generate(difficulty, seed) {
     const candidates = BANK.filter((entry) => entry.difficulty === difficulty);
@@ -65,7 +107,7 @@
       category: cat.name,
       description: cat.description,
       accept: [cat.name.toLowerCase()].concat(cat.accept),
-      words: shuffle(rng, cat.words),
+      words: cat.words.slice(),
       solution: cat.name,
     };
   }
@@ -80,6 +122,7 @@
       { id: 'tricky', label: 'Tricky' },
       { id: 'fiendish', label: 'Fiendish' },
     ],
+    matches,
     generate,
   };
 });

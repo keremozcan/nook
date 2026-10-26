@@ -112,6 +112,30 @@ function testCrossclimb() {
   });
 }
 
+function testPinpointMatches() {
+  const round = (name) => {
+    const entry = pinpoint.bank.find((row) => row.name === name);
+    assert(entry, 'missing round ' + name);
+    return { accept: [entry.name.toLowerCase()].concat(entry.accept) };
+  };
+  const yes = [
+    ['Planets', 'planets'], ['Planets', 'The Planets!'], ['Planets', 'a planet'], ['Planets', 'solar system'],
+    ['Words with a silent “k”', 'silent k'], ['Words with a silent “k”', 'Silent-K words'],
+    ['Words that can precede “house”', 'houses'], ['Words that can precede “berry”', 'Berries'],
+    ['Farm animals', 'FARM ANIMAL'], ['Things with a handle', 'things with handles'], ['Weekdays', 'days of the week'],
+    ['Words that can follow “tooth”', 'teeth'], ['Words that can follow “rain”', '"rain"'],
+    ['Words containing “light”', 'words with light'],
+  ];
+  const no = [
+    ['Planets', ''], ['Planets', 'stars'], ['Words with a silent “k”', 'silent letters'],
+    ['Words with a silent “w”', 'silent k'], ['Farm animals', 'animals'], ['Birds', 'animals'],
+    ['Words that can follow “rain”', 'snow'], ['Words that can follow “some”', 'any'],
+  ];
+  yes.forEach(([name, text]) => assert(pinpoint.matches(round(name), text), name + ' should accept ' + text));
+  no.forEach(([name, text]) => assert(!pinpoint.matches(round(name), text), name + ' should reject ' + text));
+}
+
 testCrossclimb();
 testPinpoint();
+testPinpointMatches();
 console.log('word engine regression checks passed');
