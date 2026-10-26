@@ -223,7 +223,7 @@
     S.elapsed = ms;
     const key = S.game + '/' + S.level;
     const prev = store.best[key];
-    const secs = Math.round(ms / 1000);
+    const secs = Math.floor(ms / 1000);
     const newBest = !S.helped && (prev == null || secs < prev);
     if (newBest) store.best[key] = secs;
     S.result = { ms: ms, best: newBest ? secs : prev, newBest: newBest && prev != null, helped: S.helped };
