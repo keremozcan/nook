@@ -110,18 +110,15 @@
     return bt(0) ? pos : null;
   }
 
+  // The rules: one person in each row and each column, nobody on blocking furniture, every
+  // clue true, and the victim's room holds exactly two people. Counts placements up to limit.
   function countSolutions(puzzle, limit) {
     const n = puzzle.n;
     const people = puzzle.people;
     const blocked = Array.from({ length: n }, () => Array(n).fill(false));
     for (const o of puzzle.objects) if (o.blocks) blocked[o.r][o.c] = true;
     const victim = people.find((p) => p.role === 'victim');
-    let found = 0;
-    let nodes = 0;
-    const rowUsed = Array(n).fill(false);
-    const colUsed = Array(n).fill(false);
-    const pos = {};
-    function holds(clue, r, c, occupancy) {
+    function holds(clue, r, c) {
       let ok = false;
       if (clue.kind === 'room') ok = puzzle.roomOf[r][c] === clue.roomId;
       else if (clue.kind === 'row') ok = r === clue.index;
@@ -136,67 +133,50 @@
           if (rr < 0 || cc < 0 || rr >= n || cc >= n || puzzle.roomOf[rr][cc] !== id) return false;
           return puzzle.objects.some((o) => o.r === rr && o.c === cc && o.kind === clue.object);
         });
-      } else if (clue.kind === 'alone') {
-        if (!occupancy) return true;
-        const roomId = puzzle.roomOf[r][c];
-        let share = 0;
-        for (const cell of Object.values(occupancy)) {
-          if (puzzle.roomOf[cell[0]][cell[1]] === roomId) share++;
-        }
-        ok = share === 1;
       }
       return clue.negate ? !ok : ok;
     }
-    function bt(i) {
-      if (found >= limit || found < 0) return;
-      if (++nodes > 500000) {
-        found = -1;
-        return;
-      }
-      if (i === people.length) {
-        const cell = pos[victim.id];
-        const roomId = puzzle.roomOf[cell[0]][cell[1]];
-        let share = 0;
-        for (const p of people) {
-          const at = pos[p.id];
-          if (puzzle.roomOf[at[0]][at[1]] === roomId) share++;
-        }
-        if (share !== 2) return;
-        for (const clue of puzzle.clues) {
-          if (clue.kind !== 'alone') continue;
-          const at = pos[clue.personId];
-          if (!holds(clue, at[0], at[1], pos)) return;
-        }
-        found++;
-        return;
-      }
-      const person = people[i];
+    // Squares each person can stand on, from every clue about them except "alone".
+    const options = people.map((person) => {
+      const clues = puzzle.clues.filter((clue) => clue.personId === person.id && clue.kind !== 'alone');
+      const cells = [];
       for (let r = 0; r < n; r++) {
-        if (rowUsed[r]) continue;
         for (let c = 0; c < n; c++) {
-          if (colUsed[c] || blocked[r][c]) continue;
-          let ok = true;
-          for (const clue of puzzle.clues) {
-            if (clue.personId !== person.id || clue.kind === 'alone') continue;
-            if (!holds(clue, r, c, null)) {
-              ok = false;
-              break;
-            }
-          }
-          if (!ok) continue;
-          rowUsed[r] = colUsed[c] = true;
-          pos[person.id] = [r, c];
-          bt(i + 1);
-          delete pos[person.id];
-          rowUsed[r] = colUsed[c] = false;
-          if (found >= limit || found < 0) return;
+          if (!blocked[r][c] && clues.every((clue) => holds(clue, r, c))) cells.push([r, c]);
         }
+      }
+      return cells;
+    });
+    const order = people.map((_, i) => i).sort((a, b) => options[a].length - options[b].length);
+    const alone = puzzle.clues.filter((clue) => clue.kind === 'alone');
+    const rowUsed = Array(n).fill(false);
+    const colUsed = Array(n).fill(false);
+    const pos = {};
+    let found = 0;
+    function finish() {
+      const share = (id) => people.filter((p) => puzzle.roomOf[pos[p.id][0]][pos[p.id][1]] === puzzle.roomOf[pos[id][0]][pos[id][1]]).length;
+      if (share(victim.id) !== 2) return;
+      for (const clue of alone) if ((share(clue.personId) === 1) === Boolean(clue.negate)) return;
+      found++;
+    }
+    function bt(k) {
+      if (k === people.length) {
+        finish();
+        return;
+      }
+      const person = people[order[k]];
+      for (const [r, c] of options[order[k]]) {
+        if (rowUsed[r] || colUsed[c]) continue;
+        rowUsed[r] = colUsed[c] = true;
+        pos[person.id] = [r, c];
+        bt(k + 1);
+        rowUsed[r] = colUsed[c] = false;
+        if (found >= limit) return;
       }
     }
     bt(0);
     return found;
   }
-
   function clueText(person, clue, rooms) {
     const name = person.name;
     if (clue.kind === 'room') {
