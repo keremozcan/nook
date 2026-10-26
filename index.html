@@ -4949,6 +4949,8 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     paint();
   }
   function newPuzzle() {
+    pauseClock();
+    S.puzzle = null;
     if (!S.round && S.game) delete store.saved[S.game];
     persist();
     S.failed = false;

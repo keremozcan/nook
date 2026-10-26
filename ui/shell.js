@@ -459,6 +459,8 @@
     paint();
   }
   function newPuzzle() {
+    pauseClock();
+    S.puzzle = null;
     if (!S.round && S.game) delete store.saved[S.game];
     persist();
     S.failed = false;
