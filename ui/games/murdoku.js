@@ -5,11 +5,11 @@
 
   const COPY = {
     verb: 'Find who did it',
-    rule: 'One person in each row and each column, never on hatched furniture. Every slip is true. The victim shared a room with exactly one other person: that person did it.',
+    rule: 'One person in each row and column, never on hatched furniture. Every slip is true. The victim’s room had exactly one other person in it: they did it.',
     how: [
       'Place everyone on the board. Each row and each column holds exactly one person.',
       'Hatched squares hold big furniture, like a table or a bookshelf. Nobody can stand there.',
-      'Every slip is true. “On a chair” means standing on that chair’s square.',
+      'Every slip is true. “On a chair” means in that chair’s square.',
       '“Beside” means in a square that shares a side with it, inside the same room. Squares that only touch at a corner are not beside.',
       '“Alone” means nobody else was in that room.',
       'The victim was in a room with exactly one other person. That person did it.',
@@ -20,15 +20,13 @@
     choose: 'Tap a name, then a square.',
     blocked: function (kind) { return 'Nobody can stand on the ' + kind + '.'; },
     taken: 'Someone is already in that row or column.',
-    allIn: 'Everyone is placed, but a slip isn’t true yet.',
-    clash: 'A slip isn’t true for someone marked.',
+    allIn: 'Everyone is placed, but something doesn’t fit. Check the slips and the victim’s room.',
+    clash: 'Someone’s slip isn’t true. They’re marked.',
     victim: 'victim',
     people: 'People',
     slips: 'Slips',
     legend: 'Key',
-    legendBlocked: 'Hatched: blocked, nobody stands here',
-    legendSeat: 'Plain: you can stand here',
-    wonLine: function (killer, victim, room) { return 'It was <b>' + esc(killer) + '</b>. They were in the ' + esc(room) + ' with ' + esc(victim) + '.'; }
+    wonLine: function (killer, victim, room) { return 'It was <b>' + esc(killer) + '</b>, the only other person in the ' + esc(room) + ' with ' + esc(victim) + '.'; }
   };
 
   function victimOf(p) { return p.people.find(function (x) { return x.role === 'victim'; }); }

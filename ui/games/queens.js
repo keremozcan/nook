@@ -14,7 +14,7 @@
       'Keyboard: arrow keys move, Space puts a dot, Enter puts a crown.'
     ],
     count: function (have, n) { return have + ' of ' + n + ' crowns placed.'; },
-    clash: 'Two crowns break a rule: they are marked.'
+    clash: 'Some crowns break a rule. They’re marked.'
   };
   const DOUBLE_MS = 450;
 

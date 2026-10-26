@@ -1138,7 +1138,7 @@ function loadEngine(id) {
   const engine = require(file);
   assert(engine && engine.id === id, id + ' exports id');
   assert(typeof engine.generate === 'function', id + ' generate');
-  assert(typeof engine.name === 'string' && typeof engine.tagline === 'string', id + ' copy');
+  assert(typeof engine.name === 'string', id + ' copy');
   for (const diff of REQUIRED[id]) {
     assert((engine.difficulties || []).some((d) => d.id === diff && d.label), id + ' missing difficulty ' + diff);
   }

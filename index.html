@@ -867,7 +867,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'zip',
     name: 'Zip',
-    tagline: 'One path through every cell.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },
@@ -1104,7 +1103,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'queens',
     name: 'Queens',
-    tagline: 'One crown in every row, column, and colour.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },
@@ -1305,7 +1303,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'tango',
     name: 'Tango',
-    tagline: 'Suns and moons, in balance.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },
@@ -1621,7 +1618,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'sudoku',
     name: 'Sudoku',
-    tagline: 'The classic, and the little one.',
     difficulties: [
       { id: 'mini', label: 'Mini' },
       { id: 'easy', label: 'Easy' },
@@ -1816,7 +1812,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'patches',
     name: 'Patches',
-    tagline: 'Cover the cloth with rectangles.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },
@@ -2180,7 +2175,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'murdoku',
     name: 'Murdoku',
-    tagline: 'A quiet house. One person stayed behind.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },
@@ -2238,9 +2232,9 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 
     // Tricky: shared words, letter patterns and everyday objects.
     { difficulty: 'tricky', name: 'Words that can follow “rain”', accept: after('rain'), description: 'Put rain before each clue to make a familiar word.', words: ['fall', 'water', 'bow', 'drop', 'coat'] },
-    { difficulty: 'tricky', name: 'Words that can precede “house”', accept: before('house'), description: 'Put house after each clue to make a familiar word.', words: ['club', 'bird', 'farm', 'light', 'green'] },
+    { difficulty: 'tricky', name: 'Words that can go before “house”', accept: before('house'), description: 'Put house after each clue to make a familiar word.', words: ['club', 'bird', 'farm', 'light', 'green'] },
     { difficulty: 'tricky', name: 'Words that can follow “hand”', accept: after('hand'), description: 'Put hand before each clue to make a familiar word.', words: ['stand', 'rail', 'made', 'bag', 'shake'] },
-    { difficulty: 'tricky', name: 'Words that can precede “light”', accept: before('light'), description: 'Put light after each clue to make a familiar word.', words: ['day', 'star', 'moon', 'sun', 'lamp'] },
+    { difficulty: 'tricky', name: 'Words that can go before “light”', accept: before('light'), description: 'Put light after each clue to make a familiar word.', words: ['day', 'star', 'moon', 'sun', 'lamp'] },
     { difficulty: 'tricky', name: 'Things with a handle', accept: ['handle', 'handles', 'things with handles', 'things that have a handle', 'objects with handles'], description: 'Each one has a handle you hold.', words: ['umbrella', 'bucket', 'suitcase', 'mug', 'briefcase'] },
     { difficulty: 'tricky', name: 'Words that can follow “tooth”', accept: after('tooth', ['teeth']), description: 'Put tooth before each clue to make a familiar word.', words: ['pick', 'fairy', 'brush', 'ache', 'paste'] },
     { difficulty: 'tricky', name: 'Words that can follow “snow”', accept: after('snow'), description: 'Put snow before each clue to make a familiar word.', words: ['ball', 'man', 'storm', 'drift', 'flake'] },
@@ -2248,21 +2242,21 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
     { difficulty: 'tricky', name: 'Words with a silent “k”', accept: ['silent k', 'silent k words', 'words with silent k', 'kn', 'kn words', 'words starting with kn', 'words beginning with kn', 'starts with kn'], description: 'Each starts with a k that is written but not spoken.', words: ['know', 'knit', 'knock', 'knife', 'knee'] },
     { difficulty: 'tricky', name: 'Words with a silent “w”', accept: ['silent w', 'silent w words', 'words with silent w', 'wr', 'wr words', 'words starting with wr', 'words beginning with wr', 'starts with wr'], description: 'Each starts with a w that is written but not spoken.', words: ['wrong', 'write', 'wrap', 'wrist', 'wren'] },
     { difficulty: 'tricky', name: 'Words that can follow “star”', accept: after('star'), description: 'Put star before each clue to make a familiar word.', words: ['light', 'ship', 'fruit', 'dust', 'fish'] },
-    { difficulty: 'tricky', name: 'Words that can precede “berry”', accept: before('berry', ['berries', 'types of berry']), description: 'Put berry after each clue to name a fruit.', words: ['black', 'blue', 'elder', 'goose', 'straw'] },
+    { difficulty: 'tricky', name: 'Words that can go before “berry”', accept: before('berry', ['berries', 'types of berry']), description: 'Put berry after each clue to name a fruit.', words: ['black', 'blue', 'elder', 'goose', 'straw'] },
     { difficulty: 'tricky', name: 'Words that can follow “book”', accept: after('book'), description: 'Put book before each clue to make a familiar word.', words: ['club', 'case', 'mark', 'worm', 'shelf'] },
 
     // Fiendish: less direct shared words and hidden letters.
-    { difficulty: 'fiendish', name: 'Words that can follow “ever”', accept: after('ever'), description: 'Put ever before each clue to make a familiar word.', words: ['more', 'green', 'present', 'changing', 'lasting'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “out”', accept: after('out'), description: 'Put out before each clue to make a familiar word.', words: ['come', 'side', 'fit', 'line', 'break'] },
     { difficulty: 'fiendish', name: 'Words that can follow “over”', accept: after('over'), description: 'Put over before each clue to make a familiar word.', words: ['board', 'time', 'coat', 'load', 'due'] },
     { difficulty: 'fiendish', name: 'Words that can follow “under”', accept: after('under'), description: 'Put under before each clue to make a familiar word.', words: ['water', 'line', 'pass', 'ground', 'stand'] },
     { difficulty: 'fiendish', name: 'Words that can follow “some”', accept: after('some'), description: 'Put some before each clue to make a familiar word.', words: ['body', 'where', 'how', 'what', 'times'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “any”', accept: after('any'), description: 'Put any before each clue to make a familiar word.', words: ['one', 'thing', 'where', 'way', 'more'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “any”', accept: after('any'), description: 'Put any before each clue to make a familiar word.', words: ['one', 'thing', 'where', 'way', 'body'] },
     { difficulty: 'fiendish', name: 'Words containing “light”', accept: inside('light'), description: 'Each word has light hidden inside it.', words: ['slightly', 'delightful', 'flightless', 'highlight', 'moonlight'] },
     { difficulty: 'fiendish', name: 'Words containing “rain”', accept: inside('rain'), description: 'Each word has rain hidden inside it.', words: ['train', 'brain', 'drain', 'brainstorm', 'rainbow'] },
     { difficulty: 'fiendish', name: 'Words that can follow “water”', accept: after('water'), description: 'Put water before each clue to make a familiar word.', words: ['fall', 'proof', 'wheel', 'colour', 'melon'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “cross”', accept: after('cross'), description: 'Put cross before each clue to make a familiar word.', words: ['bow', 'fire', 'word', 'walk', 'roads'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “cross”', accept: after('cross'), description: 'Put cross before each clue to make a familiar word.', words: ['bow', 'fire', 'word', 'bar', 'roads'] },
     { difficulty: 'fiendish', name: 'Words that can follow “day”', accept: after('day'), description: 'Put day before each clue to make a familiar word.', words: ['time', 'light', 'break', 'care', 'dream'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “back”', accept: after('back'), description: 'Put back before each clue to make a familiar word.', words: ['ground', 'drop', 'yard', 'bone', 'pack'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “back”', accept: after('back'), description: 'Put back before each clue to make a familiar word.', words: ['ground', 'drop', 'hand', 'bone', 'pack'] },
     { difficulty: 'fiendish', name: 'Words that can follow “fire”', accept: after('fire'), description: 'Put fire before each clue to make a familiar word.', words: ['work', 'wood', 'place', 'fly', 'fighter'] },
   ];
 
@@ -2308,7 +2302,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'pinpoint',
     name: 'Pinpoint',
-    tagline: 'Name what the words share.',
     bank: BANK,
     difficulties: [
       { id: 'easy', label: 'Easy' },
@@ -2340,13 +2333,13 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
       ['wire', 'A thin metal thread'], ['wore', 'Was dressed in'], ['word', 'A group of letters with a meaning'],
     ] },
     { difficulty: 'easy', endClue: 'Tasks a teacher sets for you to do after school', top: 'home', bottom: 'work', middle: [
-      ['come', 'Move towards the speaker'], ['core', 'The middle of an apple'], ['wore', 'Was dressed in'],
+      ['come', 'The opposite of go'], ['core', 'The middle of an apple'], ['wore', 'Was dressed in'],
     ] },
     { difficulty: 'easy', endClue: 'A farm where grapes are grown', top: 'vine', bottom: 'yard', middle: [
       ['wine', 'A drink made from grapes'], ['wind', 'Moving air'], ['wand', 'A magician’s thin stick'], ['ward', 'A room for patients in a hospital'],
     ] },
     { difficulty: 'easy', endClue: 'Where a pet budgie or canary lives', top: 'bird', bottom: 'cage', middle: [
-      ['bard', 'A poet who tells stories'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
+      ['bard', 'An old word for a poet'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
     ] },
     { difficulty: 'easy', endClue: 'A tall building with sails that turn in the breeze', top: 'wind', bottom: 'mill', middle: [
       ['mind', 'Where thoughts and memories live'], ['mild', 'Gentle, not strong or harsh'], ['milk', 'A white drink that comes from cows'],
@@ -2360,7 +2353,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
       ['rail', 'A bar to hold, or a track for trains'], ['fail', 'Not succeed'], ['foil', 'Thin metal sheet for wrapping food'], ['coil', 'A loop of rope or wire wound round and round'], ['coal', 'Black rock that is burned for heat'],
     ] },
     { difficulty: 'tricky', endClue: 'Press it so the people inside know you are here', top: 'door', bottom: 'bell', middle: [
-      ['poor', 'Having little money'], ['pool', 'A tank of water made for swimming'], ['tool', 'Something like a hammer or a saw'], ['toll', 'A fee paid to use a road or bridge'], ['tell', 'Say something to someone'],
+      ['poor', 'Having little money'], ['pool', 'A tank of water made for swimming'], ['tool', 'Something like a hammer or a saw'], ['toll', 'Money you pay to use some roads or bridges'], ['tell', 'Say something to someone'],
     ] },
     { difficulty: 'tricky', endClue: 'Shelves where you keep your novels', top: 'book', bottom: 'case', middle: [
       ['cook', 'Make a meal by heating food'], ['cork', 'The stopper in a wine bottle'], ['cord', 'A thin rope or string'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
@@ -2386,10 +2379,10 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
       ['past', 'The time that has already gone'], ['cast', 'The actors in a play'], ['cart', 'A small wagon, pushed or pulled'], ['card', 'You send one on a birthday'], ['cord', 'A thin rope or string'],
     ] },
     { difficulty: 'fiendish', endClue: 'Shoes, trainers and slippers, all together', top: 'foot', bottom: 'wear', middle: [
-      ['boot', 'A sturdy shoe that covers the ankle'], ['boat', 'A small craft that travels on water'], ['beat', 'Win against someone, or a rhythm'], ['heat', 'Warmth, or a race before the final'], ['hear', 'What your ears let you do'],
+      ['boot', 'A sturdy shoe that covers the ankle'], ['boat', 'It floats and carries people across water'], ['beat', 'Win against someone, or a rhythm'], ['heat', 'Warmth, or a race before the final'], ['hear', 'What your ears let you do'],
     ] },
-    { difficulty: 'fiendish', endClue: 'A region of the world that keeps the same clock', top: 'time', bottom: 'zone', middle: [
-      ['tire', 'Become weary'], ['fire', 'Flames and heat'], ['fore', 'The front part of something'], ['bore', 'Make a hole, or someone who is dull'], ['bone', 'A hard part of a skeleton'],
+    { difficulty: 'fiendish', endClue: 'A part of the world where the clocks all show the same hour', top: 'time', bottom: 'zone', middle: [
+      ['tire', 'Run out of energy'], ['fire', 'Flames and heat'], ['fore', 'The front part of something'], ['bore', 'Make a hole, or someone who is dull'], ['bone', 'A hard part of a skeleton'],
     ] },
     { difficulty: 'fiendish', endClue: 'Crafted by a person, not by a machine', top: 'hand', bottom: 'made', middle: [
       ['band', 'A group of musicians'], ['bane', 'A cause of constant trouble'], ['bake', 'Cook in an oven'], ['make', 'Create or build something'], ['mate', 'A friend, or a partner'],
@@ -2468,7 +2461,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   return {
     id: 'crossclimb',
     name: 'Crossclimb',
-    tagline: 'Climb a ladder of words.',
     ladders: DEALS,
     validDeal,
     difficulties: [
@@ -2490,8 +2482,8 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   const { makeRng, shuffle, pick } = R;
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   const WORDS = `bird wind moon star leaf pine lamp cake milk snow rain book fish gold ring bell coin card corn ship door rose lake hill path sand wave fire wood home nest pond frog bear wolf deer duck sail drum vine wand mist mint mind mild fist chip chin yard boot bolt belt coat rail foil coal pool tool toll tall hold told wire cork cook worm band bank card cord care case some sore word wore fail ball foot head tail
-apple arrow beach berry black bread brown brush candy chair charm cloud coral dance dream eagle earth field flame flour fruit glass grape green heart honey horse house lemon light maple melon money mouse music night ocean olive paint paper party peach pearl plant queen river robin scarf sheep shell shirt shore sleep smile snake spark spoon stamp stone storm story sweet table tiger toast trail water whale wheat white world amber birch cedar linen pearl olive
-butter candle castle bridge garden forest island market orange purple yellow silver winter summer spring basket bottle branch breeze bucket button canyon circle clover coffee copper cotton cradle cricket dancer desert donkey dragon drawer flight flower friend helmet jacket jungle kettle kitten ladder marble meadow mirror needle orchid pebble picnic pillow planet pocket potato rabbit ribbon rocket sailor season shadow singer sister sketch sleeve soccer socket square stream string summer sunset temple tennis timber tomato tunnel turkey turtle valley violet walnut window
+apple arrow beach berry black bread brown brush jelly chair charm cloud coral dance dream eagle earth field flame flour fruit glass grape green heart honey horse house lemon light maple melon money mouse music night ocean olive paint paper party peach pearl plant queen river robin scarf sheep shell shirt shore sleep smile snake spark spoon stamp stone storm story sweet table tiger toast trail water whale wheat white world amber birch cedar linen pearl olive
+butter candle castle bridge garden forest island market orange purple yellow silver winter summer spring basket bottle branch breeze bucket button canyon circle clover coffee copper cotton cradle cricket dancer desert donkey dragon drawer flight flower friend helmet jacket jungle kettle kitten ladder marble meadow mirror needle orchid pebble picnic pillow planet pocket potato rabbit ribbon rocket sailor season shadow singer sister sketch sleeve hockey socket square stream string summer sunset temple tennis timber tomato tunnel turkey turtle valley violet walnut window
 lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library morning picture rainbow silence sunrise thunder village whisper blossom compass crystal evening harbour meadowlark`.split(/\s+/).filter((word, i, all) => word.length >= 4 && word.length <= 7 && all.indexOf(word) === i && word !== word.split('').reverse().join(''));
   const DICT = new Set(WORDS);
   const PREFIXES = new Set(WORDS.flatMap((word) => Array.from({ length: word.length }, (_, i) => word.slice(0, i + 1))));
@@ -2700,7 +2692,6 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   return {
     id: 'wend',
     name: 'Wend',
-    tagline: 'Weave a word through every letter.',
     words: WORDS,
     difficulties: [
       { id: 'easy', label: 'Easy' },
@@ -2960,14 +2951,14 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       'Start on 1. Drag through squares that share a side to draw the line.',
       'Pass the numbers in order: 1, then 2, then 3, and so on.',
       'The line must go through every square once, and finish on the biggest number.',
-      'Thick dark lines are walls. The line can’t cross them.',
+      'Thick lines are walls. The line can’t cross them.',
       'Tap a square next to the end of the line to add one step. Drag back along the line, or tap an earlier square on it, to shorten it.',
       'Keyboard: arrow keys move, Space adds the square to the line.'
     ],
     levels: { easy: 'plenty of numbers', tricky: 'fewer numbers, more walls', fiendish: 'fewest numbers, most walls' },
     start: 'Start at 1.',
     next: function (n) { return 'Next number: ' + n + '.'; },
-    fill: function (n) { return 'Now fill every square left, finishing on ' + n + '.'; },
+    fill: function (n) { return 'Now cover the rest of the squares and finish on ' + n + '.'; },
     noStart: 'Start the line on 1.',
     wall: 'A wall is in the way.',
     notNext: function (n) { return 'Go to ' + n + ' first.'; },
@@ -3156,7 +3147,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       'Keyboard: arrow keys move, Space puts a dot, Enter puts a crown.'
     ],
     count: function (have, n) { return have + ' of ' + n + ' crowns placed.'; },
-    clash: 'Two crowns break a rule: they are marked.'
+    clash: 'Some crowns break a rule. They’re marked.'
   };
   const DOUBLE_MS = 450;
 
@@ -3263,18 +3254,18 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   const COPY = {
     verb: 'Balance suns and moons',
-    rule: 'Fill every square with a sun or a moon. Each row and column has as many suns as moons, with no more than two the same side by side.',
+    rule: 'Fill every square with a sun or a moon. Each row and column has as many suns as moons, and never three the same next to each other.',
     how: [
       'Every square gets a sun or a moon.',
       'Each row and each column has the same number of suns as moons.',
-      'No more than two suns, or two moons, next to each other in a row or column.',
+      'Never three suns, or three moons, next to each other in a row or column.',
       '<b>=</b> between two squares means they are the same. <b>×</b> means they are different.',
       'Shaded squares are given and can’t change.',
       'Tap a square to change it: sun, then moon, then empty.',
       'Keyboard: arrow keys move, Space or Enter changes the square.'
     ],
     open: function (n) { return n === 1 ? '1 square to fill.' : n + ' squares to fill.'; },
-    clash: 'Some squares break a rule: they are marked.',
+    clash: 'Some squares break a rule. They’re marked.',
     full: 'Every square is filled, but a rule is broken.',
     given: 'That square is given.'
   };
@@ -3397,7 +3388,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   const UI = window.NOOK_UI;
 
   const COPY = {
-    verb: 'Fill every box',
+    verb: 'Fill the grid',
     rule: function (p) { return 'Every row, column and outlined box holds each digit from 1 to ' + (p ? p.size : 9) + ' once.'; },
     how: [
       'Each row, each column and each box with a thick outline must hold every digit once: 1 to 9, or 1 to 6 on Mini.',
@@ -3405,15 +3396,15 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       '<b>Notes</b> lets you pencil in small digits you are still thinking about. <b>Erase</b> clears a square.',
       'Every puzzle can be solved by thinking it through, without guessing. The level says which ideas you need:',
       '<b>Singles</b>: a square where only one digit fits, or a digit that fits in only one square of a row, column or box.',
-      '<b>Locked candidates</b>: if a digit’s only places in a box are all in one row (or column), it can’t go anywhere else in that row.',
-      '<b>Pairs</b>: if two squares in a row, column or box can only hold the same two digits, those digits can’t go anywhere else there.',
+      '<b>Locked digits</b>: if a digit’s only spots in a box are all in one row, it can’t go anywhere else in that row. It works the other way too: if its only spots in a row are inside one box, it can’t go anywhere else in that box. Columns work the same way.',
+      '<b>Pairs</b>: if two squares in a row, column or box can only hold the same two digits, those digits can’t go anywhere else there. Or, if two digits can only go in the same two squares, those squares can’t hold anything else.',
       'Keyboard: arrow keys move, type a digit, Backspace erases, P turns notes on and off.'
     ],
-    tiers: { 1: 'Singles', 2: 'Locked candidates', 3: 'Pairs' },
+    tiers: { 1: 'Singles', 2: 'Locked digits', 3: 'Pairs' },
     left: function (n) { return n === 1 ? '1 square to fill.' : n + ' squares to fill.'; },
     pick: 'Pick a square first.',
     given: 'That digit is given.',
-    clash: 'A digit repeats: the repeats are marked.',
+    clash: 'A digit repeats. The repeats are marked.',
     full: 'Every square is filled, but a digit repeats.',
     notes: 'Notes',
     erase: 'Erase'
@@ -3601,7 +3592,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   };
   const COPY = {
     verb: 'Cut the cloth',
-    rule: 'Split the board into rectangles. Each holds one clue: the number is its size, the symbol its shape.',
+    rule: 'Split the board into rectangles, each holding one clue. The number is how many squares it covers; the symbol shows its shape.',
     how: [
       'Cover the whole board with rectangles. They can’t overlap or leave gaps.',
       'Each rectangle holds exactly one clue.',
@@ -3610,7 +3601,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       'Drag from one corner to the opposite corner to make a rectangle. Tap a rectangle to remove it. Tap a 1 to cover just that square.',
       'Keyboard: arrow keys move; press Space on one corner, then on the opposite corner. Space on a rectangle removes it.'
     ],
-    levels: { easy: 'every clue shows its shape', tricky: 'every clue shows its shape', fiendish: 'some shapes hidden' },
+    levels: { easy: 'every shape shown', tricky: 'bigger board, every shape shown', fiendish: 'some shapes hidden' },
     left: function (n) { return n === 1 ? '1 square left to cover.' : n + ' squares left to cover.'; },
     overlap: 'That overlaps another rectangle. Tap a rectangle to remove it.',
     noClue: 'Each rectangle needs one clue inside it.',
@@ -3789,11 +3780,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   const COPY = {
     verb: 'Find who did it',
-    rule: 'One person in each row and each column, never on hatched furniture. Every slip is true. The victim shared a room with exactly one other person: that person did it.',
+    rule: 'One person in each row and column, never on hatched furniture. Every slip is true. The victim’s room had exactly one other person in it: they did it.',
     how: [
       'Place everyone on the board. Each row and each column holds exactly one person.',
       'Hatched squares hold big furniture, like a table or a bookshelf. Nobody can stand there.',
-      'Every slip is true. “On a chair” means standing on that chair’s square.',
+      'Every slip is true. “On a chair” means in that chair’s square.',
       '“Beside” means in a square that shares a side with it, inside the same room. Squares that only touch at a corner are not beside.',
       '“Alone” means nobody else was in that room.',
       'The victim was in a room with exactly one other person. That person did it.',
@@ -3804,15 +3795,13 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     choose: 'Tap a name, then a square.',
     blocked: function (kind) { return 'Nobody can stand on the ' + kind + '.'; },
     taken: 'Someone is already in that row or column.',
-    allIn: 'Everyone is placed, but a slip isn’t true yet.',
-    clash: 'A slip isn’t true for someone marked.',
+    allIn: 'Everyone is placed, but something doesn’t fit. Check the slips and the victim’s room.',
+    clash: 'Someone’s slip isn’t true. They’re marked.',
     victim: 'victim',
     people: 'People',
     slips: 'Slips',
     legend: 'Key',
-    legendBlocked: 'Hatched: blocked, nobody stands here',
-    legendSeat: 'Plain: you can stand here',
-    wonLine: function (killer, victim, room) { return 'It was <b>' + esc(killer) + '</b>. They were in the ' + esc(room) + ' with ' + esc(victim) + '.'; }
+    wonLine: function (killer, victim, room) { return 'It was <b>' + esc(killer) + '</b>, the only other person in the ' + esc(room) + ' with ' + esc(victim) + '.'; }
   };
 
   function victimOf(p) { return p.people.find(function (x) { return x.role === 'victim'; }); }
@@ -4051,11 +4040,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     rule: 'Five clues share one link. Guess it using as few clues as you can.',
     how: [
       'You see one clue at first. Type what you think links the clues, then tap Guess.',
-      'A wrong guess shows the next clue. Next clue shows one without guessing.',
+      'A wrong guess shows the next clue. Next clue shows another clue without using a guess.',
       'The fewer clues you need, the better. After all five, Show answer reveals it.',
-      'Capitals, “a” or “the”, and plurals don’t matter. Common other words for the answer count too.'
+      'Capitals, punctuation, “a” or “the”, and plurals don’t matter. Other common ways of saying it count too.'
     ],
-    levels: { easy: 'everyday groups', tricky: 'words that pair with another word', fiendish: 'trickier links' },
+    levels: { easy: 'everyday groups', tricky: 'words that pair with another word', fiendish: 'harder word pairs and hidden words' },
     placeholder: 'What links them?',
     guess: 'Guess',
     label: 'Your guess',
@@ -4109,6 +4098,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       play.won = true;
       play.revealed = true;
     },
+    hintNote: function (p, play) { return play.revealed ? 'Here’s the answer.' : 'Here’s another clue.'; },
     hintLabel: function (ctx) { return ctx.play && ctx.play.shown < ctx.puzzle.words.length ? COPY.nextClue : COPY.showAnswer; },
     status: function (ctx) { return COPY.shown(ctx.play.shown); },
     wonLine: function (ctx) { return COPY.wonLine(ctx.puzzle, ctx.play.shown, ctx.play.revealed); },
@@ -4152,16 +4142,15 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   const COPY = {
     verb: 'Climb the ladder',
-    rule: 'Answer each clue, then order the words so each differs from the next by one letter. Then solve the top and bottom.',
+    rule: 'Answer each clue, then order the words so each word changes just one letter from the next. Then solve the top and bottom.',
     how: [
       'Type an answer for each clue. A tick shows the word is right.',
       'Use the ↑ and ↓ buttons to move words until each one changes just one letter from the word next to it. The ladder works either way up.',
       'Then the top and bottom unlock. They share one clue, and together they name one thing.',
       'Each end also changes one letter from the word next to it. Type both to finish.'
     ],
-    levels: { easy: 'shorter ladder', tricky: 'longer ladder', fiendish: 'longest ladder' },
     words: function (got, all) { return got + ' of ' + all + ' words right.'; },
-    order: 'All right! Now put them in order: one letter changes at each step.',
+    order: 'All correct! Now put them in order, changing one letter at each step.',
     ends: 'The ladder is in order. Now solve the top and bottom.',
     locked: 'Unlocks when the ladder is in order',
     top: 'Top word',
@@ -4200,7 +4189,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     copy: COPY,
     sheet: true,
     art: '<svg viewBox="0 0 64 48" aria-hidden="true"><path class="a-rail" d="M14 3v42M50 3v42"/><rect class="a-bg" x="14" y="6" width="36" height="9" rx="2"/><rect class="a-bg" x="14" y="19.5" width="36" height="9" rx="2"/><rect class="a-bg" x="14" y="33" width="36" height="9" rx="2"/><text class="a-word" x="20" y="13">cold</text><text class="a-word" x="20" y="26.5">cord</text><text class="a-word" x="20" y="40">word</text></svg>',
-    levelNote: function (p, level) { return p.letters + '-letter words · ' + p.rungs.length + ' clues'; },
+    levelNote: function (p, level) { return p.letters + '-letter words · ' + p.rungs.length + ' words, then the ends'; },
     fresh: function (p) { return { typed: p.rungs.map(function () { return ''; }), order: p.rungs.map(function (_, i) { return i; }), top: '', bottom: '' }; },
     solved: solved,
     hint: function (p, play) {
@@ -4324,11 +4313,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     how: [
       'Drag through letters that share a side to spell a word. Corners don’t count.',
       'Every open letter is used by exactly one word. The dashes below show how long each word is.',
-      'Dark squares are walls; go around them.',
+      'Squares with no letter are walls; go around them.',
       'A real word on the wrong path won’t count: each letter belongs to one particular word.',
       'Keyboard: arrow keys move, Space adds a letter, Enter on the last letter clears the trail. A finished word locks in.'
     ],
-    levels: { easy: 'shorter words', tricky: 'longer words', fiendish: 'longest words' },
+    levels: { easy: '6-letter words', tricky: 'more words, 4 or 5 letters', fiendish: '7-letter words, more walls' },
     left: function (n) { return n === 1 ? '1 word to find.' : n + ' words to find.'; },
     wrongPath: function (w) { return '“' + w.toUpperCase() + '” is a word, but not on this path.'; },
     found: function (w) { return 'Found “' + w.toUpperCase() + '”.'; },
@@ -4501,9 +4490,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     carryOn: 'Carry on',
     best: 'Best',
     back: 'Games',
-    share: 'Share',
+    share: 'Copy link',
     copied: 'Link copied.',
-    copyFailed: 'Copy the address bar to share this puzzle.',
+    copyFailed: 'Couldn’t copy. Copy the link from the address bar instead.',
     undo: 'Undo',
     hint: 'Hint',
     check: 'Check errors',
@@ -4511,9 +4500,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     difficulty: 'Difficulty',
     howToPlay: 'How to play',
     loading: 'Shuffling the pieces…',
-    failed: 'This puzzle didn’t load. Try a new one.',
+    failed: 'This puzzle didn’t load.',
     tryAgain: 'Try a new one',
-    updated: 'This puzzle has been updated, so it starts fresh.',
+    updated: 'Nook has changed since you last played, so this puzzle starts again.',
     solved: 'Solved',
     solvedIn: function (t) { return 'Solved in ' + t + '.'; },
     newBest: 'New best time!',
@@ -4924,7 +4913,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (S.solved || !S.puzzle) return;
     S.group = null;
     S.helped = true;
-    const changedAny = S.ctx.act(function (play) { game().hint(S.puzzle, play, S.ctx); }, { note: COPY.oneStep });
+    const opts = { note: COPY.oneStep };
+    const changedAny = S.ctx.act(function (play) {
+      game().hint(S.puzzle, play, S.ctx);
+      if (game().hintNote) opts.note = game().hintNote(S.puzzle, play);
+    }, opts);
     if (!changedAny) paint();
   }
   function toggleCheck() {

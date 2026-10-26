@@ -351,7 +351,6 @@
   return {
     id: 'murdoku',
     name: 'Murdoku',
-    tagline: 'A quiet house. One person stayed behind.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },

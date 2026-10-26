@@ -9,11 +9,11 @@
     how: [
       'Drag through letters that share a side to spell a word. Corners don’t count.',
       'Every open letter is used by exactly one word. The dashes below show how long each word is.',
-      'Dark squares are walls; go around them.',
+      'Squares with no letter are walls; go around them.',
       'A real word on the wrong path won’t count: each letter belongs to one particular word.',
       'Keyboard: arrow keys move, Space adds a letter, Enter on the last letter clears the trail. A finished word locks in.'
     ],
-    levels: { easy: 'shorter words', tricky: 'longer words', fiendish: 'longest words' },
+    levels: { easy: '6-letter words', tricky: 'more words, 4 or 5 letters', fiendish: '7-letter words, more walls' },
     left: function (n) { return n === 1 ? '1 word to find.' : n + ' words to find.'; },
     wrongPath: function (w) { return '“' + w.toUpperCase() + '” is a word, but not on this path.'; },
     found: function (w) { return 'Found “' + w.toUpperCase() + '”.'; },

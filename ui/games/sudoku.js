@@ -3,7 +3,7 @@
   const UI = window.NOOK_UI;
 
   const COPY = {
-    verb: 'Fill every box',
+    verb: 'Fill the grid',
     rule: function (p) { return 'Every row, column and outlined box holds each digit from 1 to ' + (p ? p.size : 9) + ' once.'; },
     how: [
       'Each row, each column and each box with a thick outline must hold every digit once: 1 to 9, or 1 to 6 on Mini.',
@@ -11,15 +11,15 @@
       '<b>Notes</b> lets you pencil in small digits you are still thinking about. <b>Erase</b> clears a square.',
       'Every puzzle can be solved by thinking it through, without guessing. The level says which ideas you need:',
       '<b>Singles</b>: a square where only one digit fits, or a digit that fits in only one square of a row, column or box.',
-      '<b>Locked candidates</b>: if a digit’s only places in a box are all in one row (or column), it can’t go anywhere else in that row.',
-      '<b>Pairs</b>: if two squares in a row, column or box can only hold the same two digits, those digits can’t go anywhere else there.',
+      '<b>Locked digits</b>: if a digit’s only spots in a box are all in one row, it can’t go anywhere else in that row. It works the other way too: if its only spots in a row are inside one box, it can’t go anywhere else in that box. Columns work the same way.',
+      '<b>Pairs</b>: if two squares in a row, column or box can only hold the same two digits, those digits can’t go anywhere else there. Or, if two digits can only go in the same two squares, those squares can’t hold anything else.',
       'Keyboard: arrow keys move, type a digit, Backspace erases, P turns notes on and off.'
     ],
-    tiers: { 1: 'Singles', 2: 'Locked candidates', 3: 'Pairs' },
+    tiers: { 1: 'Singles', 2: 'Locked digits', 3: 'Pairs' },
     left: function (n) { return n === 1 ? '1 square to fill.' : n + ' squares to fill.'; },
     pick: 'Pick a square first.',
     given: 'That digit is given.',
-    clash: 'A digit repeats: the repeats are marked.',
+    clash: 'A digit repeats. The repeats are marked.',
     full: 'Every square is filled, but a digit repeats.',
     notes: 'Notes',
     erase: 'Erase'

@@ -121,7 +121,7 @@ function testPinpointMatches() {
   const yes = [
     ['Planets', 'planets'], ['Planets', 'The Planets!'], ['Planets', 'a planet'], ['Planets', 'solar system'],
     ['Words with a silent “k”', 'silent k'], ['Words with a silent “k”', 'Silent-K words'],
-    ['Words that can precede “house”', 'houses'], ['Words that can precede “berry”', 'Berries'],
+    ['Words that can go before “house”', 'houses'], ['Words that can go before “berry”', 'Berries'],
     ['Farm animals', 'FARM ANIMAL'], ['Things with a handle', 'things with handles'], ['Weekdays', 'days of the week'],
     ['Words that can follow “tooth”', 'teeth'], ['Words that can follow “rain”', '"rain"'],
     ['Words containing “light”', 'words with light'],

@@ -4,18 +4,18 @@
 
   const COPY = {
     verb: 'Balance suns and moons',
-    rule: 'Fill every square with a sun or a moon. Each row and column has as many suns as moons, with no more than two the same side by side.',
+    rule: 'Fill every square with a sun or a moon. Each row and column has as many suns as moons, and never three the same next to each other.',
     how: [
       'Every square gets a sun or a moon.',
       'Each row and each column has the same number of suns as moons.',
-      'No more than two suns, or two moons, next to each other in a row or column.',
+      'Never three suns, or three moons, next to each other in a row or column.',
       '<b>=</b> between two squares means they are the same. <b>×</b> means they are different.',
       'Shaded squares are given and can’t change.',
       'Tap a square to change it: sun, then moon, then empty.',
       'Keyboard: arrow keys move, Space or Enter changes the square.'
     ],
     open: function (n) { return n === 1 ? '1 square to fill.' : n + ' squares to fill.'; },
-    clash: 'Some squares break a rule: they are marked.',
+    clash: 'Some squares break a rule. They’re marked.',
     full: 'Every square is filled, but a rule is broken.',
     given: 'That square is given.'
   };

@@ -180,7 +180,6 @@
   return {
     id: 'patches',
     name: 'Patches',
-    tagline: 'Cover the cloth with rectangles.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },

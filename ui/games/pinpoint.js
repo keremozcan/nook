@@ -8,11 +8,11 @@
     rule: 'Five clues share one link. Guess it using as few clues as you can.',
     how: [
       'You see one clue at first. Type what you think links the clues, then tap Guess.',
-      'A wrong guess shows the next clue. Next clue shows one without guessing.',
+      'A wrong guess shows the next clue. Next clue shows another clue without using a guess.',
       'The fewer clues you need, the better. After all five, Show answer reveals it.',
-      'Capitals, “a” or “the”, and plurals don’t matter. Common other words for the answer count too.'
+      'Capitals, punctuation, “a” or “the”, and plurals don’t matter. Other common ways of saying it count too.'
     ],
-    levels: { easy: 'everyday groups', tricky: 'words that pair with another word', fiendish: 'trickier links' },
+    levels: { easy: 'everyday groups', tricky: 'words that pair with another word', fiendish: 'harder word pairs and hidden words' },
     placeholder: 'What links them?',
     guess: 'Guess',
     label: 'Your guess',
@@ -66,6 +66,7 @@
       play.won = true;
       play.revealed = true;
     },
+    hintNote: function (p, play) { return play.revealed ? 'Here’s the answer.' : 'Here’s another clue.'; },
     hintLabel: function (ctx) { return ctx.play && ctx.play.shown < ctx.puzzle.words.length ? COPY.nextClue : COPY.showAnswer; },
     status: function (ctx) { return COPY.shown(ctx.play.shown); },
     wonLine: function (ctx) { return COPY.wonLine(ctx.puzzle, ctx.play.shown, ctx.play.revealed); },

@@ -5,16 +5,15 @@
 
   const COPY = {
     verb: 'Climb the ladder',
-    rule: 'Answer each clue, then order the words so each differs from the next by one letter. Then solve the top and bottom.',
+    rule: 'Answer each clue, then order the words so each word changes just one letter from the next. Then solve the top and bottom.',
     how: [
       'Type an answer for each clue. A tick shows the word is right.',
       'Use the ↑ and ↓ buttons to move words until each one changes just one letter from the word next to it. The ladder works either way up.',
       'Then the top and bottom unlock. They share one clue, and together they name one thing.',
       'Each end also changes one letter from the word next to it. Type both to finish.'
     ],
-    levels: { easy: 'shorter ladder', tricky: 'longer ladder', fiendish: 'longest ladder' },
     words: function (got, all) { return got + ' of ' + all + ' words right.'; },
-    order: 'All right! Now put them in order: one letter changes at each step.',
+    order: 'All correct! Now put them in order, changing one letter at each step.',
     ends: 'The ladder is in order. Now solve the top and bottom.',
     locked: 'Unlocks when the ladder is in order',
     top: 'Top word',
@@ -53,7 +52,7 @@
     copy: COPY,
     sheet: true,
     art: '<svg viewBox="0 0 64 48" aria-hidden="true"><path class="a-rail" d="M14 3v42M50 3v42"/><rect class="a-bg" x="14" y="6" width="36" height="9" rx="2"/><rect class="a-bg" x="14" y="19.5" width="36" height="9" rx="2"/><rect class="a-bg" x="14" y="33" width="36" height="9" rx="2"/><text class="a-word" x="20" y="13">cold</text><text class="a-word" x="20" y="26.5">cord</text><text class="a-word" x="20" y="40">word</text></svg>',
-    levelNote: function (p, level) { return p.letters + '-letter words · ' + p.rungs.length + ' clues'; },
+    levelNote: function (p, level) { return p.letters + '-letter words · ' + p.rungs.length + ' words, then the ends'; },
     fresh: function (p) { return { typed: p.rungs.map(function () { return ''; }), order: p.rungs.map(function (_, i) { return i; }), top: '', bottom: '' }; },
     solved: solved,
     hint: function (p, play) {

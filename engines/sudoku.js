@@ -303,7 +303,6 @@
   return {
     id: 'sudoku',
     name: 'Sudoku',
-    tagline: 'The classic, and the little one.',
     difficulties: [
       { id: 'mini', label: 'Mini' },
       { id: 'easy', label: 'Easy' },

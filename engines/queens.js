@@ -224,7 +224,6 @@
   return {
     id: 'queens',
     name: 'Queens',
-    tagline: 'One crown in every row, column, and colour.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },

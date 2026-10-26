@@ -188,7 +188,6 @@
   return {
     id: 'tango',
     name: 'Tango',
-    tagline: 'Suns and moons, in balance.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },

@@ -9,7 +9,7 @@
   };
   const COPY = {
     verb: 'Cut the cloth',
-    rule: 'Split the board into rectangles. Each holds one clue: the number is its size, the symbol its shape.',
+    rule: 'Split the board into rectangles, each holding one clue. The number is how many squares it covers; the symbol shows its shape.',
     how: [
       'Cover the whole board with rectangles. They can’t overlap or leave gaps.',
       'Each rectangle holds exactly one clue.',
@@ -18,7 +18,7 @@
       'Drag from one corner to the opposite corner to make a rectangle. Tap a rectangle to remove it. Tap a 1 to cover just that square.',
       'Keyboard: arrow keys move; press Space on one corner, then on the opposite corner. Space on a rectangle removes it.'
     ],
-    levels: { easy: 'every clue shows its shape', tricky: 'every clue shows its shape', fiendish: 'some shapes hidden' },
+    levels: { easy: 'every shape shown', tricky: 'bigger board, every shape shown', fiendish: 'some shapes hidden' },
     left: function (n) { return n === 1 ? '1 square left to cover.' : n + ' squares left to cover.'; },
     overlap: 'That overlaps another rectangle. Tap a rectangle to remove it.',
     noClue: 'Each rectangle needs one clue inside it.',

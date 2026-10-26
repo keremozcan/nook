@@ -29,9 +29,9 @@
     carryOn: 'Carry on',
     best: 'Best',
     back: 'Games',
-    share: 'Share',
+    share: 'Copy link',
     copied: 'Link copied.',
-    copyFailed: 'Copy the address bar to share this puzzle.',
+    copyFailed: 'Couldn’t copy. Copy the link from the address bar instead.',
     undo: 'Undo',
     hint: 'Hint',
     check: 'Check errors',
@@ -39,9 +39,9 @@
     difficulty: 'Difficulty',
     howToPlay: 'How to play',
     loading: 'Shuffling the pieces…',
-    failed: 'This puzzle didn’t load. Try a new one.',
+    failed: 'This puzzle didn’t load.',
     tryAgain: 'Try a new one',
-    updated: 'This puzzle has been updated, so it starts fresh.',
+    updated: 'Nook has changed since you last played, so this puzzle starts again.',
     solved: 'Solved',
     solvedIn: function (t) { return 'Solved in ' + t + '.'; },
     newBest: 'New best time!',
@@ -452,7 +452,11 @@
     if (S.solved || !S.puzzle) return;
     S.group = null;
     S.helped = true;
-    const changedAny = S.ctx.act(function (play) { game().hint(S.puzzle, play, S.ctx); }, { note: COPY.oneStep });
+    const opts = { note: COPY.oneStep };
+    const changedAny = S.ctx.act(function (play) {
+      game().hint(S.puzzle, play, S.ctx);
+      if (game().hintNote) opts.note = game().hintNote(S.puzzle, play);
+    }, opts);
     if (!changedAny) paint();
   }
   function toggleCheck() {

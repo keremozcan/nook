@@ -7,8 +7,8 @@
   const { makeRng, shuffle, pick } = R;
   const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   const WORDS = `bird wind moon star leaf pine lamp cake milk snow rain book fish gold ring bell coin card corn ship door rose lake hill path sand wave fire wood home nest pond frog bear wolf deer duck sail drum vine wand mist mint mind mild fist chip chin yard boot bolt belt coat rail foil coal pool tool toll tall hold told wire cork cook worm band bank card cord care case some sore word wore fail ball foot head tail
-apple arrow beach berry black bread brown brush candy chair charm cloud coral dance dream eagle earth field flame flour fruit glass grape green heart honey horse house lemon light maple melon money mouse music night ocean olive paint paper party peach pearl plant queen river robin scarf sheep shell shirt shore sleep smile snake spark spoon stamp stone storm story sweet table tiger toast trail water whale wheat white world amber birch cedar linen pearl olive
-butter candle castle bridge garden forest island market orange purple yellow silver winter summer spring basket bottle branch breeze bucket button canyon circle clover coffee copper cotton cradle cricket dancer desert donkey dragon drawer flight flower friend helmet jacket jungle kettle kitten ladder marble meadow mirror needle orchid pebble picnic pillow planet pocket potato rabbit ribbon rocket sailor season shadow singer sister sketch sleeve soccer socket square stream string summer sunset temple tennis timber tomato tunnel turkey turtle valley violet walnut window
+apple arrow beach berry black bread brown brush jelly chair charm cloud coral dance dream eagle earth field flame flour fruit glass grape green heart honey horse house lemon light maple melon money mouse music night ocean olive paint paper party peach pearl plant queen river robin scarf sheep shell shirt shore sleep smile snake spark spoon stamp stone storm story sweet table tiger toast trail water whale wheat white world amber birch cedar linen pearl olive
+butter candle castle bridge garden forest island market orange purple yellow silver winter summer spring basket bottle branch breeze bucket button canyon circle clover coffee copper cotton cradle cricket dancer desert donkey dragon drawer flight flower friend helmet jacket jungle kettle kitten ladder marble meadow mirror needle orchid pebble picnic pillow planet pocket potato rabbit ribbon rocket sailor season shadow singer sister sketch sleeve hockey socket square stream string summer sunset temple tennis timber tomato tunnel turkey turtle valley violet walnut window
 lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library morning picture rainbow silence sunrise thunder village whisper blossom compass crystal evening harbour meadowlark`.split(/\s+/).filter((word, i, all) => word.length >= 4 && word.length <= 7 && all.indexOf(word) === i && word !== word.split('').reverse().join(''));
   const DICT = new Set(WORDS);
   const PREFIXES = new Set(WORDS.flatMap((word) => Array.from({ length: word.length }, (_, i) => word.slice(0, i + 1))));
@@ -217,7 +217,6 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   return {
     id: 'wend',
     name: 'Wend',
-    tagline: 'Weave a word through every letter.',
     words: WORDS,
     difficulties: [
       { id: 'easy', label: 'Easy' },

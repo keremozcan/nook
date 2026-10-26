@@ -355,7 +355,6 @@
   return {
     id: 'zip',
     name: 'Zip',
-    tagline: 'One path through every cell.',
     difficulties: [
       { id: 'easy', label: 'Easy' },
       { id: 'tricky', label: 'Tricky' },

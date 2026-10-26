@@ -45,9 +45,9 @@
 
     // Tricky: shared words, letter patterns and everyday objects.
     { difficulty: 'tricky', name: 'Words that can follow “rain”', accept: after('rain'), description: 'Put rain before each clue to make a familiar word.', words: ['fall', 'water', 'bow', 'drop', 'coat'] },
-    { difficulty: 'tricky', name: 'Words that can precede “house”', accept: before('house'), description: 'Put house after each clue to make a familiar word.', words: ['club', 'bird', 'farm', 'light', 'green'] },
+    { difficulty: 'tricky', name: 'Words that can go before “house”', accept: before('house'), description: 'Put house after each clue to make a familiar word.', words: ['club', 'bird', 'farm', 'light', 'green'] },
     { difficulty: 'tricky', name: 'Words that can follow “hand”', accept: after('hand'), description: 'Put hand before each clue to make a familiar word.', words: ['stand', 'rail', 'made', 'bag', 'shake'] },
-    { difficulty: 'tricky', name: 'Words that can precede “light”', accept: before('light'), description: 'Put light after each clue to make a familiar word.', words: ['day', 'star', 'moon', 'sun', 'lamp'] },
+    { difficulty: 'tricky', name: 'Words that can go before “light”', accept: before('light'), description: 'Put light after each clue to make a familiar word.', words: ['day', 'star', 'moon', 'sun', 'lamp'] },
     { difficulty: 'tricky', name: 'Things with a handle', accept: ['handle', 'handles', 'things with handles', 'things that have a handle', 'objects with handles'], description: 'Each one has a handle you hold.', words: ['umbrella', 'bucket', 'suitcase', 'mug', 'briefcase'] },
     { difficulty: 'tricky', name: 'Words that can follow “tooth”', accept: after('tooth', ['teeth']), description: 'Put tooth before each clue to make a familiar word.', words: ['pick', 'fairy', 'brush', 'ache', 'paste'] },
     { difficulty: 'tricky', name: 'Words that can follow “snow”', accept: after('snow'), description: 'Put snow before each clue to make a familiar word.', words: ['ball', 'man', 'storm', 'drift', 'flake'] },
@@ -55,21 +55,21 @@
     { difficulty: 'tricky', name: 'Words with a silent “k”', accept: ['silent k', 'silent k words', 'words with silent k', 'kn', 'kn words', 'words starting with kn', 'words beginning with kn', 'starts with kn'], description: 'Each starts with a k that is written but not spoken.', words: ['know', 'knit', 'knock', 'knife', 'knee'] },
     { difficulty: 'tricky', name: 'Words with a silent “w”', accept: ['silent w', 'silent w words', 'words with silent w', 'wr', 'wr words', 'words starting with wr', 'words beginning with wr', 'starts with wr'], description: 'Each starts with a w that is written but not spoken.', words: ['wrong', 'write', 'wrap', 'wrist', 'wren'] },
     { difficulty: 'tricky', name: 'Words that can follow “star”', accept: after('star'), description: 'Put star before each clue to make a familiar word.', words: ['light', 'ship', 'fruit', 'dust', 'fish'] },
-    { difficulty: 'tricky', name: 'Words that can precede “berry”', accept: before('berry', ['berries', 'types of berry']), description: 'Put berry after each clue to name a fruit.', words: ['black', 'blue', 'elder', 'goose', 'straw'] },
+    { difficulty: 'tricky', name: 'Words that can go before “berry”', accept: before('berry', ['berries', 'types of berry']), description: 'Put berry after each clue to name a fruit.', words: ['black', 'blue', 'elder', 'goose', 'straw'] },
     { difficulty: 'tricky', name: 'Words that can follow “book”', accept: after('book'), description: 'Put book before each clue to make a familiar word.', words: ['club', 'case', 'mark', 'worm', 'shelf'] },
 
     // Fiendish: less direct shared words and hidden letters.
-    { difficulty: 'fiendish', name: 'Words that can follow “ever”', accept: after('ever'), description: 'Put ever before each clue to make a familiar word.', words: ['more', 'green', 'present', 'changing', 'lasting'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “out”', accept: after('out'), description: 'Put out before each clue to make a familiar word.', words: ['come', 'side', 'fit', 'line', 'break'] },
     { difficulty: 'fiendish', name: 'Words that can follow “over”', accept: after('over'), description: 'Put over before each clue to make a familiar word.', words: ['board', 'time', 'coat', 'load', 'due'] },
     { difficulty: 'fiendish', name: 'Words that can follow “under”', accept: after('under'), description: 'Put under before each clue to make a familiar word.', words: ['water', 'line', 'pass', 'ground', 'stand'] },
     { difficulty: 'fiendish', name: 'Words that can follow “some”', accept: after('some'), description: 'Put some before each clue to make a familiar word.', words: ['body', 'where', 'how', 'what', 'times'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “any”', accept: after('any'), description: 'Put any before each clue to make a familiar word.', words: ['one', 'thing', 'where', 'way', 'more'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “any”', accept: after('any'), description: 'Put any before each clue to make a familiar word.', words: ['one', 'thing', 'where', 'way', 'body'] },
     { difficulty: 'fiendish', name: 'Words containing “light”', accept: inside('light'), description: 'Each word has light hidden inside it.', words: ['slightly', 'delightful', 'flightless', 'highlight', 'moonlight'] },
     { difficulty: 'fiendish', name: 'Words containing “rain”', accept: inside('rain'), description: 'Each word has rain hidden inside it.', words: ['train', 'brain', 'drain', 'brainstorm', 'rainbow'] },
     { difficulty: 'fiendish', name: 'Words that can follow “water”', accept: after('water'), description: 'Put water before each clue to make a familiar word.', words: ['fall', 'proof', 'wheel', 'colour', 'melon'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “cross”', accept: after('cross'), description: 'Put cross before each clue to make a familiar word.', words: ['bow', 'fire', 'word', 'walk', 'roads'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “cross”', accept: after('cross'), description: 'Put cross before each clue to make a familiar word.', words: ['bow', 'fire', 'word', 'bar', 'roads'] },
     { difficulty: 'fiendish', name: 'Words that can follow “day”', accept: after('day'), description: 'Put day before each clue to make a familiar word.', words: ['time', 'light', 'break', 'care', 'dream'] },
-    { difficulty: 'fiendish', name: 'Words that can follow “back”', accept: after('back'), description: 'Put back before each clue to make a familiar word.', words: ['ground', 'drop', 'yard', 'bone', 'pack'] },
+    { difficulty: 'fiendish', name: 'Words that can follow “back”', accept: after('back'), description: 'Put back before each clue to make a familiar word.', words: ['ground', 'drop', 'hand', 'bone', 'pack'] },
     { difficulty: 'fiendish', name: 'Words that can follow “fire”', accept: after('fire'), description: 'Put fire before each clue to make a familiar word.', words: ['work', 'wood', 'place', 'fly', 'fighter'] },
   ];
 
@@ -115,7 +115,6 @@
   return {
     id: 'pinpoint',
     name: 'Pinpoint',
-    tagline: 'Name what the words share.',
     bank: BANK,
     difficulties: [
       { id: 'easy', label: 'Easy' },
