@@ -21,6 +21,7 @@
   --grid-thin: #d0dadc;
   --grid-thick: #34474e;
   --grid-wall: #17262c;
+  --wall-fill: #22343a;
   --path: #24a19a;
   --path-edge: #0a5a57;
   --path-cell: #d3efeb;
@@ -68,6 +69,7 @@
     --grid-thin: #314247;
     --grid-thick: #aabdc2;
     --grid-wall: #e6eff1;
+    --wall-fill: repeating-linear-gradient(135deg, #060b0c 0 6px, #2a383c 6px 8px);
     --path: #35b8b0;
     --path-edge: #9be3dd;
     --path-cell: #173f3d;
@@ -148,7 +150,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 .art .a-word { fill: var(--ink); font: 600 7.5px var(--sans); letter-spacing: .06em; }
 .art .a-word.big { font: 700 11px var(--sans); }
 .art .a-rail { stroke: var(--line-strong); stroke-width: 2; }
-.art .a-wall { fill: var(--grid-wall); }
+.art .a-wall { fill: var(--ink-2); }
 .art .a-hatch { fill: var(--hatch); }
 .art .a-victim { fill: var(--victim); }
 .art .a-token { fill: var(--token); stroke: var(--token-edge); stroke-width: 1.2; }
@@ -255,7 +257,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 .sun circle { fill: var(--sun); stroke: var(--sun-edge); stroke-width: 1.2; }
 .moon path { fill: var(--moon); stroke: var(--moon-edge); stroke-width: 1.2; }
 .signs { position: absolute; inset: 0; pointer-events: none; }
-.sign { position: absolute; display: grid; width: clamp(20px, 6.5cqi, 30px); aspect-ratio: 1; place-items: center; transform: translate(-50%, -50%); border: 1.5px solid var(--grid-thick); border-radius: 50%; background: var(--surface); color: var(--ink); font: 800 clamp(13px, 4.2cqi, 19px)/1 var(--sans); }
+.sign { position: absolute; display: grid; width: clamp(22px, 8cqi, 34px); aspect-ratio: 1; place-items: center; transform: translate(-50%, -50%); border: 1.5px solid var(--grid-thick); border-radius: 50%; background: var(--surface); color: var(--ink); font: 800 clamp(14px, 5cqi, 21px)/1 var(--sans); }
 
 /* Sudoku */
 .g-sudoku .cell.peer { background: var(--peer); }
@@ -337,7 +339,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 .g-wend .layer-trail { z-index: 0; }
 .g-wend .layer-lines { z-index: 2; }
 .g-wend .cells { z-index: 1; }
-.g-wend .cell.wall { background: var(--grid-wall); cursor: default; }
+.g-wend .cell.wall { background: var(--wall-fill); cursor: default; }
 .letter { display: grid; width: 66%; aspect-ratio: 1; place-items: center; border-radius: 50%; color: var(--ink); font: 700 calc(100cqi / var(--n) * .38)/1 var(--sans); text-transform: uppercase; }
 .g-wend .cell.on .letter { background: var(--accent); color: var(--on-accent); }
 .g-wend .cell.found .letter { background: var(--wd); color: var(--ink); }
