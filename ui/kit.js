@@ -65,8 +65,8 @@
   const FURNITURE = {
     chair: '<path d="M7 3h10v9H7z"/><path d="M5 12h14v3H5zM6 15v6M18 15v6"/>',
     stool: '<ellipse cx="12" cy="8" rx="7" ry="3"/><path d="M7 9l-1 12M17 9l1 12M12 11v10"/>',
-    armchair: '<path d="M6 5h12v8H6z"/><path d="M3 9h3v8h12V9h3v10H3z"/>',
-    sofa: '<path d="M4 7h16v6H4z"/><path d="M1.5 10h3v6h15v-6h3v8h-21z"/>',
+    armchair: '<path d="M7 3.5h10v9.5H7z"/><rect x="3" y="9" width="4" height="10" rx="1.5"/><rect x="17" y="9" width="4" height="10" rx="1.5"/><path d="M7 13h10v6H7zM5 19v2.5M19 19v2.5"/>',
+    sofa: '<path d="M3.5 7h17v5h-17z"/><rect x="0.8" y="10" width="2.7" height="7" rx="1"/><rect x="20.5" y="10" width="2.7" height="7" rx="1"/><path d="M3.5 12h17v5h-17zM9.2 12v5M14.8 12v5M3 17v2M21 17v2"/>',
     rug: '<rect x="3" y="6" width="18" height="12" rx="1"/><path d="M7 6v12M12 6v12M17 6v12" class="thin"/>',
     table: '<rect x="2" y="7" width="20" height="4" rx="1"/><path d="M5 11v9M19 11v9"/>',
     bookshelf: '<rect x="4" y="2" width="16" height="20"/><path d="M4 8.5h16M4 15h16M7 3v5M9.5 3v5M14 9.5v5M16.5 9.5v5M8 16v5M11 16v5" class="thin"/>',

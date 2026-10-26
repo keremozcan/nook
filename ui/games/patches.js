@@ -157,7 +157,7 @@
       board.layer('lines');
       let clues = '';
       p.clues.forEach(function (clue) {
-        clues += '<span class="clue" style="left:' + ((clue.c + 0.5) / p.cols * 100) + '%;top:' + ((clue.r + 0.5) / p.rows * 100) + '%" aria-hidden="true"><b>' + (clue.area != null ? clue.area : '') + '</b>' + (GLYPH[clue.shape] || '') + '</span>';
+        clues += '<span class="clue" style="left:' + ((clue.c + 0.5) / p.cols * 100) + '%;top:' + ((clue.r + 0.5) / p.rows * 100) + '%" aria-hidden="true">' + (GLYPH[clue.shape] ? '<i class="frame ' + clue.shape + '"></i>' : '') + '<b>' + (clue.area != null ? clue.area : '') + '</b></span>';
       });
       board.el.insertAdjacentHTML('beforeend', '<div class="clues-layer">' + clues + '</div>');
       ctx.ui.board = board;

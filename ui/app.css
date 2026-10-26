@@ -41,6 +41,9 @@
   --victim: #b3343f;
   --on-victim: #ffffff;
   --hatch: #8d9ca1;
+  --lit: #a66f00;
+  --m0: color-mix(in srgb, var(--c1) 55%, var(--board)); --m1: color-mix(in srgb, var(--c3) 55%, var(--board)); --m2: color-mix(in srgb, var(--c5) 55%, var(--board));
+  --m3: color-mix(in srgb, var(--c2) 55%, var(--board)); --m4: color-mix(in srgb, var(--c4) 55%, var(--board)); --m5: color-mix(in srgb, var(--c0) 55%, var(--board));
   --shadow: 0 4px 16px rgb(20 35 42 / 8%);
   --c0: #f7c99c; --c1: #a8d1f2; --c2: #bfe3b4; --c3: #f6e48c; --c4: #d5c2ef; --c5: #f5b8c9;
   --c6: #a2ddd5; --c7: #e3d0b1; --c8: #c5ccd6; --c9: #f2a99a; --c10: #d3e690; --c11: #b9c4f3;
@@ -89,6 +92,8 @@
     --victim: #ff7d86;
     --on-victim: #2a0508;
     --hatch: #63777d;
+    --lit: #f4cb52;
+    --m0: #24476c; --m1: #1c5249; --m2: #5a2d48; --m3: #2c5330; --m4: #44366f; --m5: #6a3631;
     --shadow: 0 4px 16px rgb(0 0 0 / 35%);
     --c0: #6e4a2a; --c1: #24496b; --c2: #2f5a2c; --c3: #6a5d1c; --c4: #4a3a72; --c5: #6d3046;
     --c6: #1f5a54; --c7: #5b4c35; --c8: #3e4652; --c9: #733a30; --c10: #4c5a1f; --c11: #343f78;
@@ -292,23 +297,34 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 .g-patches .cell.preview.no { background: repeating-linear-gradient(45deg, var(--bad-soft) 0 6px, var(--board) 6px 12px); }
 .g-patches .cell.anchor { box-shadow: inset 0 0 0 3px var(--accent); }
 .clues-layer { position: absolute; inset: 0; pointer-events: none; }
-.clue { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 1px; transform: translate(-50%, -50%); color: var(--ink); }
-.clue b { font: 700 calc(100cqi / var(--n) * .36)/1 var(--sans); }
+.clue { --cs: calc(100cqi / var(--n)); position: absolute; display: grid; width: var(--cs); height: var(--cs); place-items: center; transform: translate(-50%, -50%); color: var(--ink); }
+.clue > * { grid-area: 1 / 1; }
+.clue b { font: 700 calc(var(--cs) * .34)/1 var(--sans); }
+/* The shape symbol is drawn around the number, big enough to read on a phone. */
+.frame { display: block; border: 2.5px solid var(--accent-strong); border-radius: 3px; background: color-mix(in srgb, var(--board) 70%, transparent); }
+.frame.square { width: calc(var(--cs) * .64); height: calc(var(--cs) * .64); }
+.frame.wide { width: calc(var(--cs) * .86); height: calc(var(--cs) * .5); }
+.frame.tall { width: calc(var(--cs) * .5); height: calc(var(--cs) * .86); }
 .glyph { display: block; width: calc(100cqi / var(--n) * .42); height: calc(100cqi / var(--n) * .42); overflow: visible; }
 .glyph rect { fill: none; stroke: currentColor; stroke-width: 2.2; }
 .clue .glyph { color: var(--accent-strong); }
 
 /* Murdoku */
-.g-murdoku .cell { background: color-mix(in srgb, var(--rm) 55%, var(--board)); }
-.rm0 { --rm: var(--c1); } .rm1 { --rm: var(--c3); } .rm2 { --rm: var(--c5); } .rm3 { --rm: var(--c2); } .rm4 { --rm: var(--c4); } .rm5 { --rm: var(--c0); }
+.g-murdoku .cell { --fill: var(--rm); background: var(--fill); }
+.rm0 { --rm: var(--m0); } .rm1 { --rm: var(--m1); } .rm2 { --rm: var(--m2); } .rm3 { --rm: var(--m3); } .rm4 { --rm: var(--m4); } .rm5 { --rm: var(--m5); }
 .art .rm0 { fill: var(--c1); } .art .rm1 { fill: var(--c3); } .art .rm2 { fill: var(--c5); }
-.g-murdoku .cell.blocked { cursor: not-allowed; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--rm) 55%, var(--board)) 0 5px, var(--hatch) 5px 7px); }
-.g-murdoku .cell.lit { background: color-mix(in srgb, var(--gold) 45%, var(--board)); }
-.furn { width: 46%; height: 46%; align-self: center; justify-self: center; opacity: .78; }
+.g-murdoku .cell.blocked { cursor: not-allowed; background: repeating-linear-gradient(135deg, var(--fill) 0 5px, var(--hatch) 5px 7px); }
+/* Solved: the victim's room keeps its colour and gets an outline; the other rooms fade. */
+.g-murdoku .cell.dim { --fill: color-mix(in srgb, var(--rm) 30%, var(--board)); }
+.g-murdoku .cell.dim .furn, .g-murdoku .cell.dim .token { opacity: .55; }
+.g-murdoku .cell.lit::before { content: ""; position: absolute; inset: 0; border: 0 solid var(--lit); pointer-events: none; }
+.g-murdoku .cell.lit-n::before { border-top-width: 4px; } .g-murdoku .cell.lit-s::before { border-bottom-width: 4px; }
+.g-murdoku .cell.lit-w::before { border-left-width: 4px; } .g-murdoku .cell.lit-e::before { border-right-width: 4px; }
+.furn { width: 52%; height: 52%; align-self: center; justify-self: center; opacity: .78; }
 .furn path, .furn rect, .furn circle, .furn ellipse { fill: none; stroke: var(--ink-2); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
 .furn .thin { stroke-width: 1; }
 .g-murdoku .cell.blocked .furn { width: 58%; height: 58%; opacity: 1; padding: 3px; border-radius: 6px; background: var(--surface); }
-.g-murdoku .cell .token ~ .furn, .g-murdoku .cell .furn:has(+ .token) { width: 34%; height: 34%; align-self: end; justify-self: end; margin: 3px; }
+.g-murdoku .cell .token ~ .furn, .g-murdoku .cell .furn:has(+ .token) { width: 38%; height: 38%; align-self: end; justify-self: end; margin: 3px; }
 .token { display: grid; width: 56%; aspect-ratio: 1; place-items: center; border: 2px solid var(--token-edge); border-radius: 50%; background: var(--token); color: #15232a; font: 750 calc(100cqi / var(--n) * .26)/1 var(--sans); box-shadow: 0 1px 3px rgb(0 0 0 / 25%); }
 .token.victim { border-style: double; border-width: 4px; background: var(--victim); color: var(--on-victim); }
 .token.on { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -398,9 +414,9 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   .home, .play, .summary { padding-right: 16px; padding-left: 16px; }
   .home, .play { padding-top: max(10px, env(safe-area-inset-top)); }
   .shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .tile { grid-template-columns: 44px minmax(0, 1fr); column-gap: 9px; min-height: 76px; padding: 10px; }
-  .art { width: 44px; height: 34px; }
-  .tile-name { font-size: 18px; }
+  .tile { grid-template-columns: 40px minmax(0, 1fr); column-gap: 8px; min-height: 76px; padding: 10px; }
+  .art { width: 40px; height: 30px; }
+  .tile-name { font-size: clamp(15px, 4.6vw, 18px); }
   .tile-sub { font-size: 12px; }
   .tile-extra { display: block; margin: 0; }
   .bar h1 { font-size: 28px; }
