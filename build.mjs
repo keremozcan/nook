@@ -13,6 +13,10 @@ function read(rel) {
   return fs.readFileSync(file, 'utf8');
 }
 
+// Interface: the kit first, then one module per game, then the shell that boots the page.
+const GAMES = ['zip', 'queens', 'tango', 'sudoku', 'patches', 'murdoku', 'pinpoint', 'crossclimb', 'wend'];
+const UI_FILES = ['ui/kit.js', ...GAMES.map((id) => 'ui/games/' + id + '.js'), 'ui/shell.js'];
+
 const css = read('ui/app.css').replace(/<\/style/gi, '<\\/style');
 const js = [
   'engines/rng.js',
@@ -25,7 +29,7 @@ const js = [
   'engines/pinpoint.js',
   'engines/crossclimb.js',
   'engines/wend.js',
-  'ui/app.js',
+  ...UI_FILES,
 ].map(read).join('\n;\n').replace(/<\/script/gi, '<\\/script');
 
 const html = `<!DOCTYPE html>
@@ -33,7 +37,9 @@ const html = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f5f8f8">
+<meta name="theme-color" content="#f4f7f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1517" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="description" content="Nook. Nine puzzles, no ads, no accounts.">
