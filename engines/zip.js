@@ -129,9 +129,9 @@
   }
 
   // Count lines (stopping at 2) that start on 1, visit the numbers in order, cover every
-  // square and end on the last number; count is -1 if the search gives up. When a line other
-  // than `known` (a list of cell indexes) turns up, it is returned as `other`.
-  function countPaths(rows, cols, numbers, walls, known) {
+  // square and end on the last number; count is -1 if the search gives up after `cap` steps.
+  // When a line other than `known` (a list of cell indexes) turns up, it is returned as `other`.
+  function countPaths(rows, cols, numbers, walls, known, cap) {
     const N = rows * cols;
     const wallSet = new Set(walls.map((w) => w[0] + ',' + w[1] + ',' + w[2]));
     const adj = [];
@@ -156,7 +156,7 @@
         }
       }
     }
-    if (at[1] == null || at[maxN] == null) return { count: 0, other: null };
+    if (at[1] == null || at[maxN] == null) return { count: 0, other: null, nodes: 0 };
     const end = at[maxN];
     const seen = new Uint8Array(N);
     const mark = new Int32Array(N);
@@ -167,7 +167,6 @@
     let nodes = 0;
     let other = null;
     const line = new Int32Array(N);
-    const cap = 400000;
 
     function dist(a, b) {
       return Math.abs(((a / cols) | 0) - ((b / cols) | 0)) + Math.abs((a % cols) - (b % cols));
@@ -256,7 +255,7 @@
     }
 
     dfs(at[1], -1, 1);
-    return { count: nodes > cap ? -1 : count, other };
+    return { count: nodes > cap ? -1 : count, other, nodes };
   }
 
   function densityOk(numbered, cells, difficulty) {
@@ -296,13 +295,21 @@
     });
   }
 
+  const STEP = 20000;
+  const BUDGET = 60000;
+  const SMALL = 2000;
+
   function generate(difficulty, seed) {
     const rows = difficulty === 'easy' ? 6 : difficulty === 'tricky' ? 7 : 8;
     const cols = rows;
     const step0 = difficulty === 'easy' ? 5 : difficulty === 'tricky' ? 7 : 9;
     const walls0 = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 6 : 8;
     const wallCap = difficulty === 'easy' ? 8 : difficulty === 'tricky' ? 12 : 16;
-    for (let attempt = 0; attempt < 24; attempt++) {
+    // Bound the search so a new puzzle stays quick: each check may take STEP steps, and once
+    // BUDGET is spent only SMALL. A check that gives up never passes: the puzzle gets another
+    // number instead, which makes the next check cheaper, so only proven-unique boards return.
+    let budget = BUDGET;
+    for (let attempt = 0; attempt < 100; attempt++) {
       const rng = makeRng(String(seed) + ':zip:' + difficulty + ':' + attempt);
       const path = warnsdorff(rows, cols, rng) || snake(rows, cols, rng);
       const known = path.map(([r, c]) => r * cols + c);
@@ -315,7 +322,9 @@
           continue;
         }
         const built = assemble(path, indexes, walls, rows, cols);
-        const { count, other } = countPaths(rows, cols, built.numbers, built.walls, known);
+        const cap = Math.max(SMALL, Math.min(STEP, budget));
+        const { count, other, nodes } = countPaths(rows, cols, built.numbers, built.walls, known, cap);
+        budget -= nodes;
         if (count === 1) {
           return {
             game: 'zip',

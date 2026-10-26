@@ -195,7 +195,7 @@
 
   function generate(difficulty, seed) {
     const n = difficulty === 'easy' ? 7 : difficulty === 'tricky' ? 8 : 9;
-    for (let attempt = 0; attempt < 80; attempt++) {
+    for (let attempt = 0; attempt < 2000; attempt++) {
       const rng = makeRng(String(seed) + ':queens:' + difficulty + ':' + attempt);
       const queens = placeQueens(n, rng);
       if (!queens) continue;

@@ -152,7 +152,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const lengths = spec.lengths;
     const spots = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) spots.push([r, c]);
-    for (let attempt = 0; attempt < 24; attempt++) {
+    for (let attempt = 0; attempt < 100; attempt++) {
       const rng = makeRng(String(seed) + ':wend:' + difficulty + ':' + attempt);
       let carved = null;
       let walls = null;

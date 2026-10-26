@@ -141,7 +141,7 @@
   function generate(difficulty, seed) {
     const side = difficulty === 'easy' ? 6 : difficulty === 'tricky' ? 7 : 8;
     const leaf = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 4 : 5;
-    for (let attempt = 0; attempt < 40; attempt++) {
+    for (let attempt = 0; attempt < 200; attempt++) {
       const rng = makeRng(String(seed) + ':patches:' + difficulty + ':' + attempt);
       const rects = [];
       tile(0, 0, side, side, rng, rects, leaf);

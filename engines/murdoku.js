@@ -203,7 +203,7 @@
   function generate(difficulty, seed) {
     const n = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 5 : 6;
     const roomCount = n === 6 ? 4 : 3;
-    for (let attempt = 0; attempt < 30; attempt++) {
+    for (let attempt = 0; attempt < 100; attempt++) {
       const rng = makeRng(String(seed) + ':murdoku:' + difficulty + ':' + attempt);
       const grown = growRooms(n, roomCount, rng);
       if (!grown) continue;
