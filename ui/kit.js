@@ -155,7 +155,8 @@
       const drag = active;
       active = null;
       const cell = (!cancelled && e && at(e.clientX, e.clientY)) || drag.last;
-      if (opts.up) opts.up(cell[0], cell[1], drag.moved || !!cancelled);
+      // `cancelled`: the touch was interrupted (pointercancel, lost capture); not a tap or a drop.
+      if (opts.up) opts.up(cell[0], cell[1], drag.moved || !!cancelled, !!cancelled);
     }
     grid.addEventListener('pointerdown', function (e) {
       if (e.button > 0 || (opts.locked && opts.locked())) return;

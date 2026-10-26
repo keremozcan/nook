@@ -84,12 +84,20 @@
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (err) { /* Play still works without storage. */ }
   }
-  function tonight() {
-    if (!store.tonight || store.tonight.date !== today()) store.tonight = { date: today(), index: 0, times: [], slot: null };
+  /* The Tonight run for a date (today by default). A run that started before midnight keeps its
+     own date, so finishing it after midnight still records against that night. */
+  function tonight(date) {
+    date = date || today();
+    const t = store.tonight;
+    if (t && t.date === date) return t;
+    // A later night already began (another tab): don't overwrite it with an older run.
+    if (t && t.date > date) return { date: date, index: ORDER.length, times: [], slot: null };
+    store.tonight = { date: date, index: 0, times: [], slot: null };
     return store.tonight;
   }
+  function run() { return tonight(S.roundDate); }
   function tonightLevel(game) { return game === 'sudoku' ? 'mini' : 'easy'; }
-  function dailySeed(game, level) { return 'daily-' + today() + '-' + game + '-' + level; }
+  function dailySeed(game, level, date) { return 'daily-' + (date || today()) + '-' + game + '-' + level; }
 
   const WORDS = ['amber', 'lantern', 'quiet', 'cedar', 'linen', 'copper', 'harbour', 'meadow', 'velvet', 'paper', 'orchard', 'willow', 'candle', 'marble', 'thistle', 'river', 'saffron', 'pewter', 'garden', 'ivory', 'cinder', 'maple', 'birch', 'honey', 'flint', 'pearl', 'olive', 'hearth', 'clover', 'spruce', 'cobalt', 'sorrel', 'yarrow', 'pebble', 'autumn', 'silver', 'brass', 'nectar', 'fable', 'heron'];
   function freshSeed() {
@@ -107,7 +115,7 @@
 
   /* ---------- State ---------- */
   const S = {
-    view: 'home', game: null, level: null, seed: null, round: false,
+    view: 'home', game: null, level: null, seed: null, round: false, roundDate: null,
     puzzle: null, play: null, ui: null, undo: [], group: null, pending: null,
     elapsed: 0, running: false, t0: 0, solved: false, note: '', token: 0,
     result: null, toast: '', ctx: null
@@ -143,12 +151,12 @@
     if (S.view !== 'game' || !S.puzzle || S.solved) return;
     if (!S.undo.length && !S.elapsed && !S.running) return;
     const slot = { game: S.game, level: S.level, seed: S.seed, sig: S.sig, play: S.play, undo: S.undo.slice(-60), elapsed: Math.round(now()), helped: S.helped };
-    if (S.round) tonight().slot = slot;
+    if (S.round) run().slot = slot;
     else store.saved[S.game] = slot;
     persist();
   }
   function dropSlot() {
-    if (S.round) tonight().slot = null;
+    if (S.round) run().slot = null;
     else delete store.saved[S.game];
     persist();
   }
@@ -228,7 +236,7 @@
     if (newBest) store.best[key] = secs;
     S.result = { ms: ms, best: newBest ? secs : prev, newBest: newBest && prev != null, helped: S.helped };
     if (S.round) {
-      const t = tonight();
+      const t = run();
       t.times.push({ game: S.game, ms: ms });
       t.index = ORDER.indexOf(S.game) + 1;
       t.slot = null;
@@ -265,7 +273,7 @@
         h('p', { class: 'eyebrow', text: COPY.eyebrow }),
         h('h1', { text: 'Nook' }),
         h('p', { class: 'lede', text: COPY.lede })),
-      h('button', { type: 'button', class: 'tonight', 'data-act': 'tonight', onclick: startTonight },
+      h('button', { type: 'button', class: 'tonight', 'data-act': 'tonight', onclick: function () { startTonight(); } },
         h('span', { class: 'tonight-copy' },
           h('span', { class: 'eyebrow', text: COPY.tonight }),
           h('span', { class: 'tonight-title', text: tonightSub })),
@@ -300,7 +308,7 @@
   }
 
   function summaryView() {
-    const t = tonight();
+    const t = tonight(S.roundDate);
     const list = h('ol', { class: 'times' });
     let total = 0;
     t.times.forEach(function (item) {
@@ -343,7 +351,7 @@
     if (!S.puzzle) {
       stage.classList.add('waiting');
       stage.appendChild(S.failed
-        ? h('div', { class: 'placeholder failed' }, h('p', { text: COPY.failed }), h('button', { type: 'button', class: 'primary', onclick: newPuzzle }, COPY.tryAgain))
+        ? h('div', { class: 'placeholder failed' }, h('p', { text: COPY.failed }), h('button', { type: 'button', class: 'primary', 'data-act': 'again', onclick: newPuzzle }, COPY.tryAgain))
         : h('div', { class: 'placeholder', 'aria-busy': 'true' }, h('p', { class: 'loading', text: COPY.loading })));
     }
     main.appendChild(stage);
@@ -420,7 +428,7 @@
     if (S.solved && !done._filled) {
       done._filled = true;
       const r = S.result || { ms: S.elapsed, best: null };
-      const t = S.round ? tonight() : null;
+      const t = S.round ? run() : null;
       const label = S.round ? (t.index >= ORDER.length ? COPY.tonightTimes : COPY.nextGame) : COPY.nextPuzzle;
       const extra = g.wonLine ? g.wonLine(S.ctx) : '';
       const primary = h('button', { type: 'button', class: 'primary', 'data-act': 'next', onclick: next }, label);
@@ -470,10 +478,13 @@
     if (!S.round && S.game) delete store.saved[S.game];
     persist();
     S.failed = false;
-    openGame(S.game, S.level, freshSeed(), { fresh: true });
+    // Inside Tonight (only offered when its puzzle failed to load): deal a stand-in puzzle for
+    // the same game and stay in the run.
+    if (S.round) openGame(S.game, S.level, S.seed + '-b', { fresh: true, round: true, date: S.roundDate });
+    else openGame(S.game, S.level, freshSeed(), { fresh: true });
   }
   function next() {
-    if (S.round) { startTonight(); return; }
+    if (S.round) { startTonight(S.roundDate); return; }
     openGame(S.game, S.level, freshSeed(), { fresh: true });
   }
   function share() {
@@ -505,8 +516,9 @@
     render();
     window.scrollTo(0, 0);
   }
-  function startTonight() {
-    const t = tonight();
+  function startTonight(date) {
+    const t = tonight(date);
+    S.roundDate = t.date;
     if (t.index >= ORDER.length) {
       leave();
       S.view = 'summary';
@@ -515,7 +527,7 @@
     }
     const id = ORDER[t.index];
     const level = tonightLevel(id);
-    openGame(id, level, dailySeed(id, level), { push: S.view === 'home', round: true });
+    openGame(id, level, dailySeed(id, level, t.date), { push: S.view === 'home', round: true, date: t.date });
   }
   /* Open a game. With no seed, resume that game's saved puzzle at this level, else deal a new one. */
   function openGame(id, level, seed, opts) {
@@ -525,11 +537,12 @@
     const allowed = levels(id);
     if (!level) level = (!opts.round && store.saved[id] && store.saved[id].level) || store.level[id];
     if (allowed.indexOf(level) < 0) level = allowed.indexOf('easy') >= 0 ? 'easy' : allowed[0];
-    const saved = opts.round ? tonight().slot : store.saved[id];
+    const roundDate = opts.round ? (opts.date || today()) : null;
+    const saved = opts.round ? tonight(roundDate).slot : store.saved[id];
     if (!seed) seed = saved && saved.game === id && saved.level === level ? saved.seed : freshSeed();
     if (!opts.round) { store.level[id] = level; persist(); }
     Object.assign(S, {
-      view: 'game', game: id, level: level, seed: seed, round: !!opts.round,
+      view: 'game', game: id, level: level, seed: seed, round: !!opts.round, roundDate: roundDate,
       puzzle: null, play: null, ui: {}, undo: [], group: null, pending: null,
       elapsed: 0, running: false, solved: false, helped: false, note: '', result: null, failed: false
     });
@@ -560,7 +573,7 @@
     S.sig = sig(puzzle);
     S.play = g.fresh(puzzle);
     S.ui = {};
-    const saved = opts.round ? tonight().slot : store.saved[id];
+    const saved = opts.round ? run().slot : store.saved[id];
     if (saved && saved.game === id && saved.level === level && saved.seed === seed && !opts.fresh) {
       if (saved.sig === S.sig && saved.play) {
         S.play = saved.play;
@@ -569,7 +582,7 @@
         S.helped = !!saved.helped;
         if (S.undo.length || S.elapsed) startClock();
       } else {
-        if (opts.round) tonight().slot = null;
+        if (opts.round) run().slot = null;
         else delete store.saved[id];
         persist();
         S.note = COPY.updated;

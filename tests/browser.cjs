@@ -227,6 +227,69 @@ async function run() {
       await page.close();
     }
 
+    // Zip: a fast diagonal flick across a corner next to the line extends it; it never cuts the line back.
+    {
+      let found = null;
+      for (let s = 0; s < 400 && !found; s++) {
+        const p = puzzleFor('zip', 'easy', 'diag' + s);
+        const sol = p.solution;
+        const walls = new Set(p.walls.map((w) => w.join(',')));
+        const wall = (a, b) => a[0] === b[0] ? walls.has(a[0] + ',' + Math.min(a[1], b[1]) + ',E') : walls.has(Math.min(a[0], b[0]) + ',' + a[1] + ',S');
+        for (let k = 3; k < sol.length - 2 && !found; k++) {
+          const head = sol[k];
+          const on = sol.slice(0, k + 1).map((x) => x.join(','));
+          for (let j = 0; j < k - 1 && !found; j++) {
+            const X = sol[j];
+            if (X[0] !== head[0] || Math.abs(X[1] - head[1]) !== 1) continue;
+            for (const dr of [-1, 1]) {
+              const D = [head[0] + dr, X[1]];
+              if (D[0] < 0 || D[0] >= p.rows || on.includes(D.join(',')) || p.numbers[D[0]][D[1]] || wall(X, D)) continue;
+              found = { seed: 'diag' + s, k, head, D, sol };
+              break;
+            }
+          }
+        }
+      }
+      assert(found, 'found a corner next to an earlier square of the line');
+      const page = await open('zip', 'easy', found.seed);
+      await page.evaluate((pre) => { const S = window.NOOK_UI.shell.state; S.play.path = pre; S.ctx.paint(); }, found.sol.slice(0, found.k + 1));
+      const h = await cell(page, ...found.head).boundingBox();
+      const u = h.width;
+      const cx = found.D[1] > found.head[1] ? h.x + u : h.x;
+      const cy = found.D[0] > found.head[0] ? h.y + u : h.y;
+      const sx = Math.sign(found.D[1] - found.head[1]);
+      const sy = Math.sign(found.D[0] - found.head[0]);
+      await page.mouse.move(h.x + u / 2, h.y + u / 2);
+      await page.mouse.down();
+      await page.mouse.move(cx - sx * 0.12 * u, cy - sy * 0.10 * u, { steps: 4 });
+      await page.mouse.move(cx + sx * 0.12 * u, cy + sy * 0.14 * u, { steps: 1 });
+      await page.mouse.up();
+      const after = await page.evaluate(() => window.NOOK_UI.shell.state.play.path.length);
+      assert(after >= found.k + 1, 'a diagonal flick keeps the line (' + (found.k + 1) + ' squares, now ' + after + ')');
+      await page.close();
+    }
+
+    // Patches: an interrupted touch (pointercancel) neither removes nor places a patch.
+    {
+      const page = await open('patches');
+      await page.locator('[data-act="hint"]').click();
+      const before = await page.evaluate(() => JSON.stringify(window.NOOK_UI.shell.state.play.cells));
+      const placed = await page.evaluate(() => {
+        const cells = window.NOOK_UI.shell.state.play.cells;
+        for (let r = 0; r < cells.length; r++) for (let c = 0; c < cells[r].length; c++) if (cells[r][c] >= 0) return [r, c];
+        return null;
+      });
+      assert(placed, 'a hint placed a patch');
+      const [x, y] = await centre(page, ...placed);
+      await cell(page, ...placed).evaluate((node, [px, py]) => {
+        const o = { bubbles: true, cancelable: true, pointerId: 41, pointerType: 'touch', isPrimary: true, clientX: px, clientY: py, button: 0 };
+        node.dispatchEvent(new PointerEvent('pointerdown', o));
+        node.dispatchEvent(new PointerEvent('pointercancel', o));
+      }, [x, y]);
+      assert.equal(await page.evaluate(() => JSON.stringify(window.NOOK_UI.shell.state.play.cells)), before, 'a cancelled touch leaves the patches alone');
+      await page.close();
+    }
+
     // Keyboard play: Zip by arrows and Space, Queens by Enter, Sudoku by arrows and digits.
     {
       const page = await open('zip');
@@ -324,6 +387,62 @@ async function run() {
       assert.equal(await page.locator('.summary .times li:not(.total)').count(), 9, 'Tonight ends on nine times');
       await page.close();
       console.log('ok tonight');
+    }
+
+    // Tonight across midnight: a game finished after midnight counts for the night it began.
+    {
+      const page = await newPage({ tag: 'midnight', storage: {} });
+      await page.addInitScript(() => {
+        const Real = Date;
+        window.__shift = Number(sessionStorage.getItem('shift') || 0);
+        class Shifted extends Real {
+          constructor(...a) { if (a.length) super(...a); else super(Real.now() + window.__shift); }
+          static now() { return Real.now() + window.__shift; }
+        }
+        window.Date = Shifted;
+      });
+      await page.goto(base);
+      // Five minutes before midnight, local time.
+      const night = await page.evaluate(() => {
+        const d = new Date(); d.setHours(23, 55, 0, 0);
+        window.__shift += d.getTime() - Date.now();
+        sessionStorage.setItem('shift', String(window.__shift));
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      });
+      await page.locator('[data-act="tonight"]').click();
+      await ready(page);
+      await page.evaluate(() => { window.__shift += 10 * 60 * 1000; });
+      assert(await hintToEnd(page), 'Tonight game finishes after midnight');
+      const t = (await store(page)).tonight;
+      assert.equal(t.date, night, 'the run keeps the night it began');
+      assert.equal(t.index, 1, 'the finished game counts');
+      assert.equal(t.times.length, 1);
+      await page.locator('[data-act="next"]').click();
+      await ready(page);
+      assert.equal(await page.locator('.round').textContent(), 'Tonight · 2 of 9', 'Next game continues that night');
+      assert(decodeURIComponent(await page.evaluate(() => location.hash)).includes('daily-' + night + '-'), 'with that night’s puzzle');
+      await page.close();
+      console.log('ok tonight midnight');
+    }
+
+    // Tonight: a puzzle that fails to load deals a stand-in for the same game and keeps the run.
+    {
+      const page = await newPage({ tag: 'tonight-fail', storage: {} });
+      await page.goto(base);
+      await page.evaluate(() => {
+        const e = window.NOOK_ENGINES.zip;
+        const real = e.generate;
+        e.generate = function (level, seed) { if (/^daily-/.test(seed) && !/-b$/.test(seed)) throw new Error('boom'); return real(level, seed); };
+      });
+      await page.locator('[data-act="tonight"]').click();
+      await page.locator('[data-act="again"]').click();
+      await ready(page);
+      assert.equal(await page.locator('.round').textContent(), 'Tonight · 1 of 9', 'still in Tonight');
+      assert.equal(await page.evaluate(() => window.NOOK_UI.shell.state.round), true);
+      assert(await hintToEnd(page), 'the stand-in puzzle completes');
+      assert.equal((await store(page)).tonight.index, 1, 'and counts for the run');
+      await page.close();
+      console.log('ok tonight fallback');
     }
 
     // Dark mode: every game renders on a dark page without errors.

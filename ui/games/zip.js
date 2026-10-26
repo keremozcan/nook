@@ -103,11 +103,13 @@
         const path = ctx.play.path;
         const reason = step(p, path, r, c);
         if (!reason || !path.length) return reason;
-        // A diagonal jump while dragging: try the two squares in between.
+        // A diagonal jump while dragging: try the two squares in between. Only a square that
+        // extends the line can bridge the jump; one already on the line would cut it back.
         const head = path[path.length - 1];
-        if (Math.abs(head[0] - r) === 1 && Math.abs(head[1] - c) === 1) {
+        if (Math.abs(head[0] - r) === 1 && Math.abs(head[1] - c) === 1 && indexOf(path, r, c) < 0) {
           const ways = [[head[0], c], [r, head[1]]];
           for (let i = 0; i < ways.length; i++) {
+            if (indexOf(path, ways[i][0], ways[i][1]) >= 0) continue;
             const copy = path.map(function (x) { return x.slice(); });
             if (!step(p, copy, ways[i][0], ways[i][1]) && !step(p, copy, r, c)) {
               path.length = 0;

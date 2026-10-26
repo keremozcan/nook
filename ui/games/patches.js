@@ -124,12 +124,13 @@
           ctx.ui.preview = rectOf(drag.from, [r, c]);
           ctx.live();
         },
-        up: function (r, c, moved) {
+        up: function (r, c, moved, cancelled) {
           const from = drag && drag.from;
           drag = null;
           const rect = ctx.ui.preview;
           ctx.ui.preview = null;
           if (!from) return;
+          if (cancelled) { ctx.paint(); return; }
           if (!moved || !rect || (rect[0] === rect[2] && rect[1] === rect[3])) { tapAt(from[0], from[1]); return; }
           if (!place(rect)) ctx.paint();
         },
