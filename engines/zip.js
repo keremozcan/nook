@@ -93,13 +93,6 @@
     return edges;
   }
 
-  function checkpoints(len, step) {
-    const idx = [0];
-    for (let i = step; i < len - 1; i += step) idx.push(i);
-    if (idx[idx.length - 1] !== len - 1) idx.push(len - 1);
-    return idx;
-  }
-
   function widen(indexes, len) {
     let best = 0;
     let at = 1;
@@ -135,92 +128,135 @@
     return true;
   }
 
-  function countPaths(rows, cols, numbers, walls) {
+  // Count lines (stopping at 2) that start on 1, visit the numbers in order, cover every
+  // square and end on the last number; count is -1 if the search gives up. When a line other
+  // than `known` (a list of cell indexes) turns up, it is returned as `other`.
+  function countPaths(rows, cols, numbers, walls, known) {
+    const N = rows * cols;
     const wallSet = new Set(walls.map((w) => w[0] + ',' + w[1] + ',' + w[2]));
-    let start = null;
+    const adj = [];
+    const num = new Int32Array(N);
+    const at = [];
     let maxN = 0;
-    const pos = [];
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
-        const n = numbers[r][c] || 0;
-        if (!n) continue;
-        if (n > maxN) maxN = n;
-        pos[n] = [r, c];
-        if (n === 1) start = [r, c];
-      }
-    }
-    if (!start) return 0;
-    const seen = Array.from({ length: rows }, () => Array(cols).fill(false));
-    const N = rows * cols;
-    let count = 0;
-    let nodes = 0;
-    const cap = N >= 64 ? 90000 : 60000;
-    let visited = 0;
-    function neigh(r, c) {
-      const out = [];
-      for (const [dr, dc] of DIRS) {
-        const rr = r + dr;
-        const cc = c + dc;
-        if (rr < 0 || cc < 0 || rr >= rows || cc >= cols) continue;
-        if (blocked(wallSet, r, c, rr, cc)) continue;
-        out.push([rr, cc]);
-      }
-      return out;
-    }
-    function flood(hr, hc) {
-      const need = N - visited;
-      if (!need) return true;
-      const mark = Array.from({ length: rows }, () => Array(cols).fill(false));
-      const q = [];
-      let reached = 0;
-      const push = (r, c) => {
-        if (r < 0 || c < 0 || r >= rows || c >= cols || seen[r][c] || mark[r][c]) return;
-        mark[r][c] = true;
-        q.push(r, c);
-        reached++;
-      };
-      for (const [r, c] of neigh(hr, hc)) if (!seen[r][c]) push(r, c);
-      for (let i = 0; i < q.length; i += 2) {
-        const r = q[i];
-        const c = q[i + 1];
-        for (const [rr, cc] of neigh(r, c)) push(rr, cc);
-      }
-      return reached === need;
-    }
-    function dfs(r, c, need) {
-      if (count >= 2 || nodes > cap) return;
-      nodes++;
-      const here = numbers[r][c] || 0;
-      if (here) {
-        if (here !== need) return;
-        need++;
-      }
-      if (visited === N - 1) {
-        if (here === maxN && need === maxN + 1) count++;
-        return;
-      }
-      seen[r][c] = true;
-      visited++;
-      if (need <= maxN) {
-        const target = pos[need];
-        if (Math.abs(target[0] - r) + Math.abs(target[1] - c) > N - visited) {
-          seen[r][c] = false;
-          visited--;
-          return;
+        const i = r * cols + c;
+        const list = [];
+        for (const [dr, dc] of DIRS) {
+          const rr = r + dr;
+          const cc = c + dc;
+          if (rr < 0 || cc < 0 || rr >= rows || cc >= cols || blocked(wallSet, r, c, rr, cc)) continue;
+          list.push(rr * cols + cc);
+        }
+        adj.push(list);
+        num[i] = numbers[r][c] || 0;
+        if (num[i]) {
+          at[num[i]] = i;
+          maxN = Math.max(maxN, num[i]);
         }
       }
-      if ((visited & 3) === 0 && !flood(r, c)) {
-        seen[r][c] = false;
-        visited--;
+    }
+    if (at[1] == null || at[maxN] == null) return { count: 0, other: null };
+    const end = at[maxN];
+    const seen = new Uint8Array(N);
+    const mark = new Int32Array(N);
+    const queue = new Int32Array(N);
+    let stamp = 0;
+    let visited = 0;
+    let count = 0;
+    let nodes = 0;
+    let other = null;
+    const line = new Int32Array(N);
+    const cap = 400000;
+
+    function dist(a, b) {
+      return Math.abs(((a / cols) | 0) - ((b / cols) | 0)) + Math.abs((a % cols) - (b % cols));
+    }
+
+    // Free neighbours of k: unvisited squares, plus the head of the line.
+    function free(k, head) {
+      let n = 0;
+      for (const j of adj[k]) if (!seen[j] || j === head) n++;
+      return n;
+    }
+
+    // Every unvisited square must still be reachable from the head.
+    function connected(head) {
+      const left = N - visited;
+      if (!left) return true;
+      stamp++;
+      let tail = 0;
+      for (const j of adj[head]) {
+        if (!seen[j] && mark[j] !== stamp) {
+          mark[j] = stamp;
+          queue[tail++] = j;
+        }
+      }
+      for (let q = 0; q < tail; q++) {
+        for (const j of adj[queue[q]]) {
+          if (!seen[j] && mark[j] !== stamp) {
+            mark[j] = stamp;
+            queue[tail++] = j;
+          }
+        }
+      }
+      return tail === left;
+    }
+
+    function dfs(i, prev, need) {
+      if (count >= 2 || nodes > cap) return;
+      nodes++;
+      if (num[i]) {
+        if (num[i] !== need) return;
+        need++;
+      }
+      line[visited] = i;
+      if (visited === N - 1) {
+        if (i !== end) return;
+        count++;
+        if (!other && known && line.some((cell, k) => cell !== known[k])) other = Array.from(line);
         return;
       }
-      for (const [rr, cc] of neigh(r, c)) if (!seen[rr][cc]) dfs(rr, cc, need);
-      seen[r][c] = false;
+      if (i === end) return;
+      seen[i] = 1;
+      visited++;
+      let ok = dist(i, at[need]) <= N - visited;
+      // Squares beside the square just left lost a way in or out: each still needs two
+      // (the end square one), counting the head.
+      if (ok && prev >= 0) {
+        for (const k of adj[prev]) {
+          if (seen[k] || k === i) continue;
+          if (free(k, i) < (k === end ? 1 : 2)) {
+            ok = false;
+            break;
+          }
+        }
+      }
+      if (ok) ok = connected(i);
+      if (ok) {
+        // A neighbour with only one other free square must be entered now.
+        let forced = -1;
+        for (const j of adj[i]) {
+          if (seen[j] || j === end) continue;
+          if (free(j, i) === 1) {
+            if (forced >= 0) {
+              ok = false;
+              break;
+            }
+            forced = j;
+          }
+        }
+        if (ok) {
+          if (forced >= 0) dfs(forced, i, need);
+          else for (const j of adj[i]) if (!seen[j]) dfs(j, i, need);
+        }
+      }
+      seen[i] = 0;
       visited--;
     }
-    dfs(start[0], start[1], 1);
-    if (nodes > cap) return -1;
-    return count;
+
+    dfs(at[1], -1, 1);
+    return { count: nodes > cap ? -1 : count, other };
   }
 
   function densityOk(numbered, cells, difficulty) {
@@ -228,43 +264,6 @@
     if (difficulty === 'easy') return frac >= 0.22 && frac <= 0.7;
     if (difficulty === 'fiendish') return frac >= 0.1 && frac <= 0.5;
     return frac >= 0.12 && frac <= 0.6;
-  }
-
-  function segmentsForced(rows, cols, numbers, walls, solution) {
-    const wallSet = new Set(walls.map(([r, c, d]) => r + ',' + c + ',' + d));
-    let prev = 0;
-    for (let i = 1; i < solution.length; i++) {
-      const cell = solution[i];
-      if (!numbers[cell[0]][cell[1]]) continue;
-      const from = solution[prev];
-      const budget = i - prev;
-      let ways = 0;
-      const seen = Array.from({ length: rows }, () => Array(cols).fill(false));
-      seen[from[0]][from[1]] = true;
-      const dfs = (r, c, left) => {
-        if (ways > 1) return;
-        if (r === cell[0] && c === cell[1]) {
-          ways++;
-          return;
-        }
-        if (!left) return;
-        for (const [dr, dc] of DIRS) {
-          const rr = r + dr;
-          const cc = c + dc;
-          if (rr < 0 || cc < 0 || rr >= rows || cc >= cols || seen[rr][cc]) continue;
-          if (blocked(wallSet, r, c, rr, cc)) continue;
-          const num = numbers[rr][cc] || 0;
-          if (num && (rr !== cell[0] || cc !== cell[1])) continue;
-          seen[rr][cc] = true;
-          dfs(rr, cc, left - 1);
-          seen[rr][cc] = false;
-        }
-      };
-      dfs(from[0], from[1], budget);
-      if (ways !== 1) return false;
-      prev = i;
-    }
-    return true;
   }
 
   function turnIndexes(path, step) {
@@ -306,19 +305,18 @@
     for (let attempt = 0; attempt < 24; attempt++) {
       const rng = makeRng(String(seed) + ':zip:' + difficulty + ':' + attempt);
       const path = warnsdorff(rows, cols, rng) || snake(rows, cols, rng);
+      const known = path.map(([r, c]) => r * cols + c);
       const extras = shortcutWalls(path, rows, cols);
       const walls = extras.slice(0, Math.min(walls0, extras.length));
-      let nextWall = walls.length;
       const indexes = turnIndexes(path, step0);
-      for (let tighten = 0; tighten < 28; tighten++) {
-        const built = assemble(path, indexes, walls, rows, cols);
+      for (let tighten = 0; tighten < 60; tighten++) {
         if (!densityOk(indexes.length, rows * cols, difficulty)) {
-          if (indexes.length / (rows * cols) > 0.45) break;
-          if (!widen(indexes, path.length)) break;
+          if (indexes.length / (rows * cols) > 0.45 || !widen(indexes, path.length)) break;
           continue;
         }
-        const found = countPaths(rows, cols, built.numbers, built.walls);
-        if (found === 1) {
+        const built = assemble(path, indexes, walls, rows, cols);
+        const { count, other } = countPaths(rows, cols, built.numbers, built.walls, known);
+        if (count === 1) {
           return {
             game: 'zip',
             difficulty,
@@ -330,21 +328,25 @@
             solution: path.map((cell) => [cell[0], cell[1]]),
           };
         }
-        if (found === 0) break;
-        const frac = indexes.length / (rows * cols);
-        const numberCap = difficulty === 'easy' ? 0.36 : difficulty === 'tricky' ? 0.3 : 0.24;
-        if (walls.length < wallCap && nextWall < extras.length && frac >= (difficulty === 'easy' ? 0.22 : 0.1)) {
-          walls.push(extras[nextWall]);
-          nextWall++;
+        if (count === 0) break;
+        if (!other) {
+          if (!widen(indexes, path.length)) break;
           continue;
         }
-        if (frac < numberCap && widen(indexes, path.length)) continue;
-        if (walls.length < wallCap && nextWall < extras.length) {
-          walls.push(extras[nextWall]);
-          nextWall++;
-          continue;
+        // Rule out the other line where it first leaves the intended one: wall off the
+        // step it takes there, or once the walls run out, number the square it skips.
+        let k = 1;
+        while (other[k] === known[k]) k++;
+        if (walls.length < wallCap) {
+          const a = Math.min(other[k - 1], other[k]);
+          const b = Math.max(other[k - 1], other[k]);
+          walls.push(b - a === 1 ? [(a / cols) | 0, a % cols, 'E'] : [(a / cols) | 0, a % cols, 'S']);
+        } else if (indexes.indexOf(k) === -1) {
+          indexes.push(k);
+          indexes.sort((x, y) => x - y);
+        } else if (!widen(indexes, path.length)) {
+          break;
         }
-        if (!widen(indexes, path.length)) break;
       }
     }
     throw new Error('zip: no unique puzzle');
