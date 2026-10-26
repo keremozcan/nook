@@ -10,14 +10,24 @@ function canSolve(grid, boxR, boxC, tier) {
   return Boolean(result && result.solved);
 }
 
+// A hidden single is tier 1: the only place for a 1 in the top row is the corner,
+// though the corner itself could still hold any digit.
+const hidden = Array.from({ length: 9 }, () => Array(9).fill(0));
+hidden[1][3] = 1;
+hidden[2][6] = 1;
+hidden[3][1] = 1;
+hidden[6][2] = 1;
+const singlesOnly = sudoku.assess(hidden, 3, 3, 1);
+assert(singlesOnly && singlesOnly.moves >= 1 && singlesOnly.hardest === 1, 'hidden singles should be tier 1');
+
 const sudokuSeeds = ['difficulty-a', 'difficulty-b', 'difficulty-c'];
 for (const seed of sudokuSeeds) {
   const easy = sudoku.generate('easy', seed);
   const tricky = sudoku.generate('tricky', seed);
   const fiendish = sudoku.generate('fiendish', seed);
   assert(easy.rating.tier === 1, 'easy sudoku should be solvable with singles');
-  assert(tricky.rating.tier === 2, 'tricky sudoku should require hidden singles/locked candidates');
-  assert(fiendish.rating.tier === 3, 'fiendish sudoku should require naked pairs');
+  assert(tricky.rating.tier === 2, 'tricky sudoku should require locked candidates');
+  assert(fiendish.rating.tier === 3, 'fiendish sudoku should require pairs');
   assert(canSolve(easy.givens, easy.boxR, easy.boxC, 1), 'easy should solve with tier 1 enabled');
   assert(!canSolve(tricky.givens, tricky.boxR, tricky.boxC, 1), 'tricky should not solve with tier 1 only');
   assert(canSolve(tricky.givens, tricky.boxR, tricky.boxC, 2), 'tricky should solve with tier 2 enabled');

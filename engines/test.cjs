@@ -875,6 +875,16 @@ function expectSudoku(puzzle, difficulty) {
   assert(legalSudoku(puzzle), 'sudoku solution breaks the rules');
   const count = countSudoku(puzzle, 2);
   assert(count === 1, 'sudoku solutions ' + count);
+  // Mini and Easy need singles only, Tricky locked candidates, Fiendish pairs.
+  const tier = { mini: 1, easy: 1, tricky: 2, fiendish: 3 }[difficulty];
+  const grader = require('./sudoku.js');
+  assert(puzzle.rating.tier === tier, 'sudoku ' + difficulty + ' tier ' + puzzle.rating.tier);
+  const solved = grader.assess(puzzle.givens, puzzle.boxR, puzzle.boxC, tier);
+  assert(solved && solved.solved, 'sudoku does not solve with tier ' + tier);
+  if (tier > 1) {
+    const easier = grader.assess(puzzle.givens, puzzle.boxR, puzzle.boxC, tier - 1);
+    assert(!easier || !easier.solved, 'sudoku solves below tier ' + tier);
+  }
 }
 
 function expectPatches(puzzle, difficulty) {

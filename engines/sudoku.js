@@ -19,87 +19,6 @@
     return Math.floor(r / boxR) * (size / boxC) + Math.floor(c / boxC);
   }
 
-  function count(grid, boxR, boxC, limit) {
-    const size = grid.length;
-    const all = (1 << size) - 1;
-    const rows = Array(size).fill(0);
-    const cols = Array(size).fill(0);
-    const boxes = Array(size).fill(0);
-    const empties = [];
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        const d = grid[r][c];
-        if (!d) {
-          empties.push(r * size + c);
-          continue;
-        }
-        const bit = 1 << (d - 1);
-        const b = boxAt(r, c, boxR, boxC, size);
-        if ((rows[r] & bit) || (cols[c] & bit) || (boxes[b] & bit)) return 0;
-        rows[r] |= bit;
-        cols[c] |= bit;
-        boxes[b] |= bit;
-      }
-    }
-    let found = 0;
-    let nodes = 0;
-    function bt() {
-      if (found >= limit) return;
-      if (++nodes > 250000) {
-        found = -1;
-        return;
-      }
-      let best = -1;
-      let bestMask = 0;
-      let bestBits = 99;
-      for (let i = 0; i < empties.length; i++) {
-        const cell = empties[i];
-        const r = (cell / size) | 0;
-        const c = cell % size;
-        if (grid[r][c]) continue;
-        const mask = all ^ (rows[r] | cols[c] | boxes[boxAt(r, c, boxR, boxC, size)]);
-        if (!mask) return;
-        let bits = 0;
-        let m = mask;
-        while (m) {
-          bits++;
-          m &= m - 1;
-        }
-        if (bits < bestBits) {
-          bestBits = bits;
-          best = cell;
-          bestMask = mask;
-          if (bits === 1) break;
-        }
-      }
-      if (best < 0) {
-        found++;
-        return;
-      }
-      const r = (best / size) | 0;
-      const c = best % size;
-      const b = boxAt(r, c, boxR, boxC, size);
-      let mask = bestMask;
-      while (mask) {
-        const bit = mask & -mask;
-        mask ^= bit;
-        const d = bitIndex(bit) + 1;
-        grid[r][c] = d;
-        rows[r] |= bit;
-        cols[c] |= bit;
-        boxes[b] |= bit;
-        bt();
-        grid[r][c] = 0;
-        rows[r] ^= bit;
-        cols[c] ^= bit;
-        boxes[b] ^= bit;
-        if (found >= limit || found < 0) return;
-      }
-    }
-    bt();
-    return found;
-  }
-
   function fill(size, boxR, boxC, rng) {
     const grid = Array.from({ length: size }, () => Array(size).fill(0));
     const all = (1 << size) - 1;
@@ -137,159 +56,213 @@
   }
 
   const SPEC = {
-    mini: { size: 6, boxR: 2, boxC: 3, aim: 15, max: 26, min: 12 },
-    easy: { size: 9, boxR: 3, boxC: 3, aim: 38, max: 50, min: 32 },
-    tricky: { size: 9, boxR: 3, boxC: 3, aim: 33, max: 40, min: 29 },
-    fiendish: { size: 9, boxR: 3, boxC: 3, aim: 28, max: 32, min: 24 },
+    mini: { size: 6, boxR: 2, boxC: 3, tier: 1, aim: 15, max: 26, min: 12 },
+    easy: { size: 9, boxR: 3, boxC: 3, tier: 1, aim: 38, max: 50, min: 32 },
+    tricky: { size: 9, boxR: 3, boxC: 3, tier: 2, aim: 33, max: 40, min: 29 },
+    fiendish: { size: 9, boxR: 3, boxC: 3, tier: 3, aim: 28, max: 32, min: 24 },
   };
 
-  function masksOf(grid, boxR, boxC) {
-    const size = grid.length;
-    const all = (1 << size) - 1;
-    const rows = Array(size).fill(0);
-    const cols = Array(size).fill(0);
-    const boxes = Array(size).fill(0);
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (!grid[r][c]) continue;
-        const bit = 1 << (grid[r][c] - 1);
-        rows[r] |= bit;
-        cols[c] |= bit;
-        boxes[boxAt(r, c, boxR, boxC, size)] |= bit;
-      }
+  function popcount(mask) {
+    let n = 0;
+    while (mask) {
+      mask &= mask - 1;
+      n++;
     }
-    const masks = Array.from({ length: size }, () => Array(size).fill(0));
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        if (grid[r][c]) continue;
-        masks[r][c] = all ^ (rows[r] | cols[c] | boxes[boxAt(r, c, boxR, boxC, size)]);
-      }
-    }
-    return masks;
+    return n;
   }
 
-  // Human-style deterministic solve rating: naked singles (1), hidden
-  // singles/locked candidates (2), then naked pairs (3).
+  const layouts = {};
+
+  // Cell indices for every row, column and box, and the box of each cell.
+  function layout(size, boxR, boxC) {
+    const key = size + ':' + boxR + ':' + boxC;
+    if (layouts[key]) return layouts[key];
+    const rows = [];
+    const cols = [];
+    const boxes = Array.from({ length: size }, () => []);
+    const boxOf = [];
+    for (let i = 0; i < size; i++) {
+      rows.push([]);
+      cols.push([]);
+      for (let j = 0; j < size; j++) {
+        rows[i].push(i * size + j);
+        cols[i].push(j * size + i);
+      }
+    }
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const b = boxAt(r, c, boxR, boxC, size);
+        boxes[b].push(r * size + c);
+        boxOf.push(b);
+      }
+    }
+    const peers = [];
+    for (let i = 0; i < size * size; i++) {
+      const r = (i / size) | 0;
+      const c = i % size;
+      const set = new Set(rows[r].concat(cols[c], boxes[boxOf[i]]));
+      set.delete(i);
+      peers.push(Array.from(set));
+    }
+    const units = rows.concat(cols, boxes);
+    layouts[key] = { rows, cols, boxes, boxOf, peers, units };
+    return layouts[key];
+  }
+
+  // Solve the way a person would, always using the easiest technique that makes progress:
+  // tier 1 naked and hidden singles, tier 2 locked candidates (pointing and claiming),
+  // tier 3 naked and hidden pairs. Returns false on a contradiction, otherwise
+  // { solved, hardest, moves } where hardest is the highest tier the solve needed.
   function logicSolve(grid, boxR, boxC, maxTier) {
-    const g = grid.map((row) => row.slice());
-    const size = g.length;
+    const size = grid.length;
+    const all = (1 << size) - 1;
+    const { rows, cols, boxes, boxOf, peers, units } = layout(size, boxR, boxC);
+    const values = [];
+    const cand = [];
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) values.push(grid[r][c] || 0);
+    for (let i = 0; i < values.length; i++) {
+      let mask = values[i] ? 0 : all;
+      if (!values[i]) for (const p of peers[i]) if (values[p]) mask &= ~(1 << (values[p] - 1));
+      cand.push(mask);
+    }
+    let empty = values.filter((v) => !v).length;
     let hardest = 0;
     let moves = 0;
-    let candidateMasks = null;
-    const bitCount = (mask) => { let n = 0; while (mask) { mask &= mask - 1; n++; } return n; };
-    const units = () => {
-      const out = [];
-      for (let i = 0; i < size; i++) {
-        const row = [], col = [];
-        for (let j = 0; j < size; j++) { row.push([i, j]); col.push([j, i]); }
-        out.push(row, col);
-      }
-      for (let br = 0; br < size; br += boxR) for (let bc = 0; bc < size; bc += boxC) {
-        const box = [];
-        for (let r = br; r < br + boxR; r++) for (let c = bc; c < bc + boxC; c++) box.push([r, c]);
-        out.push(box);
-      }
-      return out;
-    };
-    const groups = units();
-    const place = (r, c, bit) => {
-      g[r][c] = bitIndex(bit) + 1;
-      candidateMasks[r][c] = 0;
-      for (let i = 0; i < size; i++) {
-        candidateMasks[r][i] &= ~bit;
-        candidateMasks[i][c] &= ~bit;
-      }
-      const br = Math.floor(r / boxR) * boxR, bc = Math.floor(c / boxC) * boxC;
-      for (let rr = br; rr < br + boxR; rr++) for (let cc = bc; cc < bc + boxC; cc++) candidateMasks[rr][cc] &= ~bit;
-    };
-    for (let guard = 0; guard < size * size * 3; guard++) {
-      if (!candidateMasks) candidateMasks = masksOf(g, boxR, boxC);
-      const masks = candidateMasks;
-      let empty = 0;
-      let placed = false;
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          if (g[r][c]) continue;
-          empty++;
-          const mask = masks[r][c];
-          if (!mask) return false;
-          if ((mask & (mask - 1)) === 0) {
-            place(r, c, mask);
-            hardest = Math.max(hardest, 1);
-            moves++;
-            placed = true;
-            break;
-          }
-        }
-        if (placed) break;
-      }
-      if (!empty) return { solved: true, hardest, moves };
-      if (placed) continue;
 
-      if (maxTier >= 2) {
-        // Hidden singles are the first step beyond checking each cell alone.
-        for (const group of groups) {
-          const spots = new Map();
-          for (const [r, c] of group) if (!g[r][c]) {
-            let m = masks[r][c];
-            while (m) { const bit = m & -m; m ^= bit; if (!spots.has(bit)) spots.set(bit, []); spots.get(bit).push([r, c]); }
-          }
-          for (const [bit, cells] of spots) if (cells.length === 1) {
-            place(cells[0][0], cells[0][1], bit);
-            hardest = Math.max(hardest, 2); moves++; placed = true; break;
-          }
-          if (placed) break;
-        }
-        if (placed) continue;
-      }
+    function place(i, bit) {
+      values[i] = bitIndex(bit) + 1;
+      cand[i] = 0;
+      for (const p of peers[i]) cand[p] &= ~bit;
+      empty--;
+      moves++;
+    }
 
-      // Locked candidate: all possible locations for a digit in a box lie
-      // on one row/column, so remove it from the rest of that line.
-      let eliminated = false;
-      if (maxTier >= 2) {
-        for (let br = 0; br < size && !eliminated; br += boxR) for (let bc = 0; bc < size && !eliminated; bc += boxC) {
-          const cells = [];
-          for (let r = br; r < br + boxR; r++) for (let c = bc; c < bc + boxC; c++) if (!g[r][c]) cells.push([r, c]);
-          for (let d = 0; d < size && !eliminated; d++) {
-            const bit = 1 << d, spots = cells.filter(([r,c]) => masks[r][c] & bit);
-            if (spots.length < 2) continue;
-            if (spots.every(([r]) => r === spots[0][0])) {
-              const row = spots[0][0];
-              for (let c = 0; c < size; c++) if ((c < bc || c >= bc + boxC) && !g[row][c] && (masks[row][c] & bit)) { masks[row][c] &= ~bit; eliminated = true; break; }
-            } else if (spots.every(([,c]) => c === spots[0][1])) {
-              const col = spots[0][1];
-              for (let r = 0; r < size; r++) if ((r < br || r >= br + boxR) && !g[r][col] && (masks[r][col] & bit)) { masks[r][col] &= ~bit; eliminated = true; break; }
-            }
-          }
+    function singles() {
+      for (let i = 0; i < cand.length; i++) {
+        if (values[i]) continue;
+        if (!cand[i]) return -1;
+        if ((cand[i] & (cand[i] - 1)) === 0) {
+          place(i, cand[i]);
+          return 1;
         }
-        if (eliminated) { hardest = Math.max(hardest, 2); continue; }
       }
-
-      // Naked pairs are a compact but meaningful intermediate technique.
-      if (maxTier >= 3) {
-        for (const group of groups) {
-          const pairs = new Map();
-          for (const [r,c] of group) if (!g[r][c] && bitCount(masks[r][c]) === 2) {
-            const m = masks[r][c]; pairs.set(m, (pairs.get(m) || 0) + 1);
-          }
-          for (const [pair, n] of pairs) if (n === 2) {
-            for (const [r,c] of group) if (!g[r][c] && masks[r][c] !== pair && (masks[r][c] & pair)) {
-              masks[r][c] &= ~pair; eliminated = true; break;
-            }
-            if (eliminated) break;
-          }
-          if (eliminated) break;
+      for (const unit of units) {
+        let once = 0;
+        let twice = 0;
+        let have = 0;
+        for (const i of unit) {
+          if (values[i]) have |= 1 << (values[i] - 1);
+          twice |= once & cand[i];
+          once |= cand[i];
         }
-        if (eliminated) { hardest = Math.max(hardest, 3); continue; }
+        if ((once | have) !== all) return -1;
+        const only = once & ~twice;
+        if (only) {
+          const bit = only & -only;
+          for (const i of unit) if (cand[i] & bit) place(i, bit);
+          return 1;
+        }
+      }
+      return 0;
+    }
+
+    // Remove bit from every cell of `cells` not in `keep`; true if anything changed.
+    function strip(cells, keep, bit) {
+      let changed = false;
+      for (const i of cells) {
+        if (keep.indexOf(i) === -1 && (cand[i] & bit)) {
+          cand[i] &= ~bit;
+          changed = true;
+        }
+      }
+      return changed;
+    }
+
+    function lockedCandidates() {
+      for (let d = 0; d < size; d++) {
+        const bit = 1 << d;
+        for (const box of boxes) {
+          const spots = box.filter((i) => cand[i] & bit);
+          if (spots.length < 2) continue;
+          const r = (spots[0] / size) | 0;
+          const c = spots[0] % size;
+          if (spots.every((i) => ((i / size) | 0) === r) && strip(rows[r], spots, bit)) return true;
+          if (spots.every((i) => i % size === c) && strip(cols[c], spots, bit)) return true;
+        }
+        for (const line of rows.concat(cols)) {
+          const spots = line.filter((i) => cand[i] & bit);
+          if (spots.length < 2) continue;
+          const b = boxOf[spots[0]];
+          if (spots.every((i) => boxOf[i] === b) && strip(boxes[b], spots, bit)) return true;
+        }
       }
       return false;
     }
-    return { solved: g.every((row) => row.every(Boolean)), hardest, moves };
+
+    function pairs() {
+      for (const unit of units) {
+        const open = unit.filter((i) => !values[i]);
+        for (let x = 0; x < open.length; x++) {
+          const m = cand[open[x]];
+          if (popcount(m) !== 2) continue;
+          for (let y = x + 1; y < open.length; y++) {
+            if (cand[open[y]] !== m) continue;
+            let changed = false;
+            for (const i of open) {
+              if (i !== open[x] && i !== open[y] && (cand[i] & m)) {
+                cand[i] &= ~m;
+                changed = true;
+              }
+            }
+            if (changed) return true;
+          }
+        }
+      }
+      for (const unit of units) {
+        const where = [];
+        for (let d = 0; d < size; d++) where.push(unit.filter((i) => cand[i] & (1 << d)));
+        for (let a = 0; a < size; a++) {
+          if (where[a].length !== 2) continue;
+          for (let b = a + 1; b < size; b++) {
+            if (where[b].length !== 2 || where[b][0] !== where[a][0] || where[b][1] !== where[a][1]) continue;
+            const keep = (1 << a) | (1 << b);
+            let changed = false;
+            for (const i of where[a]) {
+              if (cand[i] & ~keep) {
+                cand[i] &= keep;
+                changed = true;
+              }
+            }
+            if (changed) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    while (empty) {
+      const step = singles();
+      if (step < 0) return false;
+      if (step) {
+        hardest = Math.max(hardest, 1);
+        continue;
+      }
+      if (maxTier >= 2 && lockedCandidates()) {
+        hardest = Math.max(hardest, 2);
+        continue;
+      }
+      if (maxTier >= 3 && pairs()) {
+        hardest = Math.max(hardest, 3);
+        continue;
+      }
+      break;
+    }
+    return { solved: empty === 0, hardest, moves };
   }
 
   function generate(difficulty, seed) {
     const spec = SPEC[difficulty];
-    for (let attempt = 0; attempt < 120; attempt++) {
+    for (let attempt = 0; attempt < 200; attempt++) {
       const rng = makeRng(String(seed) + ':sudoku:' + difficulty + ':' + attempt);
       const solution = fill(spec.size, spec.boxR, spec.boxC, rng);
       if (!solution) continue;
@@ -297,22 +270,21 @@
       const cells = [];
       for (let r = 0; r < spec.size; r++) for (let c = 0; c < spec.size; c++) cells.push([r, c]);
       let filled = spec.size * spec.size;
+      let rating = { solved: true, hardest: 0, moves: 0 };
+      // A puzzle the solver finishes without guessing has exactly one solution.
       for (const [r, c] of shuffle(rng, cells)) {
-        if (filled <= spec.aim) break;
+        if (filled <= spec.min || (filled <= spec.aim && rating.hardest === spec.tier)) break;
         const saved = givens[r][c];
         givens[r][c] = 0;
-        const found = count(givens, spec.boxR, spec.boxC, 2);
-        const rating = logicSolve(givens, spec.boxR, spec.boxC, 3);
-        const targetOk = difficulty === 'mini' || difficulty !== 'easy' || (rating && rating.hardest <= 1);
-        if (found !== 1 || !rating || !rating.solved || !targetOk) givens[r][c] = saved;
-        else filled--;
+        const next = logicSolve(givens, spec.boxR, spec.boxC, spec.tier);
+        if (next && next.solved) {
+          rating = next;
+          filled--;
+        } else {
+          givens[r][c] = saved;
+        }
       }
-      if (filled < spec.min || filled > spec.max) continue;
-      const rating = logicSolve(givens, spec.boxR, spec.boxC, 3);
-      if (!rating || !rating.solved) continue;
-      if (difficulty === 'easy' && rating.hardest > 1) continue;
-      if (difficulty === 'tricky' && rating.hardest !== 2) continue;
-      if (difficulty === 'fiendish' && rating.hardest !== 3) continue;
+      if (filled > spec.max || rating.hardest !== spec.tier) continue;
       return {
         game: 'sudoku',
         difficulty,
