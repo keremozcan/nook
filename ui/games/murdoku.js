@@ -224,7 +224,16 @@
         const who = personAt(p, play, r, c);
         let cls = 'rm' + (roomIndex[p.roomOf[r][c]] % 6);
         if (obj && obj.blocks) cls += ' blocked';
-        if (ctx.solved && p.roomOf[r][c] === vRoom) cls += ' lit';
+        if (ctx.solved) {
+          if (p.roomOf[r][c] !== vRoom) cls += ' dim';
+          else {
+            cls += ' lit';
+            if (r === 0 || p.roomOf[r - 1][c] !== vRoom) cls += ' lit-n';
+            if (r === p.n - 1 || p.roomOf[r + 1][c] !== vRoom) cls += ' lit-s';
+            if (c === 0 || p.roomOf[r][c - 1] !== vRoom) cls += ' lit-w';
+            if (c === p.n - 1 || p.roomOf[r][c + 1] !== vRoom) cls += ' lit-e';
+          }
+        }
         let html = obj ? UI.furniture(obj.kind) : '';
         if (who) {
           html += '<span class="token' + (who.role === 'victim' ? ' victim' : '') + (who.id === ctx.ui.selected && !ctx.solved ? ' on' : '') +
