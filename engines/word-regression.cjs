@@ -122,7 +122,7 @@ function testPinpointMatches() {
     ['Planets', 'planets'], ['Planets', 'The Planets!'], ['Planets', 'a planet'], ['Planets', 'solar system'],
     ['Words with a silent “k”', 'silent k'], ['Words with a silent “k”', 'Silent-K words'],
     ['Words that can go before “house”', 'houses'], ['Words that can go before “berry”', 'Berries'],
-    ['Farm animals', 'FARM ANIMAL'], ['Things with a handle', 'things with handles'], ['Weekdays', 'days of the week'],
+    ['Farm animals', 'FARM ANIMAL'], ['Things with a handle', 'things with handles'], ['Insects', 'minibeasts'], ['Insects', 'bugs'],
     ['Words that can follow “tooth”', 'teeth'], ['Words that can follow “rain”', '"rain"'],
     ['Words containing “light”', 'words with light'],
   ];
@@ -135,7 +135,28 @@ function testPinpointMatches() {
   no.forEach(([name, text]) => assert(!pinpoint.matches(round(name), text), name + ' should reject ' + text));
 }
 
+// An easy round's first clue must not name its answer (a weekday gave "days of the week" away).
+function testPinpointFirstClue() {
+  pinpoint.bank.filter((entry) => entry.difficulty === 'easy').forEach((entry) => {
+    const first = entry.words[0];
+    [entry.name.toLowerCase()].concat(entry.accept).forEach((answer) => {
+      answer.split(/\s+/).filter((word) => word.length >= 3 && !['the', 'and', 'things', 'types', 'with', 'that'].includes(word)).forEach((word) => {
+        const stem = word.replace(/s$/, '');
+        assert(!first.includes(stem), entry.name + ': first clue "' + first + '" gives away "' + answer + '"');
+      });
+    });
+  });
+}
+
+// Clues that another natural four-letter word also answered (review C1) stay reworded.
+function testCrossclimbClues() {
+  const vague = ['The opposite of go', 'Moving air', 'A thin rope or string', 'Hold tightly', 'Get or win something', 'Not succeed'];
+  crossclimb.ladders.forEach((ladder) => ladder.middle.forEach(([, clue]) => assert(!vague.includes(clue), 'ambiguous clue: ' + clue)));
+}
+
 testCrossclimb();
+testCrossclimbClues();
 testPinpoint();
+testPinpointFirstClue();
 testPinpointMatches();
 console.log('word engine regression checks passed');

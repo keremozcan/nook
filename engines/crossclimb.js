@@ -17,10 +17,10 @@
       ['wire', 'A thin metal thread'], ['wore', 'Was dressed in'], ['word', 'A group of letters with a meaning'],
     ] },
     { difficulty: 'easy', endClue: 'Tasks a teacher sets for you to do after school', top: 'home', bottom: 'work', middle: [
-      ['come', 'The opposite of go'], ['core', 'The middle of an apple'], ['wore', 'Was dressed in'],
+      ['come', 'Move closer, like a dog when it is called'], ['core', 'The middle of an apple'], ['wore', 'Was dressed in'],
     ] },
     { difficulty: 'easy', endClue: 'A farm where grapes are grown', top: 'vine', bottom: 'yard', middle: [
-      ['wine', 'A drink made from grapes'], ['wind', 'Moving air'], ['wand', 'A magician’s thin stick'], ['ward', 'A room for patients in a hospital'],
+      ['wine', 'A drink made from grapes'], ['wind', 'Turn a key round and round to make a clock go'], ['wand', 'A magician’s thin stick'], ['ward', 'A room for patients in a hospital'],
     ] },
     { difficulty: 'easy', endClue: 'Where a pet budgie or canary lives', top: 'bird', bottom: 'cage', middle: [
       ['bard', 'An old word for a poet'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
@@ -34,19 +34,19 @@
       ['boot', 'A sturdy shoe that covers the ankle'], ['bolt', 'A sliding metal lock on a door'], ['belt', 'A strap worn around the waist'], ['bell', 'It rings in a church tower'],
     ] },
     { difficulty: 'tricky', endClue: 'A waterproof jacket for wet weather', top: 'rain', bottom: 'coat', middle: [
-      ['rail', 'A bar to hold, or a track for trains'], ['fail', 'Not succeed'], ['foil', 'Thin metal sheet for wrapping food'], ['coil', 'A loop of rope or wire wound round and round'], ['coal', 'Black rock that is burned for heat'],
+      ['rail', 'A bar to hold, or a track for trains'], ['fail', 'Not pass a test'], ['foil', 'Thin metal sheet for wrapping food'], ['coil', 'A loop of rope or wire wound round and round'], ['coal', 'Black rock that is burned for heat'],
     ] },
     { difficulty: 'tricky', endClue: 'Press it so the people inside know you are here', top: 'door', bottom: 'bell', middle: [
       ['poor', 'Having little money'], ['pool', 'A tank of water made for swimming'], ['tool', 'Something like a hammer or a saw'], ['toll', 'Money you pay to use some roads or bridges'], ['tell', 'Say something to someone'],
     ] },
     { difficulty: 'tricky', endClue: 'Shelves where you keep your novels', top: 'book', bottom: 'case', middle: [
-      ['cook', 'Make a meal by heating food'], ['cork', 'The stopper in a wine bottle'], ['cord', 'A thin rope or string'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
+      ['cook', 'Make a meal by heating food'], ['cork', 'The stopper in a wine bottle'], ['cord', 'The thin rope you pull to raise a blind'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
     ] },
     { difficulty: 'tricky', endClue: 'It rescues people in trouble at sea', top: 'life', bottom: 'boat', middle: [
       ['lift', 'Raise something up'], ['list', 'Items written one under another'], ['lost', 'Unable to find the way'], ['cost', 'How much you pay for something'], ['coat', 'A warm layer worn outdoors over your clothes'],
     ] },
     { difficulty: 'tricky', endClue: 'A tiny bit of water falling from a cloud', top: 'rain', bottom: 'drop', middle: [
-      ['gain', 'Get or win something'], ['grin', 'A wide smile'], ['grip', 'Hold tightly'], ['drip', 'What a leaky tap does'],
+      ['gain', 'Get more of something, like weight or speed'], ['grin', 'A wide smile'], ['grip', 'A firm hold, or what tyres need on a wet road'], ['drip', 'What a leaky tap does'],
     ] },
     { difficulty: 'tricky', endClue: 'Silver light shining down at night', top: 'moon', bottom: 'beam', middle: [
       ['moan', 'A low sound of pain or sadness'], ['loan', 'Money lent that must be paid back'], ['lean', 'Tilt to one side'], ['bean', 'A seed eaten as a vegetable'],
@@ -57,10 +57,10 @@
       ['gild', 'Coat thinly with a precious yellow metal'], ['mild', 'Gentle, not strong or harsh'], ['mind', 'Where thoughts and memories live'], ['mint', 'A fresh-smelling herb'], ['mist', 'A thin cloud close to the ground'], ['fist', 'A hand with its fingers curled in'],
     ] },
     { difficulty: 'fiendish', endClue: 'Where big boats are built and repaired', top: 'ship', bottom: 'yard', middle: [
-      ['chip', 'A small piece broken off something'], ['chin', 'The part of the face below the mouth'], ['coin', 'A small piece of money'], ['corn', 'Grain such as wheat or maize'], ['cord', 'A thin rope or string'], ['card', 'You send one on a birthday'],
+      ['chip', 'A small piece broken off something'], ['chin', 'The part of the face below the mouth'], ['coin', 'A small piece of money'], ['corn', 'Grain such as wheat or maize'], ['cord', 'The thin rope you pull to raise a blind'], ['card', 'You send one on a birthday'],
     ] },
     { difficulty: 'fiendish', endClue: 'A secret you say or type to be let in', top: 'pass', bottom: 'word', middle: [
-      ['past', 'The time that has already gone'], ['cast', 'The actors in a play'], ['cart', 'A small wagon, pushed or pulled'], ['card', 'You send one on a birthday'], ['cord', 'A thin rope or string'],
+      ['past', 'The time that has already gone'], ['cast', 'The actors in a play'], ['cart', 'A small wagon, pushed or pulled'], ['card', 'You send one on a birthday'], ['cord', 'The thin rope you pull to raise a blind'],
     ] },
     { difficulty: 'fiendish', endClue: 'Shoes, trainers and slippers, all together', top: 'foot', bottom: 'wear', middle: [
       ['boot', 'A sturdy shoe that covers the ankle'], ['boat', 'It floats and carries people across water'], ['beat', 'Win against someone, or a rhythm'], ['heat', 'Warmth, or a race before the final'], ['hear', 'What your ears let you do'],

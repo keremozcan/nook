@@ -12,6 +12,7 @@
       'Every slip is true. “On a chair” means in that chair’s square.',
       '“Beside” means in a square that shares a side with it, inside the same room. Squares that only touch at a corner are not beside.',
       '“Alone” means nobody else was in that room.',
+      'Rows count from the top and columns from the left: “the second column” is the second from the left.',
       'The victim was in a room with exactly one other person. That person did it.',
       'Tap a name, then tap a square to place them. Tap their token again to pick them up.',
       'Keyboard: Tab to a name and press Enter, then use the arrow keys and Space to place them.'
