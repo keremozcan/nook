@@ -1,9 +1,12 @@
 # Nook
 
-Nine browser puzzles for Kerem and his son, with no ads, accounts or purchases. Source lives in `engines/` and `ui/`; `node build.mjs` generates the committed, standalone `index.html`. The existing GitHub Pages URL is in README.
+Nine browser puzzles for Kerem and his son, with no ads, accounts or purchases. GitHub Pages serves the committed `index.html` from `main`; see README for the URL.
 
-2026-10-25: Kerem requested a broad repair of rules, interface, difficulty and puzzle design, using cheaper subagents. The repair includes the overlapping `d93d756` commit from the other writer, preserving its history. Queens uses single-click for dots and double-click for crowns.
-
-See README for checks and difficulty methods. Logic-board uniqueness has independent checkers; word content has curated-bank validation. Playwright exercises actual controls and completes the daily sequence. Chrome is checked; real-device Safari/VoiceOver remain unverified.
-
-Publishing: GitHub Pages builds the root of `main` automatically. Kerem authorized this repair's merge, commit and push in this conversation on 25 October. The live commit before this release was `d93d756`. Verify the Pages build commit and the served page after pushing.
+- **Contract:** `docs/games.md` says what each game must do (rules shown, one solution, clear win, difficulty, input, saving, theme). Judge changes against it.
+- **Code:** engines live in `engines/` (one per game, seeded and deterministic). The interface is `ui/shell.js` (routing, saving, clock, Solved panel, Tonight), `ui/kit.js` (shared board input and drawing) and `ui/games/<id>.js` (one module per game; its strings live in a `COPY` object). `node build.mjs` writes the standalone `index.html`.
+- **Checks:**
+  - `NOOK_SEEDS=10 node engines/test.cjs` and `engines/*-regression*.cjs`
+  - `node engines/sweep.cjs`: 1,560 real seeds per level; fails on any failed deal or a worst case over 300 ms
+  - `NODE_PATH=<a node_modules with playwright> node tests/browser.cjs`, plus `NOOK_BUILT=1`
+- **History:** Grok wrote all of Nook on 25 Oct, with ChatGPT fixes, and it went live as `57db6de`. On 26 Oct it was reviewed against the contract: engines fixed in parts, interface rewritten (see DECISIONS).
+- **Publishing:** a push to `main` publishes, and needs Kerem's yes each time.
