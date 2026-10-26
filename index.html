@@ -58,13 +58,19 @@
   --on-victim: #ffffff;
   --hatch: #8d9ca1;
   --lit: #a66f00;
-  --m0: color-mix(in srgb, var(--c1) 55%, var(--board)); --m1: color-mix(in srgb, var(--c3) 55%, var(--board)); --m2: color-mix(in srgb, var(--c5) 55%, var(--board));
-  --m3: color-mix(in srgb, var(--c2) 55%, var(--board)); --m4: color-mix(in srgb, var(--c4) 55%, var(--board)); --m5: color-mix(in srgb, var(--c0) 55%, var(--board));
+  /* Murdoku rooms: plain colours first; softened below where color-mix works (Safari 16.2+). */
+  --m0: var(--c1); --m1: var(--c3); --m2: var(--c5); --m3: var(--c2); --m4: var(--c4); --m5: var(--c0);
   --shadow: 0 4px 16px rgb(20 35 42 / 8%);
   --c0: #f7c99c; --c1: #a8d1f2; --c2: #bfe3b4; --c3: #f6e48c; --c4: #d5c2ef; --c5: #f5b8c9;
   --c6: #a2ddd5; --c7: #e3d0b1; --c8: #c5ccd6; --c9: #f2a99a; --c10: #d3e690; --c11: #b9c4f3;
   --serif: Fraunces, "Iowan Old Style", Georgia, serif;
   --sans: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  :root {
+    --m0: color-mix(in srgb, var(--c1) 55%, var(--board)); --m1: color-mix(in srgb, var(--c3) 55%, var(--board)); --m2: color-mix(in srgb, var(--c5) 55%, var(--board));
+    --m3: color-mix(in srgb, var(--c2) 55%, var(--board)); --m4: color-mix(in srgb, var(--c4) 55%, var(--board)); --m5: color-mix(in srgb, var(--c0) 55%, var(--board));
+  }
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -305,11 +311,11 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 .pad.pencil .digit { font-size: 16px; color: var(--muted); }
 
 /* Patches */
-.g-patches .cell.pc0 { background: color-mix(in srgb, var(--c0) 75%, var(--board)); } .g-patches .cell.pc1 { background: color-mix(in srgb, var(--c1) 75%, var(--board)); }
-.g-patches .cell.pc2 { background: color-mix(in srgb, var(--c2) 75%, var(--board)); } .g-patches .cell.pc3 { background: color-mix(in srgb, var(--c3) 75%, var(--board)); }
-.g-patches .cell.pc4 { background: color-mix(in srgb, var(--c4) 75%, var(--board)); } .g-patches .cell.pc5 { background: color-mix(in srgb, var(--c5) 75%, var(--board)); }
-.g-patches .cell.pc6 { background: color-mix(in srgb, var(--c6) 75%, var(--board)); } .g-patches .cell.pc7 { background: color-mix(in srgb, var(--c7) 75%, var(--board)); }
-.g-patches .cell.preview { background: color-mix(in srgb, var(--accent) 30%, var(--board)); }
+.g-patches .cell.pc0 { background: var(--c0); background: color-mix(in srgb, var(--c0) 75%, var(--board)); } .g-patches .cell.pc1 { background: var(--c1); background: color-mix(in srgb, var(--c1) 75%, var(--board)); }
+.g-patches .cell.pc2 { background: var(--c2); background: color-mix(in srgb, var(--c2) 75%, var(--board)); } .g-patches .cell.pc3 { background: var(--c3); background: color-mix(in srgb, var(--c3) 75%, var(--board)); }
+.g-patches .cell.pc4 { background: var(--c4); background: color-mix(in srgb, var(--c4) 75%, var(--board)); } .g-patches .cell.pc5 { background: var(--c5); background: color-mix(in srgb, var(--c5) 75%, var(--board)); }
+.g-patches .cell.pc6 { background: var(--c6); background: color-mix(in srgb, var(--c6) 75%, var(--board)); } .g-patches .cell.pc7 { background: var(--c7); background: color-mix(in srgb, var(--c7) 75%, var(--board)); }
+.g-patches .cell.preview { background: var(--accent-soft); background: color-mix(in srgb, var(--accent) 30%, var(--board)); }
 .g-patches .cell.preview.no { background: repeating-linear-gradient(45deg, var(--bad-soft) 0 6px, var(--board) 6px 12px); }
 .g-patches .cell.anchor { box-shadow: inset 0 0 0 3px var(--accent); }
 .clues-layer { position: absolute; inset: 0; pointer-events: none; }
@@ -331,7 +337,10 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 .art .rm0 { fill: var(--c1); } .art .rm1 { fill: var(--c3); } .art .rm2 { fill: var(--c5); }
 .g-murdoku .cell.blocked { cursor: not-allowed; background: repeating-linear-gradient(135deg, var(--fill) 0 5px, var(--hatch) 5px 7px); }
 /* Solved: the victim's room keeps its colour and gets an outline; the other rooms fade. */
-.g-murdoku .cell.dim { --fill: color-mix(in srgb, var(--rm) 30%, var(--board)); }
+.g-murdoku .cell.dim { opacity: .7; }
+@supports (color: color-mix(in srgb, red 50%, blue)) {
+  .g-murdoku .cell.dim { --fill: color-mix(in srgb, var(--rm) 30%, var(--board)); opacity: 1; }
+}
 .g-murdoku .cell.dim .furn, .g-murdoku .cell.dim .token { opacity: .55; }
 .g-murdoku .cell.lit::before { content: ""; position: absolute; inset: 0; border: 0 solid var(--lit); pointer-events: none; }
 .g-murdoku .cell.lit-n::before { border-top-width: 4px; } .g-murdoku .cell.lit-s::before { border-bottom-width: 4px; }
@@ -340,7 +349,8 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 .furn path, .furn rect, .furn circle, .furn ellipse { fill: none; stroke: var(--ink-2); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
 .furn .thin { stroke-width: 1; }
 .g-murdoku .cell.blocked .furn { width: 58%; height: 58%; opacity: 1; padding: 3px; border-radius: 6px; background: var(--surface); }
-.g-murdoku .cell .token ~ .furn, .g-murdoku .cell .furn:has(+ .token) { width: 38%; height: 38%; align-self: end; justify-self: end; margin: 3px; }
+.g-murdoku .cell .token ~ .furn { width: 38%; height: 38%; align-self: end; justify-self: end; margin: 3px; }
+.g-murdoku .cell .furn:has(+ .token) { width: 38%; height: 38%; align-self: end; justify-self: end; margin: 3px; }
 .token { display: grid; width: 56%; aspect-ratio: 1; place-items: center; border: 2px solid var(--token-edge); border-radius: 50%; background: var(--token); color: #15232a; font: 750 calc(100cqi / var(--n) * .26)/1 var(--sans); box-shadow: 0 1px 3px rgb(0 0 0 / 25%); }
 .token.victim { border-style: double; border-width: 4px; background: var(--victim); color: var(--on-victim); }
 .token.on { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -641,9 +651,9 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   }
 
   // Count lines (stopping at 2) that start on 1, visit the numbers in order, cover every
-  // square and end on the last number; count is -1 if the search gives up. When a line other
-  // than `known` (a list of cell indexes) turns up, it is returned as `other`.
-  function countPaths(rows, cols, numbers, walls, known) {
+  // square and end on the last number; count is -1 if the search gives up after `cap` steps.
+  // When a line other than `known` (a list of cell indexes) turns up, it is returned as `other`.
+  function countPaths(rows, cols, numbers, walls, known, cap) {
     const N = rows * cols;
     const wallSet = new Set(walls.map((w) => w[0] + ',' + w[1] + ',' + w[2]));
     const adj = [];
@@ -668,7 +678,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
         }
       }
     }
-    if (at[1] == null || at[maxN] == null) return { count: 0, other: null };
+    if (at[1] == null || at[maxN] == null) return { count: 0, other: null, nodes: 0 };
     const end = at[maxN];
     const seen = new Uint8Array(N);
     const mark = new Int32Array(N);
@@ -679,7 +689,6 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
     let nodes = 0;
     let other = null;
     const line = new Int32Array(N);
-    const cap = 400000;
 
     function dist(a, b) {
       return Math.abs(((a / cols) | 0) - ((b / cols) | 0)) + Math.abs((a % cols) - (b % cols));
@@ -768,7 +777,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
     }
 
     dfs(at[1], -1, 1);
-    return { count: nodes > cap ? -1 : count, other };
+    return { count: nodes > cap ? -1 : count, other, nodes };
   }
 
   function densityOk(numbered, cells, difficulty) {
@@ -808,13 +817,21 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
     });
   }
 
+  const STEP = 20000;
+  const BUDGET = 60000;
+  const SMALL = 2000;
+
   function generate(difficulty, seed) {
     const rows = difficulty === 'easy' ? 6 : difficulty === 'tricky' ? 7 : 8;
     const cols = rows;
     const step0 = difficulty === 'easy' ? 5 : difficulty === 'tricky' ? 7 : 9;
     const walls0 = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 6 : 8;
     const wallCap = difficulty === 'easy' ? 8 : difficulty === 'tricky' ? 12 : 16;
-    for (let attempt = 0; attempt < 24; attempt++) {
+    // Bound the search so a new puzzle stays quick: each check may take STEP steps, and once
+    // BUDGET is spent only SMALL. A check that gives up never passes: the puzzle gets another
+    // number instead, which makes the next check cheaper, so only proven-unique boards return.
+    let budget = BUDGET;
+    for (let attempt = 0; attempt < 100; attempt++) {
       const rng = makeRng(String(seed) + ':zip:' + difficulty + ':' + attempt);
       const path = warnsdorff(rows, cols, rng) || snake(rows, cols, rng);
       const known = path.map(([r, c]) => r * cols + c);
@@ -827,7 +844,9 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
           continue;
         }
         const built = assemble(path, indexes, walls, rows, cols);
-        const { count, other } = countPaths(rows, cols, built.numbers, built.walls, known);
+        const cap = Math.max(SMALL, Math.min(STEP, budget));
+        const { count, other, nodes } = countPaths(rows, cols, built.numbers, built.walls, known, cap);
+        budget -= nodes;
         if (count === 1) {
           return {
             game: 'zip',
@@ -1074,7 +1093,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
 
   function generate(difficulty, seed) {
     const n = difficulty === 'easy' ? 7 : difficulty === 'tricky' ? 8 : 9;
-    for (let attempt = 0; attempt < 80; attempt++) {
+    for (let attempt = 0; attempt < 2000; attempt++) {
       const rng = makeRng(String(seed) + ':queens:' + difficulty + ':' + attempt);
       const queens = placeQueens(n, rng);
       if (!queens) continue;
@@ -1190,57 +1209,80 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
     return grid.map((row) => row.map((bit) => (bit ? 'sun' : 'moon')));
   }
 
+  const MASKS = { 4: ROWS[4].map(toMask), 6: ROWS[6].map(toMask), 8: ROWS[8].map(toMask) };
+
+  function toMask(row) {
+    let m = 0;
+    for (let c = 0; c < row.length; c++) if (row[c]) m |= 1 << c;
+    return m;
+  }
+
+  // Count solutions (stopping at 2; -1 if the search gives up). Rows are bitmasks (bit c set =
+  // sun in column c); the givens and the marks inside a row are applied once per row up front.
   function count(n, givens, h, v) {
-    const pats = ROWS[n];
     const half = n / 2;
+    const full = (1 << n) - 1;
+    const rows = [];
+    const veq = [];
+    const vneq = [];
+    for (let r = 0; r < n; r++) {
+      let sun = 0;
+      let moon = 0;
+      let eq = 0;
+      let neq = 0;
+      for (let c = 0; c < n; c++) {
+        if (givens[r][c] === 'sun') sun |= 1 << c;
+        if (givens[r][c] === 'moon') moon |= 1 << c;
+        if (c < n - 1 && h[r][c] === 'eq') eq |= 1 << c;
+        if (c < n - 1 && h[r][c] === 'neq') neq |= 1 << c;
+      }
+      rows.push(MASKS[n].filter((x) => (x & sun) === sun && (x & moon) === 0 &&
+        ((x ^ (x >> 1)) & eq) === 0 && ((x ^ (x >> 1)) & neq) === neq));
+      let ve = 0;
+      let vn = 0;
+      if (r > 0) {
+        for (let c = 0; c < n; c++) {
+          if (v[r - 1][c] === 'eq') ve |= 1 << c;
+          if (v[r - 1][c] === 'neq') vn |= 1 << c;
+        }
+      }
+      veq.push(ve);
+      vneq.push(vn);
+    }
+    const suns = Array(n).fill(0);
     let found = 0;
     let nodes = 0;
-    const colSuns = Array(n).fill(0);
-    const colRun = Array(n).fill(0);
-    const colPrev = Array(n).fill(-1);
-    function bt(r) {
-      if (found >= 2) return;
+    function bt(r, prev, prev2) {
       if (++nodes > 200000) {
         found = -1;
         return;
       }
       if (r === n) {
-        if (colSuns.every((s) => s === half)) found++;
+        found++;
         return;
       }
-      for (const row of pats) {
+      for (const x of rows[r]) {
+        if (r > 0) {
+          const d = x ^ prev;
+          if ((d & veq[r]) !== 0 || (d & vneq[r]) !== vneq[r]) continue;
+        }
+        if (r > 1 && ((x & prev & prev2) !== 0 || (~x & ~prev & ~prev2 & full) !== 0)) continue;
         let ok = true;
-        for (let c = 0; c < n && ok; c++) {
-          const bit = row[c];
-          const given = givens[r][c];
-          if (given === 'sun' && bit !== 1) ok = false;
-          if (given === 'moon' && bit !== 0) ok = false;
-          if (colSuns[c] + bit > half) ok = false;
-          const run = bit === colPrev[c] ? colRun[c] + 1 : 1;
-          if (run >= 3) ok = false;
-          if (c < n - 1 && h[r][c] === 'eq' && bit !== row[c + 1]) ok = false;
-          if (c < n - 1 && h[r][c] === 'neq' && bit === row[c + 1]) ok = false;
-          if (r > 0 && v[r - 1][c] === 'eq' && bit !== colPrev[c]) ok = false;
-          if (r > 0 && v[r - 1][c] === 'neq' && bit === colPrev[c]) ok = false;
+        for (let c = 0; c < n; c++) {
+          const s = suns[c] + ((x >> c) & 1);
+          if (s > half || r + 1 - s > half) {
+            ok = false;
+            break;
+          }
         }
         if (!ok) continue;
-        const saved = [];
-        for (let c = 0; c < n; c++) {
-          saved.push([colSuns[c], colRun[c], colPrev[c]]);
-          colSuns[c] += row[c];
-          colRun[c] = row[c] === colPrev[c] ? colRun[c] + 1 : 1;
-          colPrev[c] = row[c];
-        }
-        bt(r + 1);
-        for (let c = 0; c < n; c++) {
-          colSuns[c] = saved[c][0];
-          colRun[c] = saved[c][1];
-          colPrev[c] = saved[c][2];
-        }
+        for (let c = 0; c < n; c++) suns[c] += (x >> c) & 1;
+        bt(r + 1, x, prev);
+        for (let c = 0; c < n; c++) suns[c] -= (x >> c) & 1;
         if (found >= 2 || found < 0) return;
       }
     }
-    bt(0);
+    bt(0, 0, 0);
     return found;
   }
 
@@ -1250,7 +1292,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
     const n = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 6 : 8;
     const target = difficulty === 'easy' ? 5 : difficulty === 'tricky' ? 8 : 12;
     const markTarget = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 7 : 10;
-    for (let attempt = 0; attempt < 24; attempt++) {
+    for (let attempt = 0; attempt < 2000; attempt++) {
       const rng = makeRng(String(seed) + ':tango:' + difficulty + ':' + attempt);
       const bits = fill(n, rng);
       if (!bits) continue;
@@ -1773,7 +1815,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   function generate(difficulty, seed) {
     const side = difficulty === 'easy' ? 6 : difficulty === 'tricky' ? 7 : 8;
     const leaf = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 4 : 5;
-    for (let attempt = 0; attempt < 40; attempt++) {
+    for (let attempt = 0; attempt < 200; attempt++) {
       const rng = makeRng(String(seed) + ':patches:' + difficulty + ':' + attempt);
       const rects = [];
       tile(0, 0, side, side, rng, rects, leaf);
@@ -2027,7 +2069,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
   function generate(difficulty, seed) {
     const n = difficulty === 'easy' ? 4 : difficulty === 'tricky' ? 5 : 6;
     const roomCount = n === 6 ? 4 : 3;
-    for (let attempt = 0; attempt < 30; attempt++) {
+    for (let attempt = 0; attempt < 100; attempt++) {
       const rng = makeRng(String(seed) + ':murdoku:' + difficulty + ':' + attempt);
       const grown = growRooms(n, roomCount, rng);
       if (!grown) continue;
@@ -2220,7 +2262,7 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
     { difficulty: 'easy', name: 'Musical instruments', accept: ['instrument', 'instruments', 'musical instrument', 'things you play music on'], description: 'Things played to make music.', words: ['drum', 'flute', 'harp', 'piano', 'violin'] },
     { difficulty: 'easy', name: 'Kitchen utensils', accept: ['utensil', 'utensils', 'kitchen tools', 'cooking tools', 'cooking utensils', 'kitchen equipment'], description: 'Tools used to prepare or serve food.', words: ['fork', 'spoon', 'whisk', 'spatula', 'ladle'] },
     { difficulty: 'easy', name: 'Garden flowers', accept: ['flower', 'flowers'], description: 'Flowers often grown in a garden. The first few are girls’ names too.', words: ['rose', 'lily', 'daisy', 'poppy', 'tulip'] },
-    { difficulty: 'easy', name: 'Weekdays', accept: ['weekday', 'week days', 'working days', 'school days', 'days', 'days of the week'], description: 'The five days from Monday to Friday.', words: ['wednesday', 'friday', 'tuesday', 'thursday', 'monday'] },
+    { difficulty: 'easy', name: 'Insects', accept: ['insect', 'bug', 'bugs', 'minibeasts', 'creepy crawlies'], description: 'Small creatures with six legs. A cricket is a game too, and to fly is to move through the air.', words: ['cricket', 'fly', 'wasp', 'beetle', 'ladybird'] },
     { difficulty: 'easy', name: 'Birds', accept: ['bird', 'types of bird'], description: 'Common kinds of bird.', words: ['robin', 'swan', 'eagle', 'parrot', 'sparrow'] },
     { difficulty: 'easy', name: 'Sports', accept: ['sport', 'games', 'olympic sports'], description: 'Sports people play or compete in.', words: ['boxing', 'rowing', 'golf', 'rugby', 'tennis'] },
     { difficulty: 'easy', name: 'Weather words', accept: ['weather', 'types of weather', 'weather types'], description: 'Things you might see or feel in the weather.', words: ['hail', 'wind', 'fog', 'snow', 'rain'] },
@@ -2333,10 +2375,10 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
       ['wire', 'A thin metal thread'], ['wore', 'Was dressed in'], ['word', 'A group of letters with a meaning'],
     ] },
     { difficulty: 'easy', endClue: 'Tasks a teacher sets for you to do after school', top: 'home', bottom: 'work', middle: [
-      ['come', 'The opposite of go'], ['core', 'The middle of an apple'], ['wore', 'Was dressed in'],
+      ['come', 'Move closer, like a dog when it is called'], ['core', 'The middle of an apple'], ['wore', 'Was dressed in'],
     ] },
     { difficulty: 'easy', endClue: 'A farm where grapes are grown', top: 'vine', bottom: 'yard', middle: [
-      ['wine', 'A drink made from grapes'], ['wind', 'Moving air'], ['wand', 'A magician’s thin stick'], ['ward', 'A room for patients in a hospital'],
+      ['wine', 'A drink made from grapes'], ['wind', 'Turn a key round and round to make a clock go'], ['wand', 'A magician’s thin stick'], ['ward', 'A room for patients in a hospital'],
     ] },
     { difficulty: 'easy', endClue: 'Where a pet budgie or canary lives', top: 'bird', bottom: 'cage', middle: [
       ['bard', 'An old word for a poet'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
@@ -2350,19 +2392,19 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
       ['boot', 'A sturdy shoe that covers the ankle'], ['bolt', 'A sliding metal lock on a door'], ['belt', 'A strap worn around the waist'], ['bell', 'It rings in a church tower'],
     ] },
     { difficulty: 'tricky', endClue: 'A waterproof jacket for wet weather', top: 'rain', bottom: 'coat', middle: [
-      ['rail', 'A bar to hold, or a track for trains'], ['fail', 'Not succeed'], ['foil', 'Thin metal sheet for wrapping food'], ['coil', 'A loop of rope or wire wound round and round'], ['coal', 'Black rock that is burned for heat'],
+      ['rail', 'A bar to hold, or a track for trains'], ['fail', 'Not pass a test'], ['foil', 'Thin metal sheet for wrapping food'], ['coil', 'A loop of rope or wire wound round and round'], ['coal', 'Black rock that is burned for heat'],
     ] },
     { difficulty: 'tricky', endClue: 'Press it so the people inside know you are here', top: 'door', bottom: 'bell', middle: [
       ['poor', 'Having little money'], ['pool', 'A tank of water made for swimming'], ['tool', 'Something like a hammer or a saw'], ['toll', 'Money you pay to use some roads or bridges'], ['tell', 'Say something to someone'],
     ] },
     { difficulty: 'tricky', endClue: 'Shelves where you keep your novels', top: 'book', bottom: 'case', middle: [
-      ['cook', 'Make a meal by heating food'], ['cork', 'The stopper in a wine bottle'], ['cord', 'A thin rope or string'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
+      ['cook', 'Make a meal by heating food'], ['cork', 'The stopper in a wine bottle'], ['cord', 'The thin rope you pull to raise a blind'], ['card', 'You send one on a birthday'], ['care', 'Looking after someone'],
     ] },
     { difficulty: 'tricky', endClue: 'It rescues people in trouble at sea', top: 'life', bottom: 'boat', middle: [
       ['lift', 'Raise something up'], ['list', 'Items written one under another'], ['lost', 'Unable to find the way'], ['cost', 'How much you pay for something'], ['coat', 'A warm layer worn outdoors over your clothes'],
     ] },
     { difficulty: 'tricky', endClue: 'A tiny bit of water falling from a cloud', top: 'rain', bottom: 'drop', middle: [
-      ['gain', 'Get or win something'], ['grin', 'A wide smile'], ['grip', 'Hold tightly'], ['drip', 'What a leaky tap does'],
+      ['gain', 'Get more of something, like weight or speed'], ['grin', 'A wide smile'], ['grip', 'A firm hold, or what tyres need on a wet road'], ['drip', 'What a leaky tap does'],
     ] },
     { difficulty: 'tricky', endClue: 'Silver light shining down at night', top: 'moon', bottom: 'beam', middle: [
       ['moan', 'A low sound of pain or sadness'], ['loan', 'Money lent that must be paid back'], ['lean', 'Tilt to one side'], ['bean', 'A seed eaten as a vegetable'],
@@ -2373,10 +2415,10 @@ h1 { margin: 0; font: 620 clamp(40px, 7vw, 64px)/1 var(--serif); letter-spacing:
       ['gild', 'Coat thinly with a precious yellow metal'], ['mild', 'Gentle, not strong or harsh'], ['mind', 'Where thoughts and memories live'], ['mint', 'A fresh-smelling herb'], ['mist', 'A thin cloud close to the ground'], ['fist', 'A hand with its fingers curled in'],
     ] },
     { difficulty: 'fiendish', endClue: 'Where big boats are built and repaired', top: 'ship', bottom: 'yard', middle: [
-      ['chip', 'A small piece broken off something'], ['chin', 'The part of the face below the mouth'], ['coin', 'A small piece of money'], ['corn', 'Grain such as wheat or maize'], ['cord', 'A thin rope or string'], ['card', 'You send one on a birthday'],
+      ['chip', 'A small piece broken off something'], ['chin', 'The part of the face below the mouth'], ['coin', 'A small piece of money'], ['corn', 'Grain such as wheat or maize'], ['cord', 'The thin rope you pull to raise a blind'], ['card', 'You send one on a birthday'],
     ] },
     { difficulty: 'fiendish', endClue: 'A secret you say or type to be let in', top: 'pass', bottom: 'word', middle: [
-      ['past', 'The time that has already gone'], ['cast', 'The actors in a play'], ['cart', 'A small wagon, pushed or pulled'], ['card', 'You send one on a birthday'], ['cord', 'A thin rope or string'],
+      ['past', 'The time that has already gone'], ['cast', 'The actors in a play'], ['cart', 'A small wagon, pushed or pulled'], ['card', 'You send one on a birthday'], ['cord', 'The thin rope you pull to raise a blind'],
     ] },
     { difficulty: 'fiendish', endClue: 'Shoes, trainers and slippers, all together', top: 'foot', bottom: 'wear', middle: [
       ['boot', 'A sturdy shoe that covers the ankle'], ['boat', 'It floats and carries people across water'], ['beat', 'Win against someone, or a rhythm'], ['heat', 'Warmth, or a race before the final'], ['hear', 'What your ears let you do'],
@@ -2627,7 +2669,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const lengths = spec.lengths;
     const spots = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) spots.push([r, c]);
-    for (let attempt = 0; attempt < 24; attempt++) {
+    for (let attempt = 0; attempt < 100; attempt++) {
       const rng = makeRng(String(seed) + ':wend:' + difficulty + ':' + attempt);
       let carved = null;
       let walls = null;
@@ -2860,7 +2902,8 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       const drag = active;
       active = null;
       const cell = (!cancelled && e && at(e.clientX, e.clientY)) || drag.last;
-      if (opts.up) opts.up(cell[0], cell[1], drag.moved || !!cancelled);
+      // `cancelled`: the touch was interrupted (pointercancel, lost capture); not a tap or a drop.
+      if (opts.up) opts.up(cell[0], cell[1], drag.moved || !!cancelled, !!cancelled);
     }
     grid.addEventListener('pointerdown', function (e) {
       if (e.button > 0 || (opts.locked && opts.locked())) return;
@@ -3045,11 +3088,13 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         const path = ctx.play.path;
         const reason = step(p, path, r, c);
         if (!reason || !path.length) return reason;
-        // A diagonal jump while dragging: try the two squares in between.
+        // A diagonal jump while dragging: try the two squares in between. Only a square that
+        // extends the line can bridge the jump; one already on the line would cut it back.
         const head = path[path.length - 1];
-        if (Math.abs(head[0] - r) === 1 && Math.abs(head[1] - c) === 1) {
+        if (Math.abs(head[0] - r) === 1 && Math.abs(head[1] - c) === 1 && indexOf(path, r, c) < 0) {
           const ways = [[head[0], c], [r, head[1]]];
           for (let i = 0; i < ways.length; i++) {
+            if (indexOf(path, ways[i][0], ways[i][1]) >= 0) continue;
             const copy = path.map(function (x) { return x.slice(); });
             if (!step(p, copy, ways[i][0], ways[i][1]) && !step(p, copy, r, c)) {
               path.length = 0;
@@ -3707,12 +3752,13 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
           ctx.ui.preview = rectOf(drag.from, [r, c]);
           ctx.live();
         },
-        up: function (r, c, moved) {
+        up: function (r, c, moved, cancelled) {
           const from = drag && drag.from;
           drag = null;
           const rect = ctx.ui.preview;
           ctx.ui.preview = null;
           if (!from) return;
+          if (cancelled) { ctx.paint(); return; }
           if (!moved || !rect || (rect[0] === rect[2] && rect[1] === rect[3])) { tapAt(from[0], from[1]); return; }
           if (!place(rect)) ctx.paint();
         },
@@ -3787,6 +3833,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       'Every slip is true. “On a chair” means in that chair’s square.',
       '“Beside” means in a square that shares a side with it, inside the same room. Squares that only touch at a corner are not beside.',
       '“Alone” means nobody else was in that room.',
+      'Rows count from the top and columns from the left: “the second column” is the second from the left.',
       'The victim was in a room with exactly one other person. That person did it.',
       'Tap a name, then tap a square to place them. Tap their token again to pick them up.',
       'Keyboard: Tab to a name and press Enter, then use the arrow keys and Space to place them.'
@@ -4545,12 +4592,20 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (err) { /* Play still works without storage. */ }
   }
-  function tonight() {
-    if (!store.tonight || store.tonight.date !== today()) store.tonight = { date: today(), index: 0, times: [], slot: null };
+  /* The Tonight run for a date (today by default). A run that started before midnight keeps its
+     own date, so finishing it after midnight still records against that night. */
+  function tonight(date) {
+    date = date || today();
+    const t = store.tonight;
+    if (t && t.date === date) return t;
+    // A later night already began (another tab): don't overwrite it with an older run.
+    if (t && t.date > date) return { date: date, index: ORDER.length, times: [], slot: null };
+    store.tonight = { date: date, index: 0, times: [], slot: null };
     return store.tonight;
   }
+  function run() { return tonight(S.roundDate); }
   function tonightLevel(game) { return game === 'sudoku' ? 'mini' : 'easy'; }
-  function dailySeed(game, level) { return 'daily-' + today() + '-' + game + '-' + level; }
+  function dailySeed(game, level, date) { return 'daily-' + (date || today()) + '-' + game + '-' + level; }
 
   const WORDS = ['amber', 'lantern', 'quiet', 'cedar', 'linen', 'copper', 'harbour', 'meadow', 'velvet', 'paper', 'orchard', 'willow', 'candle', 'marble', 'thistle', 'river', 'saffron', 'pewter', 'garden', 'ivory', 'cinder', 'maple', 'birch', 'honey', 'flint', 'pearl', 'olive', 'hearth', 'clover', 'spruce', 'cobalt', 'sorrel', 'yarrow', 'pebble', 'autumn', 'silver', 'brass', 'nectar', 'fable', 'heron'];
   function freshSeed() {
@@ -4568,7 +4623,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   /* ---------- State ---------- */
   const S = {
-    view: 'home', game: null, level: null, seed: null, round: false,
+    view: 'home', game: null, level: null, seed: null, round: false, roundDate: null,
     puzzle: null, play: null, ui: null, undo: [], group: null, pending: null,
     elapsed: 0, running: false, t0: 0, solved: false, note: '', token: 0,
     result: null, toast: '', ctx: null
@@ -4604,12 +4659,12 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (S.view !== 'game' || !S.puzzle || S.solved) return;
     if (!S.undo.length && !S.elapsed && !S.running) return;
     const slot = { game: S.game, level: S.level, seed: S.seed, sig: S.sig, play: S.play, undo: S.undo.slice(-60), elapsed: Math.round(now()), helped: S.helped };
-    if (S.round) tonight().slot = slot;
+    if (S.round) run().slot = slot;
     else store.saved[S.game] = slot;
     persist();
   }
   function dropSlot() {
-    if (S.round) tonight().slot = null;
+    if (S.round) run().slot = null;
     else delete store.saved[S.game];
     persist();
   }
@@ -4689,7 +4744,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (newBest) store.best[key] = secs;
     S.result = { ms: ms, best: newBest ? secs : prev, newBest: newBest && prev != null, helped: S.helped };
     if (S.round) {
-      const t = tonight();
+      const t = run();
       t.times.push({ game: S.game, ms: ms });
       t.index = ORDER.indexOf(S.game) + 1;
       t.slot = null;
@@ -4726,7 +4781,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         h('p', { class: 'eyebrow', text: COPY.eyebrow }),
         h('h1', { text: 'Nook' }),
         h('p', { class: 'lede', text: COPY.lede })),
-      h('button', { type: 'button', class: 'tonight', 'data-act': 'tonight', onclick: startTonight },
+      h('button', { type: 'button', class: 'tonight', 'data-act': 'tonight', onclick: function () { startTonight(); } },
         h('span', { class: 'tonight-copy' },
           h('span', { class: 'eyebrow', text: COPY.tonight }),
           h('span', { class: 'tonight-title', text: tonightSub })),
@@ -4761,7 +4816,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   }
 
   function summaryView() {
-    const t = tonight();
+    const t = tonight(S.roundDate);
     const list = h('ol', { class: 'times' });
     let total = 0;
     t.times.forEach(function (item) {
@@ -4804,7 +4859,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (!S.puzzle) {
       stage.classList.add('waiting');
       stage.appendChild(S.failed
-        ? h('div', { class: 'placeholder failed' }, h('p', { text: COPY.failed }), h('button', { type: 'button', class: 'primary', onclick: newPuzzle }, COPY.tryAgain))
+        ? h('div', { class: 'placeholder failed' }, h('p', { text: COPY.failed }), h('button', { type: 'button', class: 'primary', 'data-act': 'again', onclick: newPuzzle }, COPY.tryAgain))
         : h('div', { class: 'placeholder', 'aria-busy': 'true' }, h('p', { class: 'loading', text: COPY.loading })));
     }
     main.appendChild(stage);
@@ -4881,7 +4936,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (S.solved && !done._filled) {
       done._filled = true;
       const r = S.result || { ms: S.elapsed, best: null };
-      const t = S.round ? tonight() : null;
+      const t = S.round ? run() : null;
       const label = S.round ? (t.index >= ORDER.length ? COPY.tonightTimes : COPY.nextGame) : COPY.nextPuzzle;
       const extra = g.wonLine ? g.wonLine(S.ctx) : '';
       const primary = h('button', { type: 'button', class: 'primary', 'data-act': 'next', onclick: next }, label);
@@ -4931,10 +4986,13 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (!S.round && S.game) delete store.saved[S.game];
     persist();
     S.failed = false;
-    openGame(S.game, S.level, freshSeed(), { fresh: true });
+    // Inside Tonight (only offered when its puzzle failed to load): deal a stand-in puzzle for
+    // the same game and stay in the run.
+    if (S.round) openGame(S.game, S.level, S.seed + '-b', { fresh: true, round: true, date: S.roundDate });
+    else openGame(S.game, S.level, freshSeed(), { fresh: true });
   }
   function next() {
-    if (S.round) { startTonight(); return; }
+    if (S.round) { startTonight(S.roundDate); return; }
     openGame(S.game, S.level, freshSeed(), { fresh: true });
   }
   function share() {
@@ -4966,8 +5024,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     render();
     window.scrollTo(0, 0);
   }
-  function startTonight() {
-    const t = tonight();
+  function startTonight(date) {
+    const t = tonight(date);
+    S.roundDate = t.date;
     if (t.index >= ORDER.length) {
       leave();
       S.view = 'summary';
@@ -4976,7 +5035,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     }
     const id = ORDER[t.index];
     const level = tonightLevel(id);
-    openGame(id, level, dailySeed(id, level), { push: S.view === 'home', round: true });
+    openGame(id, level, dailySeed(id, level, t.date), { push: S.view === 'home', round: true, date: t.date });
   }
   /* Open a game. With no seed, resume that game's saved puzzle at this level, else deal a new one. */
   function openGame(id, level, seed, opts) {
@@ -4986,11 +5045,12 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const allowed = levels(id);
     if (!level) level = (!opts.round && store.saved[id] && store.saved[id].level) || store.level[id];
     if (allowed.indexOf(level) < 0) level = allowed.indexOf('easy') >= 0 ? 'easy' : allowed[0];
-    const saved = opts.round ? tonight().slot : store.saved[id];
+    const roundDate = opts.round ? (opts.date || today()) : null;
+    const saved = opts.round ? tonight(roundDate).slot : store.saved[id];
     if (!seed) seed = saved && saved.game === id && saved.level === level ? saved.seed : freshSeed();
     if (!opts.round) { store.level[id] = level; persist(); }
     Object.assign(S, {
-      view: 'game', game: id, level: level, seed: seed, round: !!opts.round,
+      view: 'game', game: id, level: level, seed: seed, round: !!opts.round, roundDate: roundDate,
       puzzle: null, play: null, ui: {}, undo: [], group: null, pending: null,
       elapsed: 0, running: false, solved: false, helped: false, note: '', result: null, failed: false
     });
@@ -5021,7 +5081,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     S.sig = sig(puzzle);
     S.play = g.fresh(puzzle);
     S.ui = {};
-    const saved = opts.round ? tonight().slot : store.saved[id];
+    const saved = opts.round ? run().slot : store.saved[id];
     if (saved && saved.game === id && saved.level === level && saved.seed === seed && !opts.fresh) {
       if (saved.sig === S.sig && saved.play) {
         S.play = saved.play;
@@ -5030,7 +5090,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         S.helped = !!saved.helped;
         if (S.undo.length || S.elapsed) startClock();
       } else {
-        if (opts.round) tonight().slot = null;
+        if (opts.round) run().slot = null;
         else delete store.saved[id];
         persist();
         S.note = COPY.updated;
