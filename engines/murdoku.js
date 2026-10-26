@@ -79,16 +79,6 @@
     return empty === 0 ? room : null;
   }
 
-  function corner(room, r, c) {
-    const n = room.length;
-    const id = room[r][c];
-    const N = r === 0 || room[r - 1][c] !== id;
-    const S = r === n - 1 || room[r + 1][c] !== id;
-    const W = c === 0 || room[r][c - 1] !== id;
-    const E = c === n - 1 || room[r][c + 1] !== id;
-    return (N || S) && (W || E);
-  }
-
   function placePeople(n, room, blocked, rng) {
     const rowOrder = shuffle(rng, Array.from({ length: n }, (_, i) => i));
     const colOrder = shuffle(rng, Array.from({ length: n }, (_, i) => i));
@@ -146,8 +136,7 @@
           if (rr < 0 || cc < 0 || rr >= n || cc >= n || puzzle.roomOf[rr][cc] !== id) return false;
           return puzzle.objects.some((o) => o.r === rr && o.c === cc && o.kind === clue.object);
         });
-      } else if (clue.kind === 'corner') ok = corner(puzzle.roomOf, r, c);
-      else if (clue.kind === 'alone') {
+      } else if (clue.kind === 'alone') {
         if (!occupancy) return true;
         const roomId = puzzle.roomOf[r][c];
         let share = 0;
@@ -228,9 +217,6 @@
         ? name + ' was not beside ' + article(clue.object) + ' ' + clue.object + ' in the same room.'
         : name + ' was beside ' + article(clue.object) + ' ' + clue.object + ' in the same room.';
     }
-    if (clue.kind === 'corner') {
-      return clue.negate ? name + ' was not in a corner of the room.' : name + ' was in a corner of the room.';
-    }
     return clue.negate ? name + ' was not alone.' : name + ' was alone.';
   }
 
@@ -280,7 +266,6 @@
         blocked[spot[0]][spot[1]] = true;
       }
       if (objects.some((o) => o.blocks && occupied.has(o.r + ',' + o.c))) continue;
-      const victim = people[0];
       const victimRoom = roomOf[positions[0][0]][positions[0][1]];
       let killerId = null;
       for (let i = 1; i < n; i++) {
@@ -317,7 +302,6 @@
           });
           if (yes) push(person, { kind: 'beside', negate: false, object: kind });
         }
-        push(person, { kind: 'corner', negate: !corner(roomOf, r, c) });
         const alone = positions.filter((cell) => roomOf[cell[0]][cell[1]] === roomOf[r][c]).length === 1;
         push(person, { kind: 'alone', negate: !alone });
       });
@@ -338,7 +322,7 @@
       };
       const order = shuffle(rng, pool);
       const weight = (clue) => {
-        if (clue.kind === 'beside' || clue.kind === 'object' || clue.kind === 'corner') return clue.negate ? 2 : 0;
+        if (clue.kind === 'beside' || clue.kind === 'object') return clue.negate ? 2 : 0;
         if (clue.kind === 'room' || clue.kind === 'alone') return clue.negate ? 3 : 1;
         return clue.negate ? 4 : 5;
       };
@@ -350,19 +334,16 @@
         if (found === 0 || found < 0) puzzle.clues.pop();
       }
       if (countSolutions(puzzle, 2) !== 1) continue;
-      const kept = [];
       for (let i = 0; i < puzzle.clues.length; i++) {
         const removed = puzzle.clues[i];
         puzzle.clues.splice(i, 1);
         const found = countSolutions(puzzle, 2);
         if (found !== 1 || puzzle.clues.length < n) {
           puzzle.clues.splice(i, 0, removed);
-          kept.push(true);
         } else {
           i--;
         }
       }
-      void kept;
       if (puzzle.clues.length < n) {
         for (const clue of order) {
           if (puzzle.clues.some((have) => have.kind === clue.kind && have.personId === clue.personId && have.negate === clue.negate && have.index === clue.index && have.roomId === clue.roomId && have.object === clue.object)) continue;
@@ -382,7 +363,6 @@
         const positive = puzzle.clues.filter((clue) => !clue.negate).length;
         if (positive * 2 < puzzle.clues.length) continue;
       }
-      void victim;
       return puzzle;
     }
     throw new Error('murdoku: no unique puzzle');

@@ -615,17 +615,6 @@ function legalPatches(puzzle) {
   return true;
 }
 
-function roomCorner(roomOf, r, c) {
-  const rows = roomOf.length;
-  const cols = roomOf[0].length;
-  const id = roomOf[r][c];
-  const N = r === 0 || roomOf[r - 1][c] !== id;
-  const S = r === rows - 1 || roomOf[r + 1][c] !== id;
-  const W = c === 0 || roomOf[r][c - 1] !== id;
-  const E = c === cols - 1 || roomOf[r][c + 1] !== id;
-  return (N || S) && (W || E);
-}
-
 function besideObject(puzzle, r, c, kind) {
   const id = puzzle.roomOf[r][c];
   for (const [dr, dc] of dirs4()) {
@@ -649,7 +638,6 @@ function clueHolds(puzzle, clue, r, c, occupancy) {
   else if (clue.kind === 'col') ok = c === clue.index;
   else if (clue.kind === 'object') ok = onObject(puzzle, r, c, clue.object);
   else if (clue.kind === 'beside') ok = besideObject(puzzle, r, c, clue.object);
-  else if (clue.kind === 'corner') ok = roomCorner(puzzle.roomOf, r, c);
   else if (clue.kind === 'alone') {
     if (!occupancy) return true;
     const room = puzzle.roomOf[r][c];
@@ -945,6 +933,7 @@ function expectMurdoku(puzzle, difficulty) {
   }
   assert(puzzle.clues.length >= n, 'too few clues');
   for (const clue of puzzle.clues) {
+    assert(['room', 'row', 'col', 'object', 'beside', 'alone'].includes(clue.kind), 'murdoku clue kind ' + clue.kind);
     assert(ids.has(clue.personId), 'clue person');
     assert(typeof clue.text === 'string' && clue.text.length > 8, 'clue text');
     const person = puzzle.people.find((p) => p.id === clue.personId);
