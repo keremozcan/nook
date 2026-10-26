@@ -45,6 +45,7 @@
     solved: 'Solved',
     solvedIn: function (t) { return 'Solved in ' + t + '.'; },
     newBest: 'New best time!',
+    helped: 'Hints don’t count towards your best time.',
     bestWas: function (t) { return 'Best ' + t; },
     nextPuzzle: 'Next puzzle',
     nextGame: 'Next game',
@@ -141,7 +142,7 @@
   function saveSlot() {
     if (S.view !== 'game' || !S.puzzle || S.solved) return;
     if (!S.undo.length && !S.elapsed && !S.running) return;
-    const slot = { game: S.game, level: S.level, seed: S.seed, sig: S.sig, play: S.play, undo: S.undo.slice(-60), elapsed: Math.round(now()) };
+    const slot = { game: S.game, level: S.level, seed: S.seed, sig: S.sig, play: S.play, undo: S.undo.slice(-60), elapsed: Math.round(now()), helped: S.helped };
     if (S.round) tonight().slot = slot;
     else store.saved[S.game] = slot;
     persist();
@@ -223,9 +224,9 @@
     const key = S.game + '/' + S.level;
     const prev = store.best[key];
     const secs = Math.round(ms / 1000);
-    const newBest = prev == null || secs < prev;
+    const newBest = !S.helped && (prev == null || secs < prev);
     if (newBest) store.best[key] = secs;
-    S.result = { ms: ms, best: newBest ? secs : prev, newBest: newBest && prev != null };
+    S.result = { ms: ms, best: newBest ? secs : prev, newBest: newBest && prev != null, helped: S.helped };
     if (S.round) {
       const t = tonight();
       t.times.push({ game: S.game, ms: ms });
@@ -425,7 +426,7 @@
       const primary = h('button', { type: 'button', class: 'primary', 'data-act': 'next', onclick: next }, label);
       done.appendChild(h('div', { class: 'done-head' },
         h('h2', { text: COPY.solved }),
-        h('p', { class: 'done-time' }, h('strong', { text: fmt(r.ms) }), h('span', { text: r.newBest ? COPY.newBest : r.best != null ? COPY.bestWas(fmt(r.best * 1000)) : '' }))));
+        h('p', { class: 'done-time' }, h('strong', { text: fmt(r.ms) }), h('span', { text: r.helped ? COPY.helped : r.newBest ? COPY.newBest : r.best != null ? COPY.bestWas(fmt(r.best * 1000)) : '' }))));
       if (extra) done.appendChild(h('p', { class: 'done-extra', html: extra }));
       done.appendChild(h('div', { class: 'done-actions' }, primary, h('button', { type: 'button', class: 'link', 'data-act': 'home', onclick: function () { goHome(true); } }, COPY.allGames)));
       const best = document.getElementById('best');
@@ -450,6 +451,7 @@
   function hint() {
     if (S.solved || !S.puzzle) return;
     S.group = null;
+    S.helped = true;
     const changedAny = S.ctx.act(function (play) { game().hint(S.puzzle, play, S.ctx); }, { note: COPY.oneStep });
     if (!changedAny) paint();
   }
@@ -525,7 +527,7 @@
     Object.assign(S, {
       view: 'game', game: id, level: level, seed: seed, round: !!opts.round,
       puzzle: null, play: null, ui: {}, undo: [], group: null, pending: null,
-      elapsed: 0, running: false, solved: false, note: '', result: null, failed: false
+      elapsed: 0, running: false, solved: false, helped: false, note: '', result: null, failed: false
     });
     const url = '#' + [id, level, encodeURIComponent(seed)].join('/');
     if (opts.push) history.pushState(null, '', url);
@@ -560,6 +562,7 @@
         S.play = saved.play;
         S.undo = Array.isArray(saved.undo) ? saved.undo : [];
         S.elapsed = saved.elapsed || 0;
+        S.helped = !!saved.helped;
         if (S.undo.length || S.elapsed) startClock();
       } else {
         if (opts.round) tonight().slot = null;

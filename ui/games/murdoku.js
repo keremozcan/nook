@@ -60,11 +60,6 @@
         if (rr < 0 || cc < 0 || rr >= n || cc >= n || p.roomOf[rr][cc] !== p.roomOf[r][c]) return false;
         return p.objects.some(function (o) { return o.r === rr && o.c === cc && o.kind === clue.object; });
       });
-    } else if (clue.kind === 'corner') {
-      const id = p.roomOf[r][c];
-      const vert = r === 0 || p.roomOf[r - 1][c] !== id || r === n - 1 || p.roomOf[r + 1][c] !== id;
-      const horiz = c === 0 || p.roomOf[r][c - 1] !== id || c === n - 1 || p.roomOf[r][c + 1] !== id;
-      ok = vert && horiz;
     } else if (clue.kind === 'alone') {
       if (Object.keys(play.pos).length < p.people.length) return true;
       let share = 0;

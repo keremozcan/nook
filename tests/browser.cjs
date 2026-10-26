@@ -129,7 +129,10 @@ async function run() {
       assert(Object.keys(saved.best).some((k) => k.startsWith(game + '/')), game + ' records a best time');
       await panel.locator('[data-act="next"]').click();
       await page.waitForFunction(() => !document.querySelector('.foot.is-solved') && document.querySelector('.stage .cell, .stage .sheet input'));
+      const bestBefore = JSON.stringify((await store(page)).best);
       assert(await hintToEnd(page), game + ' hints reach a win');
+      assert.equal(JSON.stringify((await store(page)).best), bestBefore, game + ' hinted win leaves best times alone');
+      assert.match(await page.locator('#done').textContent(), /Hints don’t count/, game + ' says hints don’t count');
       await page.close();
       console.log('ok play + hints ' + game);
     }

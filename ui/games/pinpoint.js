@@ -25,23 +25,11 @@
     wrong: 'Not quite. Here’s another clue.',
     wrongLast: 'Not quite. Try again, or tap Show answer.',
     tried: 'Tried',
-    wonLine: function (p, used) { return '<b>' + esc(p.category) + '</b>' + (p.description ? ': ' + esc(p.description) : '') + '<br>' + (used === 1 ? 'Got it with 1 clue.' : 'Got it with ' + used + ' clues.'); }
+    wonLine: function (p, used, revealed) { return '<b>' + esc(p.category) + '</b>' + (p.description ? ': ' + esc(p.description) : '') + '<br>' + (revealed ? 'Answer shown after all five clues.' : used === 1 ? 'Got it with 1 clue.' : 'Got it with ' + used + ' clues.'); }
   };
 
-  function norm(text) {
-    return String(text).toLowerCase()
-      .replace(/[“”"'‘’.,!?;:()]/g, '')
-      .replace(/[-–—_/]/g, ' ')
-      .replace(/\s+/g, ' ').trim()
-      .replace(/^(a|an|the) /, '')
-      .split(' ').map(function (w) { return w.length > 3 && /ies$/.test(w) ? w.slice(0, -3) + 'y' : w.length > 3 && /[^s]s$/.test(w) ? w.slice(0, -1) : w; }).join(' ');
-  }
   function matches(ctx, text) {
-    const engine = ctx.engine;
-    if (engine && typeof engine.matches === 'function') return !!engine.matches(ctx.puzzle, text);
-    const want = norm(text);
-    if (!want) return false;
-    return (ctx.puzzle.accept || [ctx.puzzle.category]).some(function (a) { return norm(a) === want; });
+    return ctx.engine.matches(ctx.puzzle, text);
   }
 
   function guess(ctx) {
@@ -76,10 +64,11 @@
       if (play.shown < p.words.length) { play.shown += 1; return; }
       play.text = p.category;
       play.won = true;
+      play.revealed = true;
     },
     hintLabel: function (ctx) { return ctx.play && ctx.play.shown < ctx.puzzle.words.length ? COPY.nextClue : COPY.showAnswer; },
     status: function (ctx) { return COPY.shown(ctx.play.shown); },
-    wonLine: function (ctx) { return COPY.wonLine(ctx.puzzle, ctx.play.shown); },
+    wonLine: function (ctx) { return COPY.wonLine(ctx.puzzle, ctx.play.shown, ctx.play.revealed); },
     mount: function (ctx, stage) {
       const p = ctx.puzzle;
       const list = UI.h('ol', { class: 'clue-list' });
