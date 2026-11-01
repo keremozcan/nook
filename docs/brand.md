@@ -111,7 +111,7 @@ selected, and nothing else is a brand colour. Every value comes from `brand/toke
 
 As set in hq/standards/brand-book.md §5, unchanged:
 
-- Site footer: "Made by Space Island Ltd" (EN), plain text in the footer's type and muted colour, linked to
+- Site footer: "Made by Space Island" (EN), plain text in the footer's type and muted colour, linked to
   https://spaceisland.ltd. No Space Island logo on product pages. **Not on the page yet:** Nook has no footer.
 - Legal pages, mail footers, About: the full company line (hq/standards/legal-pages.md). Nook has none of these.
 - Share images, app icons, profile pictures: Nook only.
