@@ -149,6 +149,12 @@
       if (r < 0 || c < 0 || r >= n || c >= n) return null;
       return [r, c];
     }
+    /* The pointer contract. One gesture at a time: every `down` is answered by exactly one `up`,
+       whether the finger lifted, the touch was cancelled or lost its capture, or a new press began
+       (the old gesture is finished as cancelled first). Three things track "a drag is active" and
+       must stay in step: `active` here, the game's own drag state (cleared in its `up`), and the
+       shell's ctx.begin()/ctx.end() pair (`S.pending`). A game that calls ctx.begin() in `down`
+       must call ctx.end() in `up`; that is what keeps a cancelled drag from leaving `pending` set. */
     let active = null;
     function finish(e, cancelled) {
       if (!active) return;
