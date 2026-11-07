@@ -415,12 +415,11 @@ async function run() {
       assert(await hintToEnd(page), 'Tonight game finishes after midnight');
       const t = (await store(page)).tonight;
       assert.equal(t.date, night, 'the run keeps the night it began');
-      assert.equal(t.index, 1, 'the finished game counts');
-      assert.equal(t.times.length, 1);
+      assert.equal(t.done.length, 1, 'the finished game counts');
       await page.locator('[data-act="next"]').click();
       await ready(page);
       assert.equal(await page.locator('.round').textContent(), 'Tonight · 2 of 9', 'Next game continues that night');
-      assert(decodeURIComponent(await page.evaluate(() => location.hash)).includes('daily-' + night + '-'), 'with that night’s puzzle');
+      assert(decodeURIComponent(await page.evaluate(() => location.hash)).includes('tonight/' + night + '/'), 'with that night’s puzzle');
       await page.close();
       console.log('ok tonight midnight');
     }
@@ -440,9 +439,159 @@ async function run() {
       assert.equal(await page.locator('.round').textContent(), 'Tonight · 1 of 9', 'still in Tonight');
       assert.equal(await page.evaluate(() => window.NOOK_UI.shell.state.round), true);
       assert(await hintToEnd(page), 'the stand-in puzzle completes');
-      assert.equal((await store(page)).tonight.index, 1, 'and counts for the run');
+      assert.equal((await store(page)).tonight.done.length, 1, 'and counts for the run');
       await page.close();
       console.log('ok tonight fallback');
+    }
+
+    // Session lifecycle: one phase, and nothing of a game outlives the home screen.
+    {
+      const page = await open('zip');
+      const phase = () => page.evaluate(() => { const S = window.NOOK_UI.shell.state; return [S.phase, S.view, S.solved, S.failed].join(); });
+      assert.equal(await phase(), 'playing,game,false,false');
+      assert(await hintToEnd(page));
+      assert.equal(await phase(), 'solved,game,true,false');
+      await page.locator('[data-act="home"]').first().click();
+      assert.equal(await phase(), 'home,home,false,false', 'home is never solved');
+      assert.equal(await page.evaluate(() => window.NOOK_UI.shell.transition('win')), false, 'a win means nothing on the home screen');
+      assert.equal(await page.evaluate(() => window.NOOK_UI.shell.state.phase), 'home');
+      await page.close();
+      console.log('ok phases');
+    }
+
+    // The store is merged per key, not overwritten whole: two tabs keep each other's puzzles and times.
+    {
+      const cx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+      const [a, b, c] = [await cx.newPage(), await cx.newPage(), await cx.newPage()];
+      [a, b, c].forEach((pg) => pg.on('pageerror', (e) => errors.push('tabs: ' + e.message)));
+      await a.goto(base + '#zip/easy/' + SEED);
+      await ready(a);
+      await b.goto(base + '#sudoku/easy/' + SEED);
+      await ready(b);
+      await c.goto(base);
+      await c.locator('.tile').first().waitFor();
+      const zip = puzzleFor('zip');
+      await draw(a, zip.solution.slice(0, 4));
+      await b.locator('[data-act="hint"]').click();
+      let s = await store(a);
+      assert(s.saved.zip && s.saved.sudoku, 'both tabs’ saved puzzles survive: ' + Object.keys(s.saved));
+      await c.waitForFunction(() => document.querySelectorAll('.tile.saved').length === 2);
+      await draw(a, zip.solution);
+      assert(await solved(a), 'zip solves');
+      s = await store(b);
+      assert(s.best['zip/easy'] != null, 'the best time is stored');
+      await b.locator('[data-act="hint"]').click();
+      s = await store(a);
+      assert(s.best['zip/easy'] != null && s.saved.sudoku && !s.saved.zip, 'a later write from the other tab keeps the best time and does not bring back the solved puzzle');
+      await c.waitForFunction(() => document.querySelectorAll('.tile.saved').length === 1);
+      assert.match(await c.locator('.tile[data-game="zip"]').textContent(), /Best/, 'the idle tab picks the best time up from the storage event');
+      // The merge itself.
+      const merged = await a.evaluate(() => {
+        const m = window.NOOK_UI.shell.mergeStores;
+        const base = { best: {}, level: {}, check: true, saved: { zip: { seed: 'old' } }, tonight: null };
+        const mine = { best: { 'tango/easy': 9 }, level: {}, check: false, saved: {}, tonight: null };
+        const disk = { best: { 'zip/easy': 5 }, level: { zip: 'tricky' }, check: true, saved: { zip: { seed: 'old' }, sudoku: { seed: 'x' } }, tonight: null };
+        return m(disk, base, mine);
+      });
+      assert.deepEqual(merged.best, { 'zip/easy': 5, 'tango/easy': 9 }, 'best times from both');
+      assert.deepEqual(merged.level, { zip: 'tricky' });
+      assert.equal(merged.check, false, 'the changed switch wins');
+      assert.deepEqual(Object.keys(merged.saved), ['sudoku'], 'our delete applies, their new puzzle stays');
+      await cx.close();
+      console.log('ok two tabs');
+    }
+
+    // Tonight: two tabs finishing the same game record it once.
+    {
+      const cx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+      const [a, b] = [await cx.newPage(), await cx.newPage()];
+      [a, b].forEach((pg) => pg.on('pageerror', (e) => errors.push('tonight tabs: ' + e.message)));
+      for (const pg of [a, b]) {
+        await pg.goto(base);
+        await pg.locator('[data-act="tonight"]').click();
+        await ready(pg);
+      }
+      assert(await hintToEnd(a), 'tab A finishes game 1');
+      assert(await hintToEnd(b), 'tab B finishes game 1 too');
+      const t = (await store(a)).tonight;
+      assert.equal(t.done.length, 1, 'the game counts once');
+      assert.equal(t.current, null);
+      await a.locator('[data-act="next"]').click();
+      await ready(a);
+      assert.equal(await a.locator('.round').textContent(), 'Tonight · 2 of 9');
+      assert((await store(a)).tonight.done.length === 1);
+      await cx.close();
+      console.log('ok tonight two tabs');
+    }
+
+    // Tonight is addressed by night and game: a reload after midnight stays in the run.
+    {
+      const page = await newPage({ tag: 'midnight-reload', storage: {} });
+      await page.addInitScript(() => {
+        const Real = Date;
+        window.__shift = Number(sessionStorage.getItem('shift') || 0);
+        class Shifted extends Real {
+          constructor(...a) { if (a.length) super(...a); else super(Real.now() + window.__shift); }
+          static now() { return Real.now() + window.__shift; }
+        }
+        window.Date = Shifted;
+      });
+      await page.goto(base);
+      const night = await page.evaluate(() => {
+        const d = new Date(); d.setHours(23, 55, 0, 0);
+        window.__shift += d.getTime() - Date.now();
+        sessionStorage.setItem('shift', String(window.__shift));
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      });
+      await page.locator('[data-act="tonight"]').click();
+      await ready(page);
+      assert.equal(decodeURIComponent(await page.evaluate(() => location.hash)), '#tonight/' + night + '/zip');
+      await page.locator('[data-act="hint"]').click();
+      await page.evaluate(() => { window.__shift += 10 * 60 * 1000; sessionStorage.setItem('shift', String(window.__shift)); });
+      await page.reload();
+      await ready(page);
+      assert.equal(await page.locator('.round').textContent(), 'Tonight · 1 of 9', 'still the round after midnight');
+      assert.equal(await page.evaluate(() => window.NOOK_UI.shell.state.roundDate), night);
+      assert.equal(await page.evaluate(() => window.NOOK_UI.shell.state.helped), true, 'with its saved puzzle');
+      await page.close();
+      console.log('ok tonight midnight reload');
+    }
+
+    // Tonight: a stand-in puzzle is still the round after a reload.
+    {
+      const page = await newPage({ tag: 'standin-reload', storage: {} });
+      await page.goto(base);
+      await page.evaluate(() => {
+        const e = window.NOOK_ENGINES.zip;
+        const real = e.generate;
+        e.generate = function (level, seed) { if (/^daily-/.test(seed) && !/-b$/.test(seed)) throw new Error('boom'); return real(level, seed); };
+      });
+      await page.locator('[data-act="tonight"]').click();
+      await page.locator('[data-act="again"]').click();
+      await ready(page);
+      await page.reload();
+      await ready(page);
+      const S = await page.evaluate(() => { const s = window.NOOK_UI.shell.state; return { round: s.round, seed: s.seed }; });
+      assert.equal(S.round, true, 'the stand-in is still a Tonight round');
+      assert(/-b$/.test(S.seed), 'and still the same puzzle: ' + S.seed);
+      assert(await hintToEnd(page));
+      assert.equal((await store(page)).tonight.done.length, 1);
+      await page.close();
+      console.log('ok stand-in reload');
+    }
+
+    // Older saves load: the run's old shape, and a store with a broken section.
+    {
+      const d = new Date();
+      const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const page = await newPage({ tag: 'legacy', storage: { 'nook.v2': { best: {}, level: {}, check: true, saved: null, tonight: { date, index: 2, times: [{ game: 'zip', ms: 5000 }, { game: 'sudoku', ms: 7000 }], slot: null } } } });
+      await page.goto(base);
+      assert.match(await page.locator('.tonight').textContent(), /2 of 9 done/);
+      await page.locator('[data-act="tonight"]').click();
+      await ready(page);
+      assert.equal(await page.locator('.round').textContent(), 'Tonight · 3 of 9');
+      await page.close();
+      console.log('ok older saves');
     }
 
     // Dark mode: every game renders on a dark page without errors.

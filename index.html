@@ -2896,6 +2896,12 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       if (r < 0 || c < 0 || r >= n || c >= n) return null;
       return [r, c];
     }
+    /* The pointer contract. One gesture at a time: every `down` is answered by exactly one `up`,
+       whether the finger lifted, the touch was cancelled or lost its capture, or a new press began
+       (the old gesture is finished as cancelled first). Three things track "a drag is active" and
+       must stay in step: `active` here, the game's own drag state (cleared in its `up`), and the
+       shell's ctx.begin()/ctx.end() pair (`S.pending`). A game that calls ctx.begin() in `down`
+       must call ctx.end() in `up`; that is what keeps a cancelled drag from leaving `pending` set. */
     let active = null;
     function finish(e, cancelled) {
       if (!active) return;
@@ -4565,17 +4571,46 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     oneStep: 'Here’s one step.'
   };
 
-  /* ---------- Storage: one saved puzzle per game, best times, preferences, Tonight. ---------- */
+  /* ---------- Storage: one saved puzzle per game, best times, preferences, Tonight. ----------
+     Every tab shares one localStorage blob, so a write never replaces it whole: persist() re-reads
+     the blob and puts back only the keys this tab changed since it last synced (see mergeStores),
+     and a `storage` event from another tab is merged the same way. */
   const KEY = 'nook.v2';
   function today() {
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   function blank() { return { best: {}, level: {}, check: true, saved: {}, tonight: null }; }
+  function plain(x) { return x && typeof x === 'object' && !Array.isArray(x); }
+  function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function clone(x) { return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
+  /* A Tonight run is one thing: { date, done: [{ game, ms }], current: { game, seed, slot } | null }.
+     Which game is next is derived from `done`; `current` is the game in hand (and its saved puzzle). */
+  function normalizeRun(t) {
+    if (!plain(t) || typeof t.date !== 'string') return null;
+    const done = [];
+    // Older saves kept { date, index, times, slot }.
+    (Array.isArray(t.done) ? t.done : Array.isArray(t.times) ? t.times : []).forEach(function (x) {
+      if (plain(x) && ORDER.indexOf(x.game) >= 0 && !done.some(function (d) { return d.game === x.game; })) done.push({ game: x.game, ms: Number(x.ms) || 0 });
+    });
+    let current = null;
+    if (plain(t.current) && ORDER.indexOf(t.current.game) >= 0 && typeof t.current.seed === 'string') {
+      current = { game: t.current.game, seed: t.current.seed, slot: plain(t.current.slot) ? t.current.slot : null };
+    } else if (plain(t.slot) && ORDER.indexOf(t.slot.game) >= 0 && typeof t.slot.seed === 'string') current = { game: t.slot.game, seed: t.slot.seed, slot: t.slot };
+    if (current && done.some(function (d) { return d.game === current.game; })) current = null;
+    return { date: t.date, done: done, current: current };
+  }
+  function normalize(data) {
+    const out = blank();
+    if (plain(data)) Object.assign(out, data);
+    ['best', 'level', 'saved'].forEach(function (k) { if (!plain(out[k])) out[k] = {}; });
+    out.tonight = normalizeRun(out.tonight);
+    return out;
+  }
   function load() {
     let data = null;
     try { data = JSON.parse(localStorage.getItem(KEY)); } catch (err) { data = null; }
-    if (data && typeof data === 'object') return Object.assign(blank(), data);
+    if (plain(data)) return normalize(data);
     data = blank();
     try {
       const old = JSON.parse(localStorage.getItem('nook.v1'));
@@ -4586,11 +4621,61 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         if (old.mistakes === false) data.check = false;
       }
     } catch (err) { /* Start clean. */ }
-    return data;
+    return normalize(data);
+  }
+  function readDisk() {
+    try {
+      const data = JSON.parse(localStorage.getItem(KEY));
+      return plain(data) ? normalize(data) : null;
+    } catch (err) { return null; }
+  }
+  /* Two copies of the same night: same date, union of finished games; the game in hand is this
+     tab's if it changed it since `base`, else the other tab's. A later night replaces an earlier one. */
+  function mergeRun(theirs, mine, base) {
+    if (!theirs) return mine;
+    if (!mine) return theirs;
+    if (theirs.date !== mine.date) return theirs.date > mine.date ? theirs : mine;
+    const out = { date: mine.date, done: theirs.done.slice(), current: null };
+    mine.done.forEach(function (x) { if (!out.done.some(function (d) { return d.game === x.game; })) out.done.push(x); });
+    const moved = !same(base && base.date === mine.date ? base.current : null, mine.current);
+    out.current = moved ? mine.current : theirs.current;
+    if (out.current && out.done.some(function (d) { return d.game === out.current.game; })) out.current = null;
+    return out;
+  }
+  /* What is on disk (`disk`), plus whatever this tab changed since it last synced (`base` → `mine`),
+     key by key: a best time, a level choice, one game's saved puzzle, the check switch, the run. */
+  function mergeStores(disk, base, mine) {
+    const out = normalize(disk);
+    ['best', 'level', 'saved'].forEach(function (sec) {
+      Object.keys(mine[sec]).concat(Object.keys(base[sec])).forEach(function (k) {
+        if (same(mine[sec][k], base[sec][k])) return;
+        if (k in mine[sec]) out[sec][k] = clone(mine[sec][k]);
+        else delete out[sec][k];
+      });
+    });
+    if (mine.check !== base.check) out.check = mine.check;
+    if (!same(mine.tonight, base.tonight)) out.tonight = mergeRun(out.tonight, mine.tonight, base.tonight);
+    return out;
   }
   let store = load();
+  let base = clone(store);
   function persist() {
-    try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (err) { /* Play still works without storage. */ }
+    const disk = readDisk();
+    const merged = disk ? mergeStores(disk, base, store) : store;
+    try { localStorage.setItem(KEY, JSON.stringify(merged)); } catch (err) { return; /* Play still works without storage. */ }
+    store = merged;
+    base = clone(merged);
+  }
+  /* Another tab wrote: take its changes, keep ours. */
+  function sync() {
+    const disk = readDisk();
+    if (!disk) return;
+    const before = JSON.stringify(store);
+    store = mergeStores(disk, base, store);
+    base = clone(disk);
+    if (JSON.stringify(store) === before) return;
+    if (S.view === 'home' || S.view === 'summary') render();
+    else paint();
   }
   /* The Tonight run for a date (today by default). A run that started before midnight keeps its
      own date, so finishing it after midnight still records against that night. */
@@ -4599,11 +4684,31 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const t = store.tonight;
     if (t && t.date === date) return t;
     // A later night already began (another tab): don't overwrite it with an older run.
-    if (t && t.date > date) return { date: date, index: ORDER.length, times: [], slot: null };
-    store.tonight = { date: date, index: 0, times: [], slot: null };
+    if (t && t.date > date) return { date: date, done: [], current: null, stale: true };
+    store.tonight = { date: date, done: [], current: null };
     return store.tonight;
   }
   function run() { return tonight(S.roundDate); }
+  /* The next game of a run: the first of the nine not yet done. */
+  function nextGame(t) {
+    if (t.stale) return null;
+    for (let i = 0; i < ORDER.length; i++) if (!t.done.some(function (d) { return d.game === ORDER[i]; })) return ORDER[i];
+    return null;
+  }
+  /* The run's puzzle for a game: the stand-in it is holding (if one was dealt), else that night's. */
+  function roundSeed(t, id) {
+    return t.current && t.current.game === id ? t.current.seed : dailySeed(id, tonightLevel(id), t.date);
+  }
+  function roundSlot(t, id, seed) {
+    return t.current && t.current.game === id && t.current.seed === seed ? t.current.slot : null;
+  }
+  function setRoundSlot(t, game, seed, slot) {
+    if (slot) t.current = { game: game, seed: seed, slot: slot };
+    else if (t.current && t.current.game === game && t.current.seed === seed) {
+      // Nothing left to resume, and not a stand-in: back to "not started" for this game.
+      t.current = seed === dailySeed(game, tonightLevel(game), t.date) ? null : { game: game, seed: seed, slot: null };
+    }
+  }
   function tonightLevel(game) { return game === 'sudoku' ? 'mini' : 'easy'; }
   function dailySeed(game, level, date) { return 'daily-' + (date || today()) + '-' + game + '-' + level; }
 
@@ -4623,11 +4728,37 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   /* ---------- State ---------- */
   const S = {
-    view: 'home', game: null, level: null, seed: null, round: false, roundDate: null,
+    phase: 'home', game: null, level: null, seed: null, round: false, roundDate: null,
     puzzle: null, play: null, ui: null, undo: [], group: null, pending: null,
-    elapsed: 0, running: false, t0: 0, solved: false, note: '', token: 0,
+    elapsed: 0, running: false, t0: 0, helped: false, sig: null, note: '', token: 0,
     result: null, toast: '', ctx: null
   };
+  /* The session lifecycle is one value, S.phase; view, solved and failed are read from it, so they
+     can't disagree (no "home and solved"). Every change goes through transition(event). */
+  const PHASES = {
+    home: { open: 'loading', summary: 'summary' },
+    summary: { open: 'loading', home: 'home' },
+    loading: { open: 'loading', dealt: 'playing', fail: 'failed', home: 'home', summary: 'summary' },
+    failed: { open: 'loading', home: 'home', summary: 'summary' },
+    playing: { open: 'loading', win: 'solved', home: 'home', summary: 'summary' },
+    solved: { open: 'loading', home: 'home', summary: 'summary' }
+  };
+  Object.defineProperties(S, {
+    view: { enumerable: true, get: function () { return S.phase === 'home' || S.phase === 'summary' ? S.phase : 'game'; } },
+    solved: { enumerable: true, get: function () { return S.phase === 'solved'; } },
+    failed: { enumerable: true, get: function () { return S.phase === 'failed'; } }
+  });
+  function transition(event) {
+    const to = PHASES[S.phase][event];
+    if (!to) return false;
+    S.phase = to;
+    if (to === 'home' || to === 'summary') {
+      // Nothing of a game survives on these screens.
+      Object.assign(S, { puzzle: null, play: null, ctx: null, pending: null, result: null, note: '' });
+      if (to === 'home') S.round = false;
+    }
+    return true;
+  }
   function engine(id) { return (window.NOOK_ENGINES || {})[id]; }
   function game(id) { return UI.games[id || S.game]; }
   function levels(id) {
@@ -4656,15 +4787,17 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   /* ---------- Saving the current puzzle ---------- */
   function saveSlot() {
-    if (S.view !== 'game' || !S.puzzle || S.solved) return;
+    if (S.phase !== 'playing' || !S.puzzle) return;
     if (!S.undo.length && !S.elapsed && !S.running) return;
-    const slot = { game: S.game, level: S.level, seed: S.seed, sig: S.sig, play: S.play, undo: S.undo.slice(-60), elapsed: Math.round(now()), helped: S.helped };
-    if (S.round) run().slot = slot;
+    // Hidden in the middle of a drag: keep the board as it was before the drag began.
+    const play = S.pending != null ? JSON.parse(S.pending) : S.play;
+    const slot = { game: S.game, level: S.level, seed: S.seed, sig: S.sig, play: play, undo: S.undo.slice(-60), elapsed: Math.round(now()), helped: S.helped };
+    if (S.round) setRoundSlot(run(), S.game, S.seed, slot);
     else store.saved[S.game] = slot;
     persist();
   }
   function dropSlot() {
-    if (S.round) run().slot = null;
+    if (S.round) setRoundSlot(run(), S.game, S.seed, null);
     else delete store.saved[S.game];
     persist();
   }
@@ -4733,8 +4866,9 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   /* ---------- Winning ---------- */
   function win() {
+    if (S.phase !== 'playing') return;
     pauseClock();
-    S.solved = true;
+    transition('win');
     const ms = Math.max(1000, Math.round(S.elapsed));
     S.elapsed = ms;
     const key = S.game + '/' + S.level;
@@ -4744,10 +4878,10 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (newBest) store.best[key] = secs;
     S.result = { ms: ms, best: newBest ? secs : prev, newBest: newBest && prev != null, helped: S.helped };
     if (S.round) {
+      // A game counts once per night, even if another tab finished it too.
       const t = run();
-      t.times.push({ game: S.game, ms: ms });
-      t.index = ORDER.indexOf(S.game) + 1;
-      t.slot = null;
+      if (!t.done.some(function (d) { return d.game === S.game; })) t.done.push({ game: S.game, ms: ms });
+      t.current = null;
     } else delete store.saved[S.game];
     persist();
     S.note = COPY.solvedIn(fmt(ms));
@@ -4769,11 +4903,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const t = tonight();
     let tonightSub = COPY.tonightTitle;
     let go = COPY.tonightStart;
-    if (t.index >= ORDER.length) {
-      tonightSub = COPY.tonightDone + ' · ' + fmt(t.times.reduce(function (a, x) { return a + x.ms; }, 0));
+    if (!nextGame(t)) {
+      tonightSub = COPY.tonightDone + ' · ' + fmt(t.done.reduce(function (a, x) { return a + x.ms; }, 0));
       go = COPY.tonightSee;
-    } else if (t.index > 0 || t.slot) {
-      tonightSub = COPY.tonightProgress(t.index);
+    } else if (t.done.length > 0 || t.current) {
+      tonightSub = COPY.tonightProgress(t.done.length);
       go = COPY.tonightGoOn;
     }
     const main = h('main', { class: 'home' },
@@ -4819,7 +4953,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const t = tonight(S.roundDate);
     const list = h('ol', { class: 'times' });
     let total = 0;
-    t.times.forEach(function (item) {
+    t.done.forEach(function (item) {
       total += item.ms;
       list.appendChild(h('li', null, nameOf(item.game), h('span', { text: fmt(item.ms) })));
     });
@@ -4858,7 +4992,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     const stage = h('div', { class: 'stage', id: 'stage' });
     if (!S.puzzle) {
       stage.classList.add('waiting');
-      stage.appendChild(S.failed
+      stage.appendChild(S.phase === 'failed'
         ? h('div', { class: 'placeholder failed' }, h('p', { text: COPY.failed }), h('button', { type: 'button', class: 'primary', 'data-act': 'again', onclick: newPuzzle }, COPY.tryAgain))
         : h('div', { class: 'placeholder', 'aria-busy': 'true' }, h('p', { class: 'loading', text: COPY.loading })));
     }
@@ -4937,7 +5071,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
       done._filled = true;
       const r = S.result || { ms: S.elapsed, best: null };
       const t = S.round ? run() : null;
-      const label = S.round ? (t.index >= ORDER.length ? COPY.tonightTimes : COPY.nextGame) : COPY.nextPuzzle;
+      const label = S.round ? (!nextGame(t) ? COPY.tonightTimes : COPY.nextGame) : COPY.nextPuzzle;
       const extra = g.wonLine ? g.wonLine(S.ctx) : '';
       const primary = h('button', { type: 'button', class: 'primary', 'data-act': 'next', onclick: next }, label);
       done.appendChild(h('div', { class: 'done-head' },
@@ -4956,7 +5090,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
 
   /* ---------- Actions ---------- */
   function undo() {
-    if (S.solved || !S.undo.length) return;
+    if (S.solved || !S.undo.length || S.pending != null) return; // not in the middle of a drag
     S.play = JSON.parse(S.undo.pop());
     S.group = null;
     S.note = '';
@@ -4965,7 +5099,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     paint();
   }
   function hint() {
-    if (S.solved || !S.puzzle) return;
+    if (S.solved || !S.puzzle || S.pending != null) return;
     S.group = null;
     S.helped = true;
     const opts = { note: COPY.oneStep };
@@ -4985,10 +5119,14 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     S.puzzle = null;
     if (!S.round && S.game) delete store.saved[S.game];
     persist();
-    S.failed = false;
     // Inside Tonight (only offered when its puzzle failed to load): deal a stand-in puzzle for
-    // the same game and stay in the run.
-    if (S.round) openGame(S.game, S.level, S.seed + '-b', { fresh: true, round: true, date: S.roundDate });
+    // the same game and stay in the run. The run remembers it, so a reload deals the same one.
+    if (S.round) {
+      const seed = S.seed + '-b';
+      run().current = { game: S.game, seed: seed, slot: null };
+      persist();
+      openGame(S.game, S.level, seed, { fresh: true, round: true, date: S.roundDate });
+    }
     else openGame(S.game, S.level, freshSeed(), { fresh: true });
   }
   function next() {
@@ -5016,10 +5154,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   }
   function goHome(push) {
     leave();
-    S.view = 'home';
-    S.round = false;
-    S.puzzle = null;
-    S.ctx = null;
+    transition('home');
     if (push && location.hash) history.pushState(null, '', location.pathname + location.search);
     render();
     window.scrollTo(0, 0);
@@ -5027,15 +5162,14 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
   function startTonight(date) {
     const t = tonight(date);
     S.roundDate = t.date;
-    if (t.index >= ORDER.length) {
+    const id = nextGame(t);
+    if (!id) {
       leave();
-      S.view = 'summary';
+      transition('summary');
       render();
       return;
     }
-    const id = ORDER[t.index];
-    const level = tonightLevel(id);
-    openGame(id, level, dailySeed(id, level, t.date), { push: S.view === 'home', round: true, date: t.date });
+    openGame(id, tonightLevel(id), roundSeed(t, id), { push: S.view === 'home', round: true, date: t.date });
   }
   /* Open a game. With no seed, resume that game's saved puzzle at this level, else deal a new one. */
   function openGame(id, level, seed, opts) {
@@ -5046,15 +5180,17 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (!level) level = (!opts.round && store.saved[id] && store.saved[id].level) || store.level[id];
     if (allowed.indexOf(level) < 0) level = allowed.indexOf('easy') >= 0 ? 'easy' : allowed[0];
     const roundDate = opts.round ? (opts.date || today()) : null;
-    const saved = opts.round ? tonight(roundDate).slot : store.saved[id];
-    if (!seed) seed = saved && saved.game === id && saved.level === level ? saved.seed : freshSeed();
+    const saved = opts.round ? null : store.saved[id];
+    if (!seed) seed = opts.round ? roundSeed(tonight(roundDate), id) : saved && saved.game === id && saved.level === level ? saved.seed : freshSeed();
     if (!opts.round) { store.level[id] = level; persist(); }
+    transition('open');
     Object.assign(S, {
-      view: 'game', game: id, level: level, seed: seed, round: !!opts.round, roundDate: roundDate,
+      game: id, level: level, seed: seed, round: !!opts.round, roundDate: roundDate,
       puzzle: null, play: null, ui: {}, undo: [], group: null, pending: null,
-      elapsed: 0, running: false, solved: false, helped: false, note: '', result: null, failed: false
+      elapsed: 0, running: false, helped: false, note: '', result: null
     });
-    const url = '#' + [id, level, encodeURIComponent(seed)].join('/');
+    // A Tonight puzzle is addressed by its night and game, not by its seed.
+    const url = opts.round ? '#tonight/' + roundDate + '/' + id : '#' + [id, level, encodeURIComponent(seed)].join('/');
     if (opts.push) history.pushState(null, '', url);
     else history.replaceState(null, '', url);
     render();
@@ -5073,15 +5209,15 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     let puzzle;
     try { puzzle = e.generate(level, seed); } catch (err) { puzzle = null; }
     if (!puzzle) {
-      S.failed = true;
-      render();
+      if (transition('fail')) render();
       return;
     }
+    if (!transition('dealt')) return;
     S.puzzle = puzzle;
     S.sig = sig(puzzle);
     S.play = g.fresh(puzzle);
     S.ui = {};
-    const saved = opts.round ? run().slot : store.saved[id];
+    const saved = opts.round ? roundSlot(run(), id, seed) : store.saved[id];
     if (saved && saved.game === id && saved.level === level && saved.seed === seed && !opts.fresh) {
       if (saved.sig === S.sig && saved.play) {
         S.play = saved.play;
@@ -5090,7 +5226,7 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
         S.helped = !!saved.helped;
         if (S.undo.length || S.elapsed) startClock();
       } else {
-        if (opts.round) run().slot = null;
+        if (opts.round) setRoundSlot(run(), id, seed, null);
         else delete store.saved[id];
         persist();
         S.note = COPY.updated;
@@ -5105,18 +5241,35 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (rule && typeof g.copy.rule === 'function') rule.innerHTML = g.copy.rule(puzzle);
     mountGame();
   }
+  /* The hash is #game/level/seed for free play and #tonight/date/game for a Tonight puzzle. An
+     older Tonight link (#game/level/daily-date-game-level) is read as the second form. */
   function route() {
     const raw = location.hash.replace(/^#/, '');
     if (!raw) { if (S.view !== 'home') goHome(false); else render(); return; }
     const parts = raw.split('/');
-    const id = parts[0];
-    if (!UI.games[id] || !parts[2]) { history.replaceState(null, '', location.pathname + location.search); goHome(false); return; }
-    const level = parts[1];
-    const seed = decodeURIComponent(parts.slice(2).join('/'));
-    if (S.view === 'game' && S.game === id && S.level === level && S.seed === seed) return;
-    const t = tonight();
-    const round = seed === dailySeed(id, level) && ORDER[t.index] === id;
-    openGame(id, level, seed, { round: round });
+    let id = parts[0];
+    let level = parts[1];
+    let seed = null;
+    let date = null;
+    if (id === 'tonight') {
+      date = /^\d{4}-\d{2}-\d{2}$/.test(parts[1] || '') ? parts[1] : null;
+      id = parts[2];
+      level = tonightLevel(id);
+    } else if (parts[2]) {
+      seed = decodeURIComponent(parts.slice(2).join('/'));
+      const m = /^daily-(\d{4}-\d{2}-\d{2})-([a-z]+)-([a-z]+)$/.exec(seed);
+      if (m && m[2] === id && m[3] === level && level === tonightLevel(id)) date = m[1];
+    }
+    if (!UI.games[id] || (!seed && !date)) { history.replaceState(null, '', location.pathname + location.search); goHome(false); return; }
+    // It is a Tonight round only if that night's run is today's, or already stored, and this game is next in it.
+    let round = false;
+    if (date) {
+      const t = date === today() || (store.tonight && store.tonight.date === date) ? tonight(date) : null;
+      round = !!t && nextGame(t) === id;
+      seed = round ? roundSeed(t, id) : dailySeed(id, level, date);
+    }
+    if (S.view === 'game' && S.game === id && S.level === level && S.seed === seed && S.round === round && (!round || S.roundDate === date)) return;
+    openGame(id, level, seed, round ? { round: true, date: date } : {});
   }
 
   /* ---------- Global keys ---------- */
@@ -5137,10 +5290,11 @@ lantern orchard thistle blanket cabinet diamond feather jasmine kitchen library 
     if (document.visibilityState === 'hidden') { pauseClock(); saveSlot(); }
     else if (S.puzzle && !S.solved && (S.undo.length || S.elapsed)) startClock();
   });
+  window.addEventListener('storage', function (e) { if (e.key === KEY || e.key === null) sync(); });
   window.addEventListener('popstate', route);
   window.addEventListener('hashchange', route);
 
-  UI.shell = { COPY: COPY, ORDER: ORDER, store: function () { return store; }, state: S };
+  UI.shell = { COPY: COPY, ORDER: ORDER, store: function () { return store; }, state: S, transition: transition, mergeStores: mergeStores, normalize: normalize };
 
   function boot() {
     if (boot.done) return;
