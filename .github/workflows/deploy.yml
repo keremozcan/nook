@@ -1,0 +1,51 @@
+# Deploy: the one deploy command for a static site on GitHub Pages. Started by hand only, with Kerem's yes:
+#   gh workflow run deploy.yml -R keremozcan/<repo>                 publish main
+#   gh workflow run deploy.yml -R keremozcan/<repo> -f ref=<sha>    publish an earlier commit (the rollback)
+# Pushing never deploys once the repo's Pages source is "GitHub Actions" (Settings › Pages › Build and deployment ›
+# Source, or `gh api -X PUT repos/keremozcan/<repo>/pages -f build_type=workflow`). Public repos: no minutes billed.
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit to publish (default main); an older sha is the rollback
+        required: false
+        default: main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  SITE: .                                    # the folder that is the site
+  URL: https://keremozcan.github.io/nook/
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.SITE }}
+      - id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Check the live URL
+        run: |
+          for i in $(seq 1 12); do curl -fsS -o /dev/null --max-time 10 "$URL" && { echo "$URL answers ($(git rev-parse --short HEAD))" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; }; sleep 5; done
+          echo "::error::$URL didn't answer 200 within 60 s: run again with ref=<the previous sha>"; exit 1
