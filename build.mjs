@@ -50,6 +50,7 @@ const html = `<!DOCTYPE html>
 <style>
 ${css}
 </style>
+<script src="jserr.js" defer></script>
 </head>
 <body>
 <div id="app"></div>
